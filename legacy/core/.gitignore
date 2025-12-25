@@ -1,0 +1,9 @@
+node_modules
+# Keep environment variables out of version control
+.env
+vector_store.db
+memory.db
+neo4j
+/generated/prisma
+qdrant_data\
+generated

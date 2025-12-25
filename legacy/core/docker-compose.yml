@@ -1,0 +1,52 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    container_name: qdrant
+    ports:
+      - 6333:6333
+      - 6334:6334
+    configs:
+      - source: qdrant_config
+        target: /qdrant/config/production.yaml
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+  
+  neo4j:
+    image: neo4j:latest
+    volumes:
+        - ./neo4j/logs:/logs
+        - ./neo4j/data:/data
+        - ./neo4j/plugins:/plugins
+    environment:
+        - NEO4J_AUTH=neo4j/0123456789
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    restart: always
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "0987654321"
+      POSTGRES_DB: "storydb"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+configs:
+  qdrant_config:
+    content: |
+      log_level: INFO
+
+volumes:
+  postgres_data:
+
+secrets:
+  neo4j_auth_file:
+    file: ./secrets/neo4j_auth.txt
+

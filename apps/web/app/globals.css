@@ -1,50 +1,82 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ember: var(--ember);
+  --color-cyan: var(--cyan);
+  --font-sans: var(--font-geist-sans);
+  --font-playfair: var(--font-playfair);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.5rem;
+  --background: #050505;
+  --foreground: #EAEAEA;
+  --ember: #FF4D00;
+  --cyan: #00F0FF;
+  --muted: #1a1a1a;
+  --muted-foreground: #666666;
+  --charcoal: #0d0d0d;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-[#1a1a1a];
   }
-}
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
   html {
-    color-scheme: dark;
+    background: var(--background);
+    color: var(--foreground);
   }
 
-  .imgLight {
-    display: none;
+  body {
+    @apply bg-background text-foreground;
   }
-  .imgDark {
-    display: unset;
+
+  ::selection {
+    background: var(--ember);
+    color: var(--background);
   }
+}
+
+.font-playfair-italic {
+  font-family: var(--font-playfair);
+  font-style: italic;
+}
+
+.text-ember {
+  color: var(--ember);
+}
+
+.text-cyan {
+  color: var(--cyan);
+}
+
+.bg-charcoal {
+  background: var(--charcoal);
+}
+
+.glow-ember {
+  box-shadow: 0 0 60px rgba(255, 77, 0, 0.4), 0 0 120px rgba(255, 77, 0, 0.2);
+}
+
+.glow-text-ember {
+  text-shadow: 0 0 40px rgba(255, 77, 0, 0.6);
+}
+
+.spotlight-ember {
+  background: radial-gradient(circle, #FF4D00 0%, transparent 70%);
+}
+
+.tracking-wide-custom {
+  letter-spacing: 0.05em;
 }
