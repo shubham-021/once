@@ -18,9 +18,8 @@ interface ContinueContext {
         narration: string;
     }>;
     userAction: string;
-    triggeredEchoes?: Array<{
-        description: string;
-    }>;
+    triggeredEchoes?: Array<{ description: string; }>;
+    factualKnowledge?: string[];
 }
 
 export function buildContinuePrompt(ctx: ContinueContext): string {
@@ -57,9 +56,20 @@ export function buildContinuePrompt(ctx: ContinueContext): string {
         `;
     }
 
+    let memoryBlock = "";
+    if (ctx.factualKnowledge && ctx.factualKnowledge.length > 0) {
+        const facts = ctx.factualKnowledge.map(f => `- ${f}`).join("\n");
+        memoryBlock = `
+        ## Relevant Memories
+        These facts from earlier in the story may be relevant:
+        ${facts}
+        `;
+    }
+
     return `Continue the story based on the player's action.
         ${stateBlock}
         ${echoBlock}
+        ${memoryBlock}
 
         ## Recent Events
         ${recentContext || "This is the beginning of the story."}

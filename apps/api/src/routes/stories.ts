@@ -12,6 +12,7 @@ import { generateContinuation } from "@/services/story";
 import { updateProtagonistState } from "@/services/protagonist";
 import { streamSSE } from "hono/streaming";
 import { fakeStream } from "@/lib/stream";
+import { searchMemory, storeMemory } from "@/services/memory";
 
 const storiesRouter = new Hono();
 
@@ -105,6 +106,8 @@ storiesRouter.post("/", async (c) => {
             narration: openingScene.narration,
             protagonistId,
         });
+
+        storeMemory([{ role: 'assistant', content: openingScene.narration }], testUserId).catch(console.error);
 
         const storyWithRelations = await db.query.stories.findFirst({
             where: eq(stories.id, newStory.id),
@@ -225,6 +228,9 @@ storiesRouter.post("/:id/continue", async (c) => {
             recentNarration: lastScene?.narration || "",
         });
 
+        const memoryResult = await searchMemory(userAction, "testUserId"); // update userID: todo
+        const factualKnowledge = memoryResult.results?.map((m: any) => m.content) || [];
+
         const response = await generateContinuation({
             narrativeStance: story.narrativeStance,
             storyMode: story.storyMode,
@@ -244,6 +250,7 @@ storiesRouter.post("/:id/continue", async (c) => {
             })),
             userAction,
             triggeredEchoes: triggeredEchoes.map(e => ({ description: e.description })),
+            factualKnowledge
         });
 
         const newTurnNumber = (story.turnCount || 0) + 1;
@@ -266,6 +273,11 @@ storiesRouter.post("/:id/continue", async (c) => {
                 updatedAt: new Date(),
             })
             .where(eq(stories.id, storyId));
+
+        storeMemory([
+            { role: 'user', content: userAction },
+            { role: 'assistant', content: response.narration }
+        ], "testUserId").catch(console.error); // update userID : todo
 
         await resolveEchoes(triggeredEchoes.map(e => e.id), newScene.id);
 
@@ -329,6 +341,9 @@ storiesRouter.post("/:id/continue/stream", async (c) => {
                 recentNarration: lastScene?.narration || ""
             })
 
+            const memoryResult = await searchMemory(userAction, "testUserId");
+            const factualKnowledge = memoryResult.results?.map((m: any) => m.content) || [];
+
             const response = await generateContinuation({
                 narrativeStance: story.narrativeStance,
                 storyMode: story.storyMode,
@@ -348,6 +363,7 @@ storiesRouter.post("/:id/continue/stream", async (c) => {
                 })),
                 userAction,
                 triggeredEchoes: triggeredEchoes.map(e => ({ description: e.description })),
+                factualKnowledge
             });
 
             for await (const chunk of fakeStream(response.narration, 25)) {
@@ -371,6 +387,11 @@ storiesRouter.post("/:id/continue/stream", async (c) => {
             await db.update(stories)
                 .set({ turnCount: newTurnNumber, updatedAt: new Date() })
                 .where(eq(stories.id, storyId));
+
+            storeMemory([
+                { role: 'user', content: userAction },
+                { role: 'assistant', content: response.narration }
+            ], "testUserId").catch(console.error); // change userID: todo
 
             await resolveEchoes(triggeredEchoes.map(e => e.id), newScene.id);
 
