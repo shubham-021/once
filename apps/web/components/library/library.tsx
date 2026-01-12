@@ -7,6 +7,8 @@ import { NavHeader } from "../nav-header";
 import { storiesApi } from "@/lib/api";
 import type { Story } from "@once/shared";
 import { toast } from "sonner";
+import { Loader } from "lucide-react";
+import { ConstellationLoader } from "../loader";
 
 
 export function Library() {
@@ -36,6 +38,7 @@ export function Library() {
     return (
         <>
             <div className="min-h-screen bg-background">
+                {/* <ConstellationLoader/> */}
                 <header className="dotted-border-b px-4 md:px-8 py-6">
                     <h1 className="text-2xl text-foreground">Your Library</h1>
                     <p className="mt-1 text-sm text-muted">Stories you've begun</p>
