@@ -36,7 +36,7 @@ interface FontStore {
 export const useFontStore = create<FontStore>()(
     persist(
         (set, get) => ({
-            font: "font-indie-flower",
+            font: "font-space-grotesk",
             setFont: (font) => set({ font })
         }),
         {

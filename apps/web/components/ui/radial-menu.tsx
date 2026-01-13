@@ -55,7 +55,6 @@ export function RadialMenu({
       }
     };
 
-    
     if (isOpen) {
       const timeoutId = setTimeout(() => {
         document.addEventListener("click", handleClickOutside);
@@ -66,7 +65,6 @@ export function RadialMenu({
       };
     }
   }, [isOpen, onClose]);
-
 
   return (
     <div ref={menuRef} className="absolute top-6 left-6">
@@ -148,13 +146,14 @@ function RadialMenuItem({
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      style={{
+        zIndex: hovered ? 60 : 10,
+      }}
       className={cn(
         "absolute flex items-center justify-center w-12 h-12 rounded-full",
-        "bg-surface border border-line hover:border-accent",
+        "bg-surface/80 backdrop-blur-md border border-line hover:border-accent",
         "transition-colors cursor-pointer",
-        
         "top-0 left-0",
-       
         "-translate-x-1/2 -translate-y-1/2",
       )}
     >
@@ -173,7 +172,7 @@ function RadialMenuItem({
             exit={{ opacity: 0, scale: 0.8 }}
             className={cn(
               "absolute right-full mr-2 px-2 py-1 rounded-md text-xs whitespace-nowrap",
-              "bg-surface border border-line",
+              "bg-surface border border-line z-50",
               isActive && "text-accent",
             )}
           >

@@ -7,7 +7,7 @@ import { NavHeader } from "../nav-header";
 import { storiesApi } from "@/lib/api";
 import type { Story } from "@once/shared";
 import { toast } from "sonner";
-import { Loader, PlusCircle } from "lucide-react";
+import { Loader } from "lucide-react";
 import { ConstellationLoader } from "../loader";
 
 export function Library() {
@@ -64,7 +64,6 @@ export function Library() {
           <div className="p-8 text-center text-muted">Loading stories...</div>
         ) : filteredStories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <PlusCircle className="size-12 text-muted/50 mb-4" />
             <p className="text-muted mb-4">No stories yet</p>
             <a
               href="/create"

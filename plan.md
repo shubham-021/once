@@ -1,73 +1,50 @@
-# Plan: Radial Menu from Origami Icon
+# Plan: Mobile Bottom Tab Bar & Tooltip Fix
 
-## Goal
+## 1. Radial Menu Tooltip Fix
 
-Replace the bottom dock with a radial menu that fans out from the origami icon (top-right) when clicked. Buttons appear in a bottom-left quadrant arc.
+**File:** `apps/web/components/ui/radial-menu.tsx`
 
-## Completed Changes
+**Fix:** Dynamically elevate z-index on hover.
 
-### Phase 1: Radial Menu (DONE)
+- Add `zIndex: hovered ? 60 : 10` to the button style.
+- This ensures the active button and its tooltip child sit above all adjacent buttons.
 
-1. **Created** `apps/web/components/ui/radial-menu.tsx`
-   - Renders items in a radial arc (90° to 180°)
-   - Uses framer-motion for staggered animations
-   - Radius: 170px
-   - Click-outside and Escape key to close
+## 2. Profile Page Mobile Navigation
 
-2. **Modified** `apps/web/components/user-menu.tsx`
-   - Replaced dropdown with RadialMenu
-   - Origami button toggles menu open/close
+**File:** `apps/web/components/profile/profile-page.tsx`
 
-3. **Updated** `apps/web/app/(main)/(others)/layout.tsx`
-   - Removed FloatingNav
+**Changes:**
 
-4. **Deleted**
-   - `apps/web/components/floating-nav.tsx`
-   - `apps/web/components/ui/floating-dock.tsx`
+1. **Remove** bottom sheet logic and mobile header menu button.
+2. **Add** `MobileBottomNav` component (fixed at bottom).
+3. **Add** "Sign Out" button to `ProfileContent` (visible only on mobile).
 
-### Phase 2: Profile Page (DONE)
+**Layout Structure:**
 
-1. **Updated radial menu items** (5 items now):
-   - Home (90°) - directly below origami
-   - Library
-   - Discover
-   - Create
-   - Profile (180°) - directly left of origami
-   - _Removed: Analytics, Vault (moved to profile page)_
+```tsx
+<div className="flex flex-col h-screen md:flex-row bg-background">
+  {/* Desktop Sidebar (hidden on mobile) */}
+  <aside className="hidden md:flex ..." />
 
-2. **Created** `apps/web/app/(main)/(others)/profile/page.tsx`
-   - Route wrapper for profile page
+  {/* Main Content */}
+  <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+    {/* pb-20 prevents content from being hidden behind bottom bar */}
+    {activeTab === "profile" && <ProfileContent />}
+    {activeTab === "analytics" && <Analytics />}
+    {activeTab === "vault" && <CharacterVault />}
+  </main>
 
-3. **Created** `apps/web/components/profile/profile-page.tsx`
-   - Left sidebar with tabs: Profile, Analytics, Vault
-   - Sign Out button at bottom of sidebar
-   - Content area switches based on active tab
-   - Reuses existing Analytics and CharacterVault components
-
-4. **Updated** `apps/web/components/library/library.tsx`
-   - Empty state now shows centered "Create now" button
-   - Links to /create page
-
-## Current Navigation Structure
-
-```
-Radial Menu (from Origami):
-├── Home (/)
-├── Library (/library)
-├── Discover (/discover)
-├── Create (/create)
-└── Profile (/profile)
-
-Profile Page Sidebar:
-├── Profile (user info)
-├── Analytics (stats)
-├── Vault (characters)
-└── Sign Out
+  {/* Mobile Bottom Bar (hidden on desktop) */}
+  <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface/80 backdrop-blur-md border-t border-line flex justify-around items-center h-16 z-50 px-2 pb-safe">
+    <TabButton tab="profile" icon={User} label="Profile" />
+    <TabButton tab="analytics" icon={BarChart2} label="Analytics" />
+    <TabButton tab="vault" icon={Users} label="Vault" />
+  </nav>
+</div>
 ```
 
-## Arc Geometry
+**Sign Out Button:**
 
-- Start angle: 90° (directly down - Home)
-- End angle: 180° (directly left - Profile)
-- 5 items spread across 90° arc = 22.5° between each
-- Radius: 170px
+- Add to `ProfileContent` component
+- Visible only on mobile (`md:hidden`)
+- Placed below the info cards

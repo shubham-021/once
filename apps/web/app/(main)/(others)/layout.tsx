@@ -22,7 +22,7 @@ export default function MainLayout({
 
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex-col items-center justify-center bg-background">
         <p className="text-muted">Loading...</p>
       </div>
     );
