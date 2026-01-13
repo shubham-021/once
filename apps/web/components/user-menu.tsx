@@ -5,24 +5,13 @@ import { usePathname } from "next/navigation";
 import {
   Origami,
   User,
-  LogOut,
   Home,
   BookOpen,
   Compass,
   PlusCircle,
-  Users,
-  BarChart2,
 } from "lucide-react";
-import { signOut, useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { RadialMenu, RadialMenuItem } from "@/components/ui/radial-menu";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const navItems: RadialMenuItem[] = [
   {
@@ -54,30 +43,17 @@ const navItems: RadialMenuItem[] = [
     href: "/create",
   },
   {
-    title: "Vault",
+    title: "Profile",
     icon: (className: string) => (
-      <Users className={cn("h-full w-full", className)} />
+      <User className={cn("h-full w-full", className)} />
     ),
-    href: "/vault",
-  },
-  {
-    title: "Analytics",
-    icon: (className: string) => (
-      <BarChart2 className={cn("h-full w-full", className)} />
-    ),
-    href: "/analytics",
+    href: "/profile",
   },
 ];
 
 export function UserMenu() {
-  const { data: session } = useSession();
   const pathname = usePathname();
   const [isRadialOpen, setIsRadialOpen] = useState(false);
-
-  const handleSignOut = async () => {
-    await signOut();
-    window.location.href = "/auth/login";
-  };
 
   const toggleRadialMenu = () => {
     setIsRadialOpen(!isRadialOpen);
