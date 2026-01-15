@@ -63,6 +63,7 @@ LLM_PROVIDER=google
 GOOGLE_API_KEY=your-google-api-key
 GOOGLE_LLM_MODEL=gemini-3-flash-preview
 GOOGLE_EMBEDDING_MODEL=gemini-embedding-001
+```
 
 ### 3. Start Infrastructure
 
