@@ -88,3 +88,21 @@ export async function searchSimilarScenes(query: string, storyId: number, limit:
         score: r.score
     }))
 }
+
+export async function deleteStoryVector(storyId: number): Promise<void> {
+    await checkCollection();
+    await qdrant.delete(COLLECTION_NAME, {
+        filter: {
+            must: [{ key: "storyId", match: { value: storyId.toString() } }]
+        }
+    })
+}
+
+
+export async function deleteSceneVector(sceneId: number): Promise<void> {
+    await checkCollection();
+    await qdrant.delete(COLLECTION_NAME, {
+        points: [sceneId]
+    })
+}
+

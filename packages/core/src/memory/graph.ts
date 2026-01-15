@@ -259,3 +259,33 @@ export async function getLocationHistory(
 export async function closeGraphConnection(): Promise<void> {
     await driver.close();
 }
+
+export async function deleteStoryGraph(storyId: number): Promise<void> {
+    const session = getSession();
+    try {
+        await driver.executeQuery(
+            `
+                MATCH (n {storyId: $storyId})
+                DETACH DELETE n
+            `,
+            { storyId }
+        )
+    } finally {
+        await session.close();
+    }
+}
+
+export async function deleteSceneGraph(storyId: number, sceneId: number): Promise<void> {
+    const session = getSession();
+    try {
+        await driver.executeQuery(
+            `
+                MATCH (e:Event {storyId: $storyId, sceneId: $sceneId})
+                DETACH DELETE e
+            `,
+            { storyId, sceneId }
+        );
+    } finally {
+        await session.close();
+    }
+}

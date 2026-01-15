@@ -5,6 +5,7 @@ import { db, eq, protagonists, scenes, stories } from "@once/database";
 import { protagonistSchema, scenesSchema, storySchema } from "@once/database/types";
 import { openSceneSchema } from "@once/shared";
 import { DebugCollector } from "@/debug";
+import { cleanupFailedStory } from "./cleanup";
 
 export interface CreateStoryProps {
     user: {
@@ -41,102 +42,112 @@ export async function createStory(props: CreateStoryProps, collector?: DebugColl
 
     const { user, title, description, genre, narrativeStance, storyMode, storyIdea, protagonist } = props;
 
-    const [newStory] = await db.insert(stories).values({
-        userId: user.id,
-        title,
-        description,
-        genre,
-        narrativeStance,
-        storyMode
-    }).returning();
+    let storyId: number | null = null;
 
-    // debug collector
-    collector?.add('db', 'insert:stories', newStory);
-
-    let protagonistId: number | undefined;
-
-    if (storyMode === "protagonist" && protagonist) {
-        const [newProtagonist] = await db.insert(protagonists).values({
-            storyId: newStory.id,
-            name: protagonist.name,
-            description: protagonist.description,
-            currentLocation: protagonist.location,
-            baseTraits: protagonist.traits,
-            currentTraits: protagonist.traits
+    try {
+        const [newStory] = await db.insert(stories).values({
+            userId: user.id,
+            title,
+            description,
+            genre,
+            narrativeStance,
+            storyMode
         }).returning();
 
-        protagonistId = newProtagonist.id;
-    }
+        storyId = newStory.id;
 
-    const systemPrompt = buildSystemPrompt(narrativeStance, storyMode);
-    const initPrompt = buildInitializePrompt({ title, genre, stance: narrativeStance, mode: storyMode, plot: storyIdea, protagonist });
+        // debug collector
+        collector?.add('db', 'insert:stories', newStory);
 
-    //debug collector
-    collector?.add('llm', 'prompts', { systemPrompt, initPrompt });
+        let protagonistId: number | undefined;
 
-    const openingScene = await generateStructured(systemPrompt, initPrompt, openSceneSchema, "opening_scene");
+        if (storyMode === "protagonist" && protagonist) {
+            const [newProtagonist] = await db.insert(protagonists).values({
+                storyId: newStory.id,
+                name: protagonist.name,
+                description: protagonist.description,
+                currentLocation: protagonist.location,
+                baseTraits: protagonist.traits,
+                currentTraits: protagonist.traits
+            }).returning();
 
-    //debug collector
-    collector?.add('llm', 'openingScene', openingScene);
+            protagonistId = newProtagonist.id;
+        }
 
-    if (!protagonist && openingScene.protagonistGenerated) {
-        const gen = openingScene.protagonistGenerated;
-        const [newProtagonist] = await db.insert(protagonists).values({
-            storyId: newStory.id,
-            name: gen.name,
-            description: gen.description,
-            currentLocation: gen.location,
-            baseTraits: gen.traits,
-            currentTraits: gen.traits
-        }).returning();
-
-        protagonistId = newProtagonist.id;
+        const systemPrompt = buildSystemPrompt(narrativeStance, storyMode);
+        const initPrompt = buildInitializePrompt({ title, genre, stance: narrativeStance, mode: storyMode, plot: storyIdea, protagonist });
 
         //debug collector
-        collector?.add('db', 'insert:protagonists', newProtagonist);
+        collector?.add('llm', 'prompts', { systemPrompt, initPrompt });
+
+        const openingScene = await generateStructured(systemPrompt, initPrompt, openSceneSchema, "opening_scene");
+
+        //debug collector
+        collector?.add('llm', 'openingScene', openingScene);
+
+        if (!protagonist && openingScene.protagonistGenerated) {
+            const gen = openingScene.protagonistGenerated;
+            const [newProtagonist] = await db.insert(protagonists).values({
+                storyId: newStory.id,
+                name: gen.name,
+                description: gen.description,
+                currentLocation: gen.location,
+                baseTraits: gen.traits,
+                currentTraits: gen.traits
+            }).returning();
+
+            protagonistId = newProtagonist.id;
+
+            //debug collector
+            collector?.add('db', 'insert:protagonists', newProtagonist);
+        }
+
+        await db.insert(scenes).values({
+            storyId: newStory.id,
+            turnNumber: 1,
+            userAction: "[STORY_START]",
+            narration: openingScene.narration,
+            protagonistId,
+        });
+
+        //debug collector
+        collector?.add('db', 'insert:scenes', { storyId: newStory.id, turnNumber: 1 })
+
+        const entities = await extractEntities(openingScene.narration, protagonist?.name || "protagonist")
+        // .then(entities => storySceneMemory(
+        //     "1",
+        //     openingScene.narration,
+        //     newStory.id,
+        //     1,
+        //     entities
+        // ))
+        // .catch(console.error);
+
+        collector?.add('llm', 'extractedEntities', entities);
+
+        await storySceneMemory(
+            "1",
+            openingScene.narration,
+            newStory.id,
+            1,
+            entities,
+            collector
+        )
+
+        const storyWithRelations = await db.query.stories.findFirst({
+            where: eq(stories.id, newStory.id),
+            with: {
+                protagonist: true,
+                scenes: true,
+            },
+        });
+
+        if (!storyWithRelations) throw new Error("Failed to fetch created story");
+
+        return { storyWithRelations };
+
+    } catch (error) {
+        if (storyId) await cleanupFailedStory(storyId);
+        throw error;
     }
-
-    await db.insert(scenes).values({
-        storyId: newStory.id,
-        turnNumber: 1,
-        userAction: "[STORY_START]",
-        narration: openingScene.narration,
-        protagonistId,
-    });
-
-    //debug collector
-    collector?.add('db', 'insert:scenes', { storyId: newStory.id, turnNumber: 1 })
-
-    const entities = await extractEntities(openingScene.narration, protagonist?.name || "protagonist")
-    // .then(entities => storySceneMemory(
-    //     "1",
-    //     openingScene.narration,
-    //     newStory.id,
-    //     1,
-    //     entities
-    // ))
-    // .catch(console.error);
-
-    collector?.add('llm', 'extractedEntities', entities);
-
-    await storySceneMemory(
-        "1",
-        openingScene.narration,
-        newStory.id,
-        1,
-        entities,
-        collector
-    )
-
-    const storyWithRelations = await db.query.stories.findFirst({
-        where: eq(stories.id, newStory.id),
-        with: {
-            protagonist: true,
-            scenes: true,
-        },
-    });
-
-    if (!storyWithRelations) throw new Error("Failed to fetch created story");
-
-    return { storyWithRelations };
 }
