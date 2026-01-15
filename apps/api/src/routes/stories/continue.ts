@@ -2,12 +2,11 @@ import { Hono } from "hono";
 import { db, eq, desc } from "@once/database";
 import { stories, scenes } from "@once/database/schema";
 import { success, error } from "@/lib/response";
-import { extractCodexEntries } from "@once/core";
 import { streamSSE } from "hono/streaming";
 import { fakeStream } from "@/lib/stream";
 import { requireAuth } from "@/middleware/auth";
 import { StreamCompleteData } from "@once/shared";
-import { continueStory, continueStream } from "@once/core";
+import { continueStory } from "@once/core";
 
 const continueRouter = new Hono();
 
@@ -87,7 +86,7 @@ continueRouter.post("/:id/continue/stream", requireAuth, async (c) => {
     return streamSSE(c, async (stream) => {
         try {
 
-            const { response, newScene } = await continueStream({ story, userAction });
+            const { response, scene: newScene } = await continueStory({ story, userAction });
 
             for await (const chunk of fakeStream(response.narration, 25)) {
                 await stream.writeSSE({ data: chunk, event: "narration" });
@@ -110,15 +109,6 @@ continueRouter.post("/:id/continue/stream", requireAuth, async (c) => {
                 data: JSON.stringify(completeData),
             });
 
-            try {
-                await extractCodexEntries(storyId, response.narration)
-                await stream.writeSSE({
-                    event: "codex",
-                    data: JSON.stringify({ complete: true })
-                })
-            } catch (err) {
-                console.error("Codex extraction failed:", err);
-            }
         } catch (err) {
             console.error("Streaming error:", err);
             await stream.writeSSE({ event: "error", data: "Failed to generate story" });

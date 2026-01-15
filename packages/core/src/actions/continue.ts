@@ -30,6 +30,23 @@ interface ContinueStoryResult {
         mood: string | null;
         protagonistId: number | null;
     };
+    response: {
+        narration: string;
+        protagonistUpdates: {
+            health: number | null;
+            energy: number | null;
+            location: string | null;
+            addTraits: string[] | null;
+            removeTraits: string[] | null;
+            addInventory: string[] | null;
+            removeInventory: string[] | null;
+            addScars: string[] | null;
+        } | null;
+        echoPlanted: {
+            description: string;
+            triggerCondition: string;
+        } | null;
+    },
     protagonistUpdates: {
         health: number | null;
         energy: number | null;
@@ -43,6 +60,11 @@ interface ContinueStoryResult {
     echoPlanted: boolean;
     narration: string;
 }
+
+// continue and continueStream endpoint have difference when extracting codex , this helps in skipping codex extraction for streaming enpoint so we can extract codex later when streaming of narration is done
+// interface ContinueStoryOptions {
+//     skipCodexExtraction?: boolean;
+// }
 
 
 export async function continueStory(props: ContinueStoryProps, collector?: DebugCollector): Promise<ContinueStoryResult> {
@@ -171,50 +193,29 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
         // debug collector
         collector?.add('db', 'insert:scenes', newScene);
 
-        await db.update(stories)
-            .set({
-                turnCount: newTurnNumber,
-                updatedAt: new Date(),
-            })
-            .where(eq(stories.id, storyId));
+        await Promise.all([
+            db.update(stories).set({ turnCount: newTurnNumber, updatedAt: new Date() }).where(eq(stories.id, storyId)),
+            ...triggeredCharacters.map(character => markCharacterIntroduced(character.id, newScene.id))
+        ])
 
         collector?.add('db', 'update:stories', { storyId, turnCount: newTurnNumber });
 
-        for (const char of triggeredCharacters) {
-            await markCharacterIntroduced(char.id, newScene.id);
-        }
-
         const entities = await extractEntities(response.narration, activeProtagonist?.name || "protagonist")
-        // .then(entities => storySceneMemory(
-        //     newScene.id.toString(),
-        //     response.narration,
-        //     storyId,
-        //     newTurnNumber,
-        //     entities
-        // ))
-        // .catch(console.error);
-
 
         // debug collector
         collector?.add('llm', 'extractedEntities', entities);
 
         await storySceneMemory(newScene.id.toString(), response.narration, storyId, newTurnNumber, entities, collector);
 
-        await resolveEchoes(triggeredEchoes.map(e => e.id), newScene.id, collector);
-
-        if (response.echoPlanted) {
-            await plantEcho(
-                storyId,
-                newScene.id,
-                response.echoPlanted.description,
-                response.echoPlanted.triggerCondition
-            );
-        }
-
-        await extractCodexEntries(storyId, response.narration, collector)
+        await Promise.all([
+            resolveEchoes(triggeredEchoes.map(e => e.id), newScene.id, collector),
+            response.echoPlanted ? plantEcho(storyId, newScene.id, response.echoPlanted.description, response.echoPlanted.triggerCondition) : Promise.resolve(),
+            extractCodexEntries(storyId, response.narration, collector)
+        ])
 
         return {
             scene: newScene,
+            response,
             protagonistUpdates: response.protagonistUpdates,
             echoPlanted: response.echoPlanted ? true : false,
             narration: response.narration

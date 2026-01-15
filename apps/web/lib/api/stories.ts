@@ -39,8 +39,7 @@ export const storiesApi = {
         id: string,
         action: string,
         onChunk: (text: string) => void,
-        onComplete: (data: StreamCompleteData) => void,
-        onCodex: (data: { complete: boolean }) => void
+        onComplete: (data: StreamCompleteData) => void
     ) => {
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -78,9 +77,6 @@ export const storiesApi = {
                                     break;
                                 case "complete":
                                     onComplete(JSON.parse(rawData));
-                                    break;
-                                case "codex":
-                                    onCodex(JSON.parse(rawData));
                                     break;
                             }
 

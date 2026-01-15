@@ -94,13 +94,9 @@ export function StoryInterface({ storyId }: { storyId: string }) {
                 }
 
                 setPendingScene(null);
-            },
-            (codexData) => {
-                if (codexData.complete) {
-                    storiesApi.getCodex(storyId).then(res => {
-                        if (res.data) setCodex(res.data)
-                    })
-                }
+
+                const res = await storiesApi.getCodex(storyId);
+                if (res.data) setCodex(res.data);
             }
         )
         setIsContinuing(false);
