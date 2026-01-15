@@ -10,11 +10,9 @@ The application features a memory system that tracks characters, locations, rela
 ## Prerequisites
 
 Before starting, ensure you have:
-1. Node.js 18+ installed
-2. Bun package manager installed
-3. Docker and Docker Compose installed
-4. OpenAI API key
-5. PostgreSQL database (local or cloud)
+1. Bun installed
+2. Docker and Docker Compose installed
+3. An LLM API key (OpenAI or Google)
 
 
 ## Local Development Setup
@@ -35,13 +33,36 @@ Copy the example environment file and fill in your values:
 cp .example.env .env
 ```
 
-Required environment variables:
-```
-DATABASE_URL=postgres://user:password@localhost:5432/once
-OPENAI_API_KEY=your-openai-key
-BETTER_AUTH_SECRET=generate-with-openssl-rand-base64-32
+#### Required Variables
+
+```bash
+# Database (uses Docker-provided Postgres)
+DATABASE_URL="postgresql://once:once_password_123@localhost:5432/once"
+
+# Auth secret (generate with: openssl rand -base64 32)
+BETTER_AUTH_SECRET=your-generated-secret
+BETTER_AUTH_URL="http://localhost:3001"
+
+# Memory mode: "local" for Docker services, "cloud" for hosted Qdrant/Neo4j
 MEMORY_MODE=local
 ```
+
+#### LLM Provider (choose one)
+
+**Option A: OpenAI**
+```bash
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_LLM_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+```
+
+**Option B: Google Gemini**
+```bash
+LLM_PROVIDER=google
+GOOGLE_API_KEY=your-google-api-key
+GOOGLE_LLM_MODEL=gemini-3-flash-preview
+GOOGLE_EMBEDDING_MODEL=gemini-embedding-001
 
 ### 3. Start Infrastructure
 
