@@ -27,7 +27,7 @@ function getGoogleGenAi(): GoogleGenAI {
     return _googleai;
 }
 
-const LLM_MODEL = process.env.GOOGLE_LLM_MODEL || 'gemini-2.0-flash';
+const LLM_MODEL = process.env.GOOGLE_LLM_MODEL || 'gemini-3-flash-preview';
 const EMBEDDING_MODEL = process.env.GOOGLE_EMBEDDING_MODEL || 'gemini-embedding-001'
 
 export const googleLLM: LLMProvider = {
