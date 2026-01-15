@@ -1,11 +1,12 @@
 import { extractEntities } from "@/extraction";
-import { buildInitializePrompt, buildSystemPrompt, generateStructured } from "@/llm";
+import { buildInitializePrompt, buildSystemPrompt, generateStructuredWithTracking } from "@/llm";
 import { storySceneMemory } from "@/memory";
 import { db, eq, protagonists, scenes, stories } from "@once/database";
 import { protagonistSchema, scenesSchema, storySchema } from "@once/database/types";
 import { openSceneSchema } from "@once/shared";
 import { DebugCollector } from "@/debug";
 import { cleanupFailedStory } from "./cleanup";
+import { checkCredits, deductCredits, UsageCollector } from "@/credits";
 
 export interface CreateStoryProps {
     user: {
@@ -36,15 +37,21 @@ interface CreateStoryResult {
         protagonist: Array<protagonistSchema>,
         scenes: Array<scenesSchema>
     };
+    creditsUsed?: number;
+    creditsRemaining?: number;
 }
 
 export async function createStory(props: CreateStoryProps, collector?: DebugCollector): Promise<CreateStoryResult> {
 
     const { user, title, description, genre, narrativeStance, storyMode, storyIdea, protagonist } = props;
 
+    const usageCollector = process.env.DEV_MODE === "true" ? undefined : new UsageCollector();
     let storyId: number | null = null;
 
     try {
+
+        if (usageCollector) await checkCredits(user.id);
+
         const [newStory] = await db.insert(stories).values({
             userId: user.id,
             title,
@@ -80,7 +87,7 @@ export async function createStory(props: CreateStoryProps, collector?: DebugColl
         //debug collector
         collector?.add('llm', 'prompts', { systemPrompt, initPrompt });
 
-        const openingScene = await generateStructured(systemPrompt, initPrompt, openSceneSchema, "opening_scene");
+        const openingScene = await generateStructuredWithTracking(systemPrompt, initPrompt, openSceneSchema, "opening_scene", usageCollector);
 
         //debug collector
         collector?.add('llm', 'openingScene', openingScene);
@@ -113,7 +120,7 @@ export async function createStory(props: CreateStoryProps, collector?: DebugColl
         //debug collector
         collector?.add('db', 'insert:scenes', { storyId: newStory.id, turnNumber: 1 })
 
-        const entities = await extractEntities(openingScene.narration, protagonist?.name || "protagonist")
+        const entities = await extractEntities(openingScene.narration, protagonist?.name || "protagonist", usageCollector)
         // .then(entities => storySceneMemory(
         //     "1",
         //     openingScene.narration,
@@ -131,7 +138,8 @@ export async function createStory(props: CreateStoryProps, collector?: DebugColl
             newStory.id,
             1,
             entities,
-            collector
+            collector,
+            usageCollector
         )
 
         const storyWithRelations = await db.query.stories.findFirst({
@@ -142,9 +150,24 @@ export async function createStory(props: CreateStoryProps, collector?: DebugColl
             },
         });
 
+        let creditsRemaining: number | undefined;
+
+        if (usageCollector) {
+            const creditsUsed = usageCollector.getCredits();
+            const usage = usageCollector.getUsage();
+
+            creditsRemaining = await deductCredits({
+                userId: user.id,
+                storyId,
+                sceneId: 1,
+                creditsUsed,
+                usage
+            })
+        }
+
         if (!storyWithRelations) throw new Error("Failed to fetch created story");
 
-        return { storyWithRelations };
+        return { storyWithRelations, creditsUsed: usageCollector?.getCredits(), creditsRemaining };
 
     } catch (error) {
         if (storyId) await cleanupFailedStory(storyId);

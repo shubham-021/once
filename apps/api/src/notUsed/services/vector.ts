@@ -12,7 +12,7 @@ const EMBEDDING_DIMENSIONS = 1536;
 const openai = new OpenAI();
 
 function createQdrantClient(): QdrantClient {
-    if (process.env.MEMORY_MODE === "cloud") {
+    if (process.env.DEV_MODE === "true") {
         return new QdrantClient({
             url: process.env.QDRANT_URL,
             apiKey: process.env.QDRANT_API_KEY

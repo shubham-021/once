@@ -6,6 +6,14 @@ import { db, eq, scenes, stories } from "@once/database";
 import { deferredCharactersSchema, echoesSchema, protagonistSchema, scenesSchema, storySchema } from "@once/database/types";
 import { DebugCollector } from "@/debug";
 import { cleanupFailedScene } from "./cleanup";
+import { UsageCollector, deductCredits, checkCredits, InsufficientCreditsError } from "@/credits";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+import { config } from "dotenv";
+
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+config({ path: resolve(__dirname, "../../../../.env") });
 
 
 interface ContinueStoryProps {
@@ -59,6 +67,7 @@ interface ContinueStoryResult {
     } | null;
     echoPlanted: boolean;
     narration: string;
+    creditsUsed?: number;
 }
 
 // continue and continueStream endpoint have difference when extracting codex , this helps in skipping codex extraction for streaming enpoint so we can extract codex later when streaming of narration is done
@@ -72,50 +81,60 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
     const { story, userAction } = props;
     const storyId = story.id;
 
+    const usageCollector = process.env.DEV_MODE === "true" ? undefined : new UsageCollector();
+
     let sceneId: number | null = null;
 
     try {
+
+        if (usageCollector) await checkCredits(story.userId);
 
         const activeProtagonist = story.protagonist.find(p => p.isActive);
 
         const pendingEchoes = story.echoes.filter(e => e.status === "pending");
         const lastScene = story.scenes[0];
 
-        const triggeredEchoes = await evaluateEchoes({
-            storyId,
-            pendingEchoes: pendingEchoes.map(e => ({
-                id: e.id,
-                description: e.description,
-                triggerCondition: e.triggerCondition,
-            })),
-            protagonistLocation: activeProtagonist?.currentLocation || "",
-            protagonistState: activeProtagonist
-                ? `Health: ${activeProtagonist.health}, Energy: ${activeProtagonist.energy}`
-                : "",
-            userAction,
-            recentNarration: lastScene?.narration || "",
-        });
+        const triggeredEchoes = await evaluateEchoes(
+            {
+                storyId,
+                pendingEchoes: pendingEchoes.map(e => ({
+                    id: e.id,
+                    description: e.description,
+                    triggerCondition: e.triggerCondition,
+                })),
+                protagonistLocation: activeProtagonist?.currentLocation || "",
+                protagonistState: activeProtagonist
+                    ? `Health: ${activeProtagonist.health}, Energy: ${activeProtagonist.energy}`
+                    : "",
+                userAction,
+                recentNarration: lastScene?.narration || "",
+            },
+            usageCollector
+        );
 
         // debug collector
         collector?.add('llm', 'triggeredEchoes', triggeredEchoes);
 
         const pendingCharacters = story.deferredCharacters.filter(c => !c.introduced);
-        const triggeredCharacters = await evaluateDeferredCharacters({
-            storyId,
-            pendingCharacters: pendingCharacters.map(c => ({
-                id: c.id,
-                name: c.name,
-                description: c.description,
-                role: c.role,
-                triggerCondition: c.triggerCondition,
-            })),
-            protagonistLocation: activeProtagonist?.currentLocation || "",
-            protagonistState: activeProtagonist
-                ? `Health: ${activeProtagonist.health}, Energy: ${activeProtagonist.energy}`
-                : "",
-            userAction,
-            recentNarration: lastScene?.narration || "",
-        });
+        const triggeredCharacters = await evaluateDeferredCharacters(
+            {
+                storyId,
+                pendingCharacters: pendingCharacters.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    description: c.description,
+                    role: c.role,
+                    triggerCondition: c.triggerCondition,
+                })),
+                protagonistLocation: activeProtagonist?.currentLocation || "",
+                protagonistState: activeProtagonist
+                    ? `Health: ${activeProtagonist.health}, Energy: ${activeProtagonist.energy}`
+                    : "",
+                userAction,
+                recentNarration: lastScene?.narration || "",
+            },
+            usageCollector
+        );
 
         //debug collector
         collector?.add('llm', 'triggeredCharacters', triggeredCharacters);
@@ -135,28 +154,31 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
         // debug collector
         // collector?.add('context', '', factualKnowledge);
 
-        const response = await generateContinuation({
-            narrativeStance: story.narrativeStance,
-            storyMode: story.storyMode,
-            protagonist: activeProtagonist ? {
-                name: activeProtagonist.name,
-                description: activeProtagonist.description,
-                traits: activeProtagonist.currentTraits || [],
-                health: activeProtagonist.health,
-                energy: activeProtagonist.energy,
-                location: activeProtagonist.currentLocation,
-                inventory: activeProtagonist.inventory || [],
-                scars: activeProtagonist.scars || [],
-            } : undefined,
-            recentScenes: story.scenes.reverse().map(s => ({
-                userAction: s.userAction,
-                narration: s.narration,
-            })),
-            userAction,
-            triggeredEchoes: triggeredEchoes.map(e => ({ description: e.description })),
-            factualKnowledge,
-            introducedCharacters: triggeredCharacters.map(c => ({ name: c.name, description: c.description, role: c.role }))
-        });
+        const response = await generateContinuation(
+            {
+                narrativeStance: story.narrativeStance,
+                storyMode: story.storyMode,
+                protagonist: activeProtagonist ? {
+                    name: activeProtagonist.name,
+                    description: activeProtagonist.description,
+                    traits: activeProtagonist.currentTraits || [],
+                    health: activeProtagonist.health,
+                    energy: activeProtagonist.energy,
+                    location: activeProtagonist.currentLocation,
+                    inventory: activeProtagonist.inventory || [],
+                    scars: activeProtagonist.scars || [],
+                } : undefined,
+                recentScenes: story.scenes.reverse().map(s => ({
+                    userAction: s.userAction,
+                    narration: s.narration,
+                })),
+                userAction,
+                triggeredEchoes: triggeredEchoes.map(e => ({ description: e.description })),
+                factualKnowledge,
+                introducedCharacters: triggeredCharacters.map(c => ({ name: c.name, description: c.description, role: c.role }))
+            },
+            usageCollector
+        );
 
         // debug collector
         collector?.add('llm', 'continuation', response);
@@ -200,25 +222,39 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
 
         collector?.add('db', 'update:stories', { storyId, turnCount: newTurnNumber });
 
-        const entities = await extractEntities(response.narration, activeProtagonist?.name || "protagonist")
+        const entities = await extractEntities(response.narration, activeProtagonist?.name || "protagonist", usageCollector)
 
         // debug collector
         collector?.add('llm', 'extractedEntities', entities);
 
-        await storySceneMemory(newScene.id.toString(), response.narration, storyId, newTurnNumber, entities, collector);
+        await storySceneMemory(newScene.id.toString(), response.narration, storyId, newTurnNumber, entities, collector, usageCollector);
 
         await Promise.all([
             resolveEchoes(triggeredEchoes.map(e => e.id), newScene.id, collector),
             response.echoPlanted ? plantEcho(storyId, newScene.id, response.echoPlanted.description, response.echoPlanted.triggerCondition) : Promise.resolve(),
-            extractCodexEntries(storyId, response.narration, collector)
+            extractCodexEntries(storyId, response.narration, collector, usageCollector)
         ])
+
+        if (usageCollector) {
+            const creditsUsed = usageCollector.getCredits();
+            const usage = usageCollector.getUsage();
+
+            await deductCredits({
+                userId: story.userId,
+                storyId,
+                sceneId: newScene.id,
+                creditsUsed,
+                usage
+            })
+        }
 
         return {
             scene: newScene,
             response,
             protagonistUpdates: response.protagonistUpdates,
             echoPlanted: response.echoPlanted ? true : false,
-            narration: response.narration
+            narration: response.narration,
+            creditsUsed: usageCollector?.getCredits(),
         };
 
     } catch (error) {

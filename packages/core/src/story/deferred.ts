@@ -1,8 +1,9 @@
 import { db, eq } from "@once/database";
 import { deferredCharacters } from "@once/database/schema";
-import { generateStructured } from "../llm";
+import { generateStructured, generateStructuredWithTracking } from "../llm";
 import { buildDeferredCharPrompt } from "../llm/prompts/deferred";
 import { deferredCharEvalSchema } from "@once/shared/schemas";
+import { UsageCollector } from "@/credits/collector";
 
 interface DeferredCharEvalContext {
     storyId: number;
@@ -19,16 +20,17 @@ interface DeferredCharEvalContext {
     recentNarration: string;
 }
 
-export async function evaluateDeferredCharacters(ctx: DeferredCharEvalContext) {
+export async function evaluateDeferredCharacters(ctx: DeferredCharEvalContext, usageCollector?: UsageCollector) {
     if (ctx.pendingCharacters.length === 0) return [];
 
     const prompt = buildDeferredCharPrompt(ctx);
 
-    const result = await generateStructured(
+    const result = await generateStructuredWithTracking(
         "You evaluate when deferred characters should be introduced into a story",
         prompt,
         deferredCharEvalSchema,
-        "deferred_char_eval"
+        "deferred_char_eval",
+        usageCollector
     );
 
     return ctx.pendingCharacters.filter(c => result.triggeredCharacterIds.includes(c.id));

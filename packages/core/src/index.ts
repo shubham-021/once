@@ -4,4 +4,5 @@ export * from './story';
 export * from './debug';
 export * from './extraction';
 export * from './memory';
-export * from './actions'
+export * from './actions';
+export * from './credits';

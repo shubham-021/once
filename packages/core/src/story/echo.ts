@@ -1,9 +1,10 @@
 import { db, eq, inArray } from "@once/database";
 import { echoes } from "@once/database/schema";
-import { generateStructured } from "../llm/generate";
+import { generateStructured, generateStructuredWithTracking } from "../llm/generate";
 import { buildEchoEvalPrompt } from "../llm/prompts/echo";
 import { echoEvalSchema } from "@once/shared/schemas";
 import { DebugCollector } from "@/debug";
+import { UsageCollector } from "@/credits/collector";
 
 interface EchoEvalContext {
     storyId: number;
@@ -18,7 +19,7 @@ interface EchoEvalContext {
     recentNarration: string;
 }
 
-export async function evaluateEchoes(ctx: EchoEvalContext): Promise<typeof ctx.pendingEchoes> {
+export async function evaluateEchoes(ctx: EchoEvalContext, usageCollector?: UsageCollector): Promise<typeof ctx.pendingEchoes> {
     if (ctx.pendingEchoes.length === 0) return [];
 
     const prompt = buildEchoEvalPrompt({
@@ -31,11 +32,12 @@ export async function evaluateEchoes(ctx: EchoEvalContext): Promise<typeof ctx.p
 
     if (!prompt) return [];
 
-    const result = await generateStructured(
+    const result = await generateStructuredWithTracking(
         "You evaluate story echoes to decide which should trigger",
         prompt,
         echoEvalSchema,
-        "echo_eval"
+        "echo_eval",
+        usageCollector
     );
 
     return ctx.pendingEchoes.filter(e => result.triggeredEchoIds.includes(e.id));

@@ -1,9 +1,10 @@
-import { generateStructured } from "../llm/generate";
+import { generateStructured, generateStructuredWithTracking } from "../llm/generate";
 import { buildSystemPrompt } from "../llm/prompts/system";
 import { buildInitializePrompt } from "../llm/prompts/initialize";
 import { buildContinuePrompt } from "../llm/prompts/continue";
 import { openSceneSchema, sceneResponseSchema } from "@once/shared/schemas";
 import type { NarrativeStance, StoryMode } from "@once/shared/schemas";
+import { UsageCollector } from "@/credits/collector";
 
 interface StoryContext {
     narrativeStance: NarrativeStance;
@@ -46,7 +47,7 @@ interface ContinueContext extends StoryContext {
     }>;
 }
 
-export async function generateOpeningScene(ctx: InitializeContext) {
+export async function generateOpeningScene(ctx: InitializeContext, usageCollector?: UsageCollector) {
     const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode);
     const initPrompt = buildInitializePrompt({
         title: ctx.title,
@@ -56,15 +57,16 @@ export async function generateOpeningScene(ctx: InitializeContext) {
         protagonist: ctx.protagonist,
     });
 
-    return generateStructured(
+    return generateStructuredWithTracking(
         systemPrompt,
         initPrompt,
         openSceneSchema,
-        "opening_scene"
+        "opening_scene",
+        usageCollector
     );
 }
 
-export async function generateContinuation(ctx: ContinueContext) {
+export async function generateContinuation(ctx: ContinueContext, usageCollector?: UsageCollector) {
     const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode);
 
     const continuePrompt = buildContinuePrompt({
@@ -78,10 +80,11 @@ export async function generateContinuation(ctx: ContinueContext) {
         introducedCharacters: ctx.introducedCharacters
     });
 
-    return generateStructured(
+    return generateStructuredWithTracking(
         systemPrompt,
         continuePrompt,
         sceneResponseSchema,
-        "scene_response"
+        "scene_response",
+        usageCollector
     );
 }

@@ -1,11 +1,12 @@
 import { db, eq } from "@once/database";
 import { codexEntries } from "@once/database/schema";
-import { generateStructured } from "../llm/generate";
+import { generateStructured, generateStructuredWithTracking } from "../llm/generate";
 import { buildCodexExtractionPrompt } from "../llm/prompts/codex";
 import { CodexExtractionResponse, codexExtractionSchema } from "@once/shared/schemas";
 import { DebugCollector } from "@/debug";
+import { UsageCollector } from "@/credits/collector";
 
-export async function extractCodexEntries(storyId: number, narration: string, collector?: DebugCollector) {
+export async function extractCodexEntries(storyId: number, narration: string, collector?: DebugCollector, usageCollector?: UsageCollector) {
     const existingEntries = await db.query.codexEntries.findMany({
         where: eq(codexEntries.storyId, storyId)
     })
@@ -18,11 +19,12 @@ export async function extractCodexEntries(storyId: number, narration: string, co
     // debug collector
     collector?.add('llm', 'codexExtractionPrompt', prompt);
 
-    const extraction = await generateStructured(
+    const extraction = await generateStructuredWithTracking(
         "You extract notable entities from story narration for an encyclopedia.",
         prompt,
         codexExtractionSchema,
-        "codex_extraction"
+        "codex_extraction",
+        usageCollector
     );
 
     // debug collector

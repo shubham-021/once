@@ -1,4 +1,4 @@
-import { storeSceneVector, searchSimilarScenes } from "./vector";
+import { storeSceneVector, searchSimilarScenes, storeSceneVectorWithTracking } from "./vector";
 import { type ExtractedEntities } from "../llm/prompts/extract";
 import {
     storeCharacter,
@@ -17,6 +17,7 @@ import {
 import { db, eq, desc } from "@once/database";
 import { scenes } from "@once/database";
 import { DebugCollector } from "@/debug";
+import { UsageCollector } from "@/credits/collector";
 
 // export interface ExtractedEntities {
 //     characters: Array<{
@@ -54,10 +55,11 @@ export async function storySceneMemory(
     storyId: number,
     turnNumber: number,
     entities: ExtractedEntities,
-    collector?: DebugCollector
+    collector?: DebugCollector,
+    usageCollector?: UsageCollector
 ) {
     try {
-        await storeSceneVector(sceneId, narration, storyId);
+        await storeSceneVectorWithTracking(sceneId, narration, storyId, usageCollector);
 
         for (const character of entities.characters) {
 

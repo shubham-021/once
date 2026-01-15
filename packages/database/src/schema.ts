@@ -194,6 +194,58 @@ export const storySuggestions = pgTable("story_suggestions", {
     createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const creditTransactionTypeEnum = pgEnum("credit_transaction_type", [
+    "purchase",
+    "usage",
+    "refund",
+    "bonus"
+]);
+
+
+export const userCredits = pgTable("user_credits", {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull().unique(),
+    balance: integer("balance").default(0).notNull(),
+    lifetimePurchased: integer("lifetime_purchased").default(0).notNull(),
+    lifetimeUsed: integer("lifetime_used").default(0).notNull(),
+    lastPurchaseAt: timestamp("last_purchase_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const creditTransactions = pgTable("credit_transactions", {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    type: creditTransactionTypeEnum("type").notNull(),
+    amount: integer("amount").notNull(),
+    balanceAfter: integer("balance_after").notNull(),
+    paymentId: text("payment_id"),
+    packageName: varchar("package_name", { length: 50 }),
+    amountPaid: integer("amount_paid"),
+    storyId: integer("story_id"),
+    sceneId: integer("scene_id"),
+    claudeInputTokens: integer("claude_input_tokens"),
+    claudeOutputTokens: integer("claude_output_tokens"),
+    gptInputTokens: integer("gpt_input_tokens"),
+    gptOutputTokens: integer("gpt_output_tokens"),
+    embeddingTokens: integer("embedding_tokens"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userCreditsRelations = relations(userCredits, ({ one }) => ({
+    user: one(user, {
+        fields: [userCredits.userId],
+        references: [user.id]
+    })
+}));
+
+export const creditTransactionsRelations = relations(creditTransactions, ({ one }) => ({
+    story: one(stories, {
+        fields: [creditTransactions.storyId],
+        references: [stories.id]
+    })
+}));
+
 export const storiesRelations = relations(stories, ({ one, many }) => ({
     protagonist: many(protagonists),
     scenes: many(scenes),

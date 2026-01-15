@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
-import type { LLMProvider, EmbeddingProvider } from "./types";
+import type { LLMProvider, EmbeddingProvider, LLMResponse } from "./types";
 import { config } from "dotenv";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
@@ -73,6 +73,40 @@ export const openaiLLM: LLMProvider = {
                 yield event.delta
             }
         }
+    },
+
+    async generateTextWithUsage(instructions: string, input: string): Promise<LLMResponse<string>> {
+        const response = await getOpenAI().responses.create({
+            model: LLM_MODEL,
+            instructions,
+            input
+        })
+
+        return {
+            result: response.output_text,
+            usage: {
+                inputTokens: response.usage?.input_tokens || 0,
+                outputTokens: response.usage?.output_tokens || 0
+            }
+        }
+    },
+
+    async generateStructuredWithUsage<T>(instructions: string, input: string, schema: z.ZodSchema<T>, schemaName: string = "response"): Promise<LLMResponse<T>> {
+
+        const response = await getOpenAI().responses.parse({
+            model: LLM_MODEL,
+            instructions,
+            input,
+            text: { format: zodTextFormat(schema, schemaName) }
+        });
+
+        return {
+            result: response.output_parsed as T,
+            usage: {
+                inputTokens: response.usage?.input_tokens || 0,
+                outputTokens: response.usage?.output_tokens || 0
+            }
+        };
     }
 }
 
@@ -87,5 +121,19 @@ export const openaiEmbedding: EmbeddingProvider = {
             dimensions: 1536
         })
         return response.data[0].embedding
+    },
+
+    async embedWithUsage(text: string): Promise<{ embedding: number[]; tokens: number }> {
+
+        const response = await getOpenAI().embeddings.create({
+            model: EMBEDDING_MODEL,
+            input: text,
+            dimensions: 1536
+        });
+
+        return {
+            embedding: response.data[0].embedding,
+            tokens: response.usage?.total_tokens || 0
+        };
     }
 }

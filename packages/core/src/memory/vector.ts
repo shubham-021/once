@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { embedder } from "@/llm/providers";
+import { UsageCollector } from "@/credits/collector";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, "../../../../.env") });
@@ -11,7 +12,7 @@ const COLLECTION_NAME = "once_scenes";
 const EMBEDDING_DIMENSIONS = embedder.dimensions;
 
 function createQdrantClient(): QdrantClient {
-    if (process.env.MEMORY_MODE === "cloud") {
+    if (process.env.DEV_MODE === "false") {
         return new QdrantClient({
             url: process.env.QDRANT_URL,
             apiKey: process.env.QDRANT_API_KEY
@@ -66,6 +67,34 @@ export async function storeSceneVector(sceneId: string, narration: string, story
             }
         ]
     })
+}
+
+export async function storeSceneVectorWithTracking(sceneId: string, narration: string, storyId: number, collector?: UsageCollector): Promise<void> {
+    await checkCollection();
+
+    let vector: number[];
+
+    if (collector) {
+        const { embedding, tokens } = await embedder.embedWithUsage(narration);
+        collector.addEmbeddingUsage(tokens);
+        vector = embedding;
+    } else {
+        vector = await embed(narration);
+    }
+
+    await qdrant.upsert(COLLECTION_NAME, {
+        points: [
+            {
+                id: parseInt(sceneId),
+                vector,
+                payload: {
+                    storyId: storyId.toString(),
+                    narration,
+                    createdAt: new Date().toISOString()
+                }
+            }
+        ]
+    });
 }
 
 export async function searchSimilarScenes(query: string, storyId: number, limit: number = 5): Promise<Array<{ sceneId: string; narration: string; score: number }>> {
