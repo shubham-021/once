@@ -11,7 +11,9 @@ export default function CreditsSuccessPage() {
 
     useEffect(() => {
         fetchCredits();
-        toast.success("Purchase successful! Credits added to your account.");
+        toast.success("Purchase successful! Credits added to your account.", {
+            id: "payment-sucess" // so strict mode doesnt render it twice
+        });
 
         router.replace("/library");
     }, [fetchCredits, router]);
