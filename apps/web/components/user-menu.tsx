@@ -9,6 +9,7 @@ import {
   BookOpen,
   Compass,
   PlusCircle,
+  Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RadialMenu, RadialMenuItem } from "@/components/ui/radial-menu";
@@ -49,6 +50,13 @@ const navItems: RadialMenuItem[] = [
     ),
     href: "/profile",
   },
+  {
+    title: "Credits",
+    icon: (className: string) => (
+      <Coins className={cn("h-full w-full", className)} />
+    ),
+    href: "/credits"
+  }
 ];
 
 export function UserMenu() {

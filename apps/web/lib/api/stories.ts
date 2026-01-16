@@ -39,7 +39,8 @@ export const storiesApi = {
         id: string,
         action: string,
         onChunk: (text: string) => void,
-        onComplete: (data: StreamCompleteData) => void
+        onComplete: (data: StreamCompleteData) => void,
+        onError?: (error: { code: string; balance?: number }) => void
     ) => {
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -49,6 +50,12 @@ export const storiesApi = {
                     credentials: "include",
                     body: JSON.stringify({ action })
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (onError) onError(errorData.error);
+                    return reject(new Error(errorData.error?.code))
+                }
 
                 const reader = response.body?.getReader();
                 const decoder = new TextDecoder();
@@ -78,6 +85,10 @@ export const storiesApi = {
                                 case "complete":
                                     onComplete(JSON.parse(rawData));
                                     break;
+                                case "error":
+                                    const errorData = JSON.parse(rawData);
+                                    if (onError) onError({ code: errorData.code });
+                                    return reject(new Error(errorData.code));
                             }
 
                             currentEvent = "";

@@ -32,6 +32,7 @@ import { FontProvider } from "@/components/font-provider";
 import { NavHeader } from "@/components/nav-header";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
+import { CreditsProvider } from "@/components/credits-provider";
 
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair", display: "swap" });
 const cormorant = Cormorant_Garamond({ subsets: ["latin"], variable: "--font-cormorant", weight: ["400", "500", "600"], display: "swap" });
@@ -82,17 +83,19 @@ export default function RootLayout({
           <LenisProvider>
             {/* <EmberCursor /> */}
             <FontProvider>
-              <Toaster
-                position="bottom-right"
-                toastOptions={{
-                  style: {
-                    background: 'var(--surface)',
-                    border: '1px solid var(--line)',
-                    color: 'var(--foreground)',
-                  },
-                }}
-              />
-              {children}
+              <CreditsProvider>
+                <Toaster
+                  position="bottom-right"
+                  toastOptions={{
+                    style: {
+                      background: 'var(--surface)',
+                      border: '1px solid var(--line)',
+                      color: 'var(--foreground)',
+                    },
+                  }}
+                />
+                {children}
+              </CreditsProvider>
             </FontProvider>
           </LenisProvider>
         </ThemeProvider>

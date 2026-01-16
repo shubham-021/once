@@ -2,11 +2,15 @@ export const ERROR_CODES = {
     // Validation errors (400)
     VALIDATION_ERROR: { status: 400, message: "Validation failed" },
     INVALID_ID: { status: 400, message: "Invalid ID format" },
+    INVALID_USER_ID: { status: 400, message: "Invalid User ID" },
     MISSING_FIELD: { status: 400, message: "Required field missing" },
 
     // Authentication errors (401)
     UNAUTHORIZED: { status: 401, message: "Authentication required" },
     INVALID_TOKEN: { status: 401, message: "Invalid or expired token" },
+
+    // Insufficient Balance (402)
+    INSUFFICIENT_BALANCE: { status: 402, message: "You don't have enough credits for this request" },
 
     // Authorization errors (403)
     // FORBIDDEN: { status: 403, message: "Access denied" },

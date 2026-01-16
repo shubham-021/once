@@ -7,6 +7,7 @@ export type ApiResponse<T> = {
     error?: {
         message: string;
         code: ErrorCode;
+        data?: any;
     };
     meta?: {
         page?: number;
@@ -19,10 +20,10 @@ export function success<T>(c: Context, data: T, status: ContentfulStatusCode = 2
     return c.json({ data } as ApiResponse<T>, status);
 }
 
-export function error(c: Context, code: ErrorCode, customMessage?: string) {
+export function error(c: Context, code: ErrorCode, customMessage?: string, data?: any) {
     const status = getErrorStatus(code) as ContentfulStatusCode;
     const message = customMessage || getErrorMessage(code);
-    return c.json({ error: { message, code } } as ApiResponse<never>, status);
+    return c.json({ error: { message, code, data } } as ApiResponse<never>, status);
 }
 
 export function paginated<T>(c: Context, data: T[], meta: { page: number; pageSize: number; total: number }) {

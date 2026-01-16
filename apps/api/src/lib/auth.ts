@@ -1,10 +1,24 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@once/database";
+import { creditTransactions, db, eq } from "@once/database";
 import { config } from "dotenv";
 import { user, session, account, verification } from "@once/database";
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import Dodopayments from "dodopayments";
+import { addCredits } from "@once/core";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+import { CREDITS_MAP } from "./rates";
 
-config({ path: "../../../../.env" });
+const __dirname = dirname(fileURLToPath(import.meta.url))
+config({ path: resolve(__dirname, "../../../../.env") });
+
+// console.log(process.env.DODO_PAYMENT_API_KEY)
+
+const dodoClient = new Dodopayments({
+    bearerToken: process.env.DODO_PAYMENT_API_KEY,
+    environment: "live_mode"
+})
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -16,6 +30,67 @@ export const auth = betterAuth({
     },
     trustedOrigins: [
         "http://localhost:3000"
+    ],
+    plugins: [
+        dodopayments({
+            client: dodoClient,
+            createCustomerOnSignUp: true,
+            use: [
+                checkout({
+                    products: [
+                        { productId: process.env.STARTER_PRODUCT_ID!, slug: "starter" },
+                        { productId: process.env.EXPLORER_PRODUCT_ID!, slug: "explorer" },
+                        { productId: process.env.STORYTELLER_PRODUCT_ID!, slug: "storyteller" },
+                        { productId: process.env.AUTHOR_PRODUCT_ID!, slug: "author" },
+                        { productId: process.env.TEST_PRODUCT_ID!, slug: "test" }
+                    ],
+                    successUrl: "http://localhost:3000/credits/success",
+                    authenticatedUsersOnly: true
+                }),
+                portal(),
+                webhooks({
+                    webhookKey: process.env.DODO_WEBHOOK_SECRET!,
+                    onPaymentSucceeded: async (payload) => {
+                        const data = payload.data;
+
+                        if (!data.product_cart) throw new Error("No product id");
+
+                        const productId = data.product_cart[0].product_id;
+
+                        const credits = CREDITS_MAP[productId];
+
+                        if (!credits) {
+                            throw new Error(`No credits in metadata for payment: ${data.payment_id}`);
+                        }
+
+                        const foundUser = await db.query.user.findFirst({
+                            where: eq(user.email, data.customer.email)
+                        })
+
+                        if (!foundUser) throw new Error(`User not found for email: ${data.customer.email}`);
+
+                        const existingTx = await db.query.creditTransactions.findFirst({
+                            where: eq(creditTransactions.paymentId, data.payment_id)
+                        })
+
+                        if (existingTx) {
+                            console.log("Already processed: ", data.payment_id);
+                            return;
+                        }
+
+                        await addCredits({
+                            userId: foundUser.id,
+                            credits: Number(credits),
+                            paymentId: data.payment_id,
+                            packageName: productId,
+                            amountPaid: data.total_amount
+                        })
+
+                        console.log(`Added ${credits} credits for user ${foundUser.id}`);
+                    }
+                })
+            ]
+        })
     ]
     // socialProviders: {
     //     google: {

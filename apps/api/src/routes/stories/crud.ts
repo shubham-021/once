@@ -4,7 +4,7 @@ import { stories } from "@once/database/schema";
 import { success, error, paginated } from "@/lib/response";
 import { createStorySchema } from "@once/shared/schemas";
 import { requireAuth, type AuthVariables } from "@/middleware/auth";
-import { createStory } from "@once/core";
+import { checkCredits, createStory, InsufficientCreditsError } from "@once/core";
 
 const crudRouter = new Hono<{ Variables: AuthVariables }>();
 
@@ -89,6 +89,8 @@ crudRouter.post("/", requireAuth, async (c) => {
     const user = c.get("user")!;
 
     try {
+        if (process.env.DEV_MODE === "false") await checkCredits(user.id);
+
         const { storyWithRelations } = await createStory({
             user,
             title,
@@ -102,6 +104,8 @@ crudRouter.post("/", requireAuth, async (c) => {
 
         return success(c, storyWithRelations, 201);
     } catch (err) {
+        if (err instanceof InsufficientCreditsError) return error(c, "INSUFFICIENT_BALANCE", undefined, { balance: err.balance });
+
         console.error("LLM Error: ", err);
         return error(c, "LLM_ERROR", "Failed to create opening scene");
     }

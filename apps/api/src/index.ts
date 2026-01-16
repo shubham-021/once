@@ -7,6 +7,7 @@ import { error } from "./lib/response";
 import vaultRouter from "./routes/vault";
 import { auth } from "./lib/auth";
 import { authMiddleware, requireAuth } from "./middleware/auth";
+import creditsRouter from "./routes/credits";
 
 const app = new Hono();
 
@@ -30,6 +31,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.route("/api/stories", storiesRouter);
 app.route("/api/vault", vaultRouter);
+app.route("/api/credits", creditsRouter);
 
 
 app.onError((err, c) => {

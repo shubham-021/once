@@ -6,7 +6,7 @@ import { protagonistSchema, scenesSchema, storySchema } from "@once/database/typ
 import { openSceneSchema } from "@once/shared";
 import { DebugCollector } from "@/debug";
 import { cleanupFailedStory } from "./cleanup";
-import { checkCredits, deductCredits, UsageCollector } from "@/credits";
+import { deductCredits, UsageCollector } from "@/credits";
 
 export interface CreateStoryProps {
     user: {
@@ -49,8 +49,6 @@ export async function createStory(props: CreateStoryProps, collector?: DebugColl
     let storyId: number | null = null;
 
     try {
-
-        if (usageCollector) await checkCredits(user.id);
 
         const [newStory] = await db.insert(stories).values({
             userId: user.id,

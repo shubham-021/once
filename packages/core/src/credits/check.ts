@@ -1,7 +1,9 @@
 import { db, eq } from "@once/database";
 import { userCredits } from "@once/database/schema";
 
-// ??
+
+// instanceof InsufficientCreditsError : checks the class/constructor
+// error.name : just a string property for display, doesn't affect instanceof
 export class InsufficientCreditsError extends Error {
     constructor(public balance: number) {
         super(`Insufficient credits. Current balance: ${balance}`);

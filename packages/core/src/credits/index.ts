@@ -3,3 +3,4 @@ export * from "./calculate";
 export * from "./collector";
 export * from "./deduct";
 export * from "./check";
+export * from "./add";

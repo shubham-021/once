@@ -86,9 +86,6 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
     let sceneId: number | null = null;
 
     try {
-
-        if (usageCollector) await checkCredits(story.userId);
-
         const activeProtagonist = story.protagonist.find(p => p.isActive);
 
         const pendingEchoes = story.echoes.filter(e => e.status === "pending");

@@ -6,7 +6,7 @@ import { streamSSE } from "hono/streaming";
 import { fakeStream } from "@/lib/stream";
 import { requireAuth } from "@/middleware/auth";
 import { StreamCompleteData } from "@once/shared";
-import { continueStory } from "@once/core";
+import { checkCredits, continueStory, InsufficientCreditsError } from "@once/core";
 
 const continueRouter = new Hono();
 
@@ -21,38 +21,46 @@ continueRouter.post("/:id/continue", requireAuth, async (c) => {
         return error(c, "VALIDATION_ERROR", "Action is required");
     }
 
-    const story = await db.query.stories.findFirst({
-        where: eq(stories.id, storyId),
-        with: {
-            protagonist: true,
-            scenes: {
-                orderBy: desc(scenes.turnNumber),
-                limit: 5
-            },
-            echoes: true,
-            deferredCharacters: true
-        }
-    })
-
-    if (!story) return error(c, "NOT_FOUND", "Story not found");
-    if (story.status !== "active") return error(c, "STORY_COMPLETED", "Cannot continue a completed story");
-
-    const user = c.get("user");
-    if (!user || story.userId !== user.id) return error(c, "FORBIDDEN", "You can only continue your own story");
-
     try {
+        const story = await db.query.stories.findFirst({
+            where: eq(stories.id, storyId),
+            with: {
+                protagonist: true,
+                scenes: {
+                    orderBy: desc(scenes.turnNumber),
+                    limit: 5
+                },
+                echoes: true,
+                deferredCharacters: true
+            }
+        })
 
-        const { scene, protagonistUpdates, echoPlanted } = await continueStory({ story, userAction });
+        if (!story) return error(c, "NOT_FOUND", "Story not found");
+        if (story.status !== "active") return error(c, "STORY_COMPLETED", "Cannot continue a completed story");
 
-        return success(c, {
-            scene: scene,
-            protagonistUpdates: protagonistUpdates,
-            echoPlanted: echoPlanted,
-        });
+        const user = c.get("user");
 
+        if (!user) return error(c, "INVALID_USER_ID");
+        if (process.env.DEV_MODE === "false") await checkCredits(user.id);
+        if (story.userId !== user.id) return error(c, "FORBIDDEN", "You can only continue your own story");
+
+        try {
+
+            const { scene, protagonistUpdates, echoPlanted } = await continueStory({ story, userAction });
+
+            return success(c, {
+                scene: scene,
+                protagonistUpdates: protagonistUpdates,
+                echoPlanted: echoPlanted,
+            });
+
+        } catch (err) {
+            console.error("LLM Error:", err);
+            return error(c, "LLM_ERROR", "Failed to continue story");
+        }
     } catch (err) {
-        console.error("LLM Error:", err);
-        return error(c, "LLM_ERROR", "Failed to continue story");
+        if (err instanceof InsufficientCreditsError) return error(c, "INSUFFICIENT_BALANCE", undefined, { balance: err.balance });
+        return error(c, "INTERNAL_ERROR")
     }
 })
 
@@ -67,53 +75,62 @@ continueRouter.post("/:id/continue/stream", requireAuth, async (c) => {
         return error(c, "VALIDATION_ERROR", "Action is required");
     }
 
-    const story = await db.query.stories.findFirst({
-        where: eq(stories.id, storyId),
-        with: {
-            protagonist: true,
-            scenes: { orderBy: desc(scenes.turnNumber), limit: 5 },
-            echoes: true,
-            deferredCharacters: true
-        }
-    })
-
-    if (!story) return error(c, "NOT_FOUND", "Story not found");
-    if (story.status !== "active") return error(c, "STORY_COMPLETED");
-
-    const user = c.get("user");
-    if (!user || story.userId !== user.id) return error(c, "FORBIDDEN", "You can only continue your own stories");
-
-    return streamSSE(c, async (stream) => {
-        try {
-
-            const { response, scene: newScene } = await continueStory({ story, userAction });
-
-            for await (const chunk of fakeStream(response.narration, 25)) {
-                await stream.writeSSE({ data: chunk, event: "narration" });
+    try {
+        const story = await db.query.stories.findFirst({
+            where: eq(stories.id, storyId),
+            with: {
+                protagonist: true,
+                scenes: { orderBy: desc(scenes.turnNumber), limit: 5 },
+                echoes: true,
+                deferredCharacters: true
             }
+        })
 
-            const completeData: StreamCompleteData = {
-                scene: {
-                    sceneId: newScene.id,
-                    protagonistId: newScene.protagonistId,
-                    mood: newScene.mood,
-                    createdAt: newScene.createdAt?.toISOString(),
-                },
-                protagonistSnapshot: newScene.protagonistSnapshot,
-                protagonistUpdates: response.protagonistUpdates,
-                echoPlanted: !!response.echoPlanted,
-            };
+        if (!story) return error(c, "NOT_FOUND", "Story not found");
+        if (story.status !== "active") return error(c, "STORY_COMPLETED");
 
-            await stream.writeSSE({
-                event: "complete",
-                data: JSON.stringify(completeData),
-            });
+        const user = c.get("user");
 
-        } catch (err) {
-            console.error("Streaming error:", err);
-            await stream.writeSSE({ event: "error", data: "Failed to generate story" });
-        }
-    })
+        if (!user) return error(c, "INVALID_USER_ID");
+        if (process.env.DEV_MODE === "false") await checkCredits(user.id);
+        if (story.userId !== user.id) return error(c, "FORBIDDEN", "You can only continue your own stories");
+
+        return streamSSE(c, async (stream) => {
+            try {
+
+                const { response, scene: newScene } = await continueStory({ story, userAction });
+
+                for await (const chunk of fakeStream(response.narration, 25)) {
+                    await stream.writeSSE({ data: chunk, event: "narration" });
+                }
+
+                const completeData: StreamCompleteData = {
+                    scene: {
+                        sceneId: newScene.id,
+                        protagonistId: newScene.protagonistId,
+                        mood: newScene.mood,
+                        createdAt: newScene.createdAt?.toISOString(),
+                    },
+                    protagonistSnapshot: newScene.protagonistSnapshot,
+                    protagonistUpdates: response.protagonistUpdates,
+                    echoPlanted: !!response.echoPlanted,
+                };
+
+                await stream.writeSSE({
+                    event: "complete",
+                    data: JSON.stringify(completeData),
+                });
+
+            } catch (err) {
+                console.error("Streaming error:", err);
+                await stream.writeSSE({ event: "error", data: JSON.stringify({ code: "LLM_ERROR", message: "Failed to generate story" }) });
+                // failed stream should also cleanup the db records of the created scenes for the story and other
+            }
+        })
+    } catch (err) {
+        if (err instanceof InsufficientCreditsError) return error(c, "INSUFFICIENT_BALANCE", undefined, { balance: err.balance });
+        return error(c, "INTERNAL_ERROR");
+    }
 })
 
 export default continueRouter;
