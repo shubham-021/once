@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { CampfireToggle } from "@/components/campfire-toggle";
 import { UserMenu } from "@/components/user-menu";
+import { CreateStoryModal } from "@/components/create/create-story-modal";
 
 export default function MainLayout({
   children,
@@ -13,6 +14,7 @@ export default function MainLayout({
 }) {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -35,8 +37,13 @@ export default function MainLayout({
   return (
     <>
       <main>{children}</main>
-      <UserMenu />
+      <UserMenu createOnClick={() => setIsCreateModalOpen(true)} />
       <CampfireToggle />
+
+      <CreateStoryModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+      />
     </>
   );
 }

@@ -1,18 +1,25 @@
 import { z } from "zod";
 import { narrativeStanceSchema, storyModeSchema, traitsArraySchema } from "./common"
 
+export const castMemberSchema = z.object({
+    name: z.string().min(1, "Name required").max(10),
+    description: z.string().max(500).optional()
+})
+
 export const createStorySchema = z.object({
-    title: z.string().min(1, "Title is required").max(30, "Title can not be more than 20 characters"),
-    description: z.string().optional(),
+    title: z.string().min(1, "Title is required").max(30, "Title can not be more than 30 characters"),
     genre: z.string().min(1, "Genre is required").max(20, "Genre can not be more than 20 characters"),
     narrativeStance: narrativeStanceSchema.default("heroic"),
     storyMode: storyModeSchema.default("protagonist"),
-    storyIdea: z.string().min(10, "Story idea/ plot must be at least 10 characters").max(500, "Story Idea/ plot can not be more than 500 characters").optional(),
+    storyIdea: z.string().min(20, "Story idea/ plot must be at least 20 characters"),
+    worldDescription: z.string().max(2000).optional(),
+    promptForOnce: z.string().max(500).optional(),
+    startingScene: z.string().max(2000).optional(),
+    cast: z.array(castMemberSchema).optional(),
     protagonist: z.object({
         name: z.string().min(1).max(100),
         description: z.string().optional(),
         traits: traitsArraySchema.default([]),
-        location: z.string().min(1).max(255)
     }).optional()
 });
 

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RadialMenu, RadialMenuItem } from "@/components/ui/radial-menu";
+import { LinearMenu } from "./ui/linear-menu";
 
 const navItems: RadialMenuItem[] = [
   {
@@ -37,13 +38,6 @@ const navItems: RadialMenuItem[] = [
     href: "/discover",
   },
   {
-    title: "Create",
-    icon: (className: string) => (
-      <PlusCircle className={cn("h-full w-full", className)} />
-    ),
-    href: "/create",
-  },
-  {
     title: "Profile",
     icon: (className: string) => (
       <User className={cn("h-full w-full", className)} />
@@ -59,7 +53,7 @@ const navItems: RadialMenuItem[] = [
   }
 ];
 
-export function UserMenu() {
+export function UserMenu({ createOnClick }: { createOnClick: () => void }) {
   const pathname = usePathname();
   const [isRadialOpen, setIsRadialOpen] = useState(false);
 
@@ -71,36 +65,44 @@ export function UserMenu() {
     setIsRadialOpen(false);
   };
 
+  const withCreateButton: RadialMenuItem[] = [
+    ...navItems,
+    {
+      title: 'Create',
+      icon: (className: string) => (
+        <PlusCircle className={cn("h-full w-full", className)} />
+      ),
+      onClick: createOnClick
+    }
+  ]
+
   return (
-    <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50">
-      {/* Origami button */}
-      <button
-        onClick={toggleRadialMenu}
-        className={cn(
-          "relative flex items-center justify-center w-12 h-12 rounded-full",
-          "bg-surface border border-line hover:border-accent",
-          "transition-colors cursor-pointer focus:outline-none z-10",
-          isRadialOpen && "border-accent",
-        )}
-      >
-        <Origami
+    <div className="fixed top-8 right-8 z-50">
+      <div className="relative">
+        <button
+          onClick={toggleRadialMenu}
           className={cn(
-            "w-5 h-5",
-            isRadialOpen ? "text-accent" : "text-accent",
+            "flex items-center justify-center w-12 h-12 rounded-full",
+            "bg-surface border border-line hover:border-accent",
+            "transition-colors cursor-pointer focus:outline-none z-10",
+            isRadialOpen && "border-accent",
           )}
+        >
+          <Origami
+            className={cn(
+              "w-5 h-5",
+              isRadialOpen ? "text-accent" : "text-accent",
+            )}
+          />
+        </button>
+
+        <LinearMenu
+          items={withCreateButton}
+          isOpen={isRadialOpen}
+          onClose={closeRadialMenu}
+          currentPath={pathname}
         />
-      </button>
-
-      {/* Radial navigation menu */}
-      <RadialMenu
-        items={navItems}
-        isOpen={isRadialOpen}
-        onClose={closeRadialMenu}
-        currentPath={pathname}
-      />
-
-      {/* User dropdown - positioned below the origami button when needed */}
-      {/* TODO: Integrate user menu items into radial menu later */}
+      </div>
     </div>
   );
 }

@@ -4,11 +4,13 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
-export interface RadialMenuItem {
+export type RadialMenuItem = {
   title: string;
   icon: (className: string) => React.ReactNode;
-  href: string;
-}
+} & (
+    | { href: string; onClick?: never }
+    | { onClick: () => void; href?: never }
+  );
 
 interface RadialMenuProps {
   items: RadialMenuItem[];
@@ -117,10 +119,20 @@ function RadialMenuItem({
 }: RadialMenuItemComponentProps) {
   const [hovered, setHovered] = useState(false);
 
+  const isLink = 'href' in item && item.href;
+  const Component = isLink ? motion.a : motion.button;
+
+  const handleClick = () => {
+    if ('onClick' in item && item.onClick) {
+      item.onClick();
+    }
+    onClose();
+  }
+
   return (
-    <motion.a
-      href={item.href}
-      onClick={onClose}
+    <Component
+      {...(isLink ? { href: item.href } : {})}
+      onClick={handleClick}
       initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
       animate={{
         opacity: 1,
@@ -180,6 +192,6 @@ function RadialMenuItem({
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.a>
+    </Component>
   );
 }
