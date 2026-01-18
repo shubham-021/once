@@ -14,7 +14,7 @@ export default function MainLayout({
 }) {
   const router = useRouter();
   const { data: session, isPending } = useSession();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -37,13 +37,10 @@ export default function MainLayout({
   return (
     <>
       <main>{children}</main>
-      <UserMenu createOnClick={() => setIsCreateModalOpen(true)} />
+      <UserMenu />
       <CampfireToggle />
 
-      <CreateStoryModal
-        open={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
-      />
+      <CreateStoryModal />
     </>
   );
 }

@@ -46,7 +46,7 @@ export function LinearMenu({ items, isOpen, onClose, currentPath }: LinearMenuPr
     const isMobile = !useMediaQuery("(min-width: 600px)");
 
     return (
-        <div ref={menuRef} className={cn("absolute top-0 right-0 bg-amber-600")}>
+        <div ref={menuRef} className={cn("absolute top-0 right-0 z-40")}>
             <AnimatePresence>
                 {isOpen && items.map((item, index) => {
                     const offset = (index + 1) * 56; // 48px button + 8px gap

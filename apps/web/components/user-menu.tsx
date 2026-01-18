@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { RadialMenu, RadialMenuItem } from "@/components/ui/radial-menu";
 import { LinearMenu } from "./ui/linear-menu";
+import { useCreateStore } from "@/stores/create-store";
 
 const navItems: RadialMenuItem[] = [
   {
@@ -53,7 +54,7 @@ const navItems: RadialMenuItem[] = [
   }
 ];
 
-export function UserMenu({ createOnClick }: { createOnClick: () => void }) {
+export function UserMenu() {
   const pathname = usePathname();
   const [isRadialOpen, setIsRadialOpen] = useState(false);
 
@@ -65,6 +66,8 @@ export function UserMenu({ createOnClick }: { createOnClick: () => void }) {
     setIsRadialOpen(false);
   };
 
+  const setOpen = useCreateStore((s) => s.setOpen);
+
   const withCreateButton: RadialMenuItem[] = [
     ...navItems,
     {
@@ -72,7 +75,7 @@ export function UserMenu({ createOnClick }: { createOnClick: () => void }) {
       icon: (className: string) => (
         <PlusCircle className={cn("h-full w-full", className)} />
       ),
-      onClick: createOnClick
+      onClick: () => setOpen(true)
     }
   ]
 
