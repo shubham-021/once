@@ -5,10 +5,17 @@ export const openSceneSchema = z.object({
     protagonistGenerated: z.object({
         name: z.string(),
         description: z.string(),
-        traits: z.array(z.string()),
-        location: z.string()
-    }).nullable().describe("Only present if protagonist was auto-generated")
+        traits: z.array(z.string())
+    }).nullable().describe("Only present if protagonist was auto-generated"),
+    extractedLocation: z.string().describe("The location where the scene takes place"),
+    deferredCharacter: z.array(z.object({
+        name: z.string(),
+        description: z.string(),
+        triggerCondition: z.string().describe("When this character should naturally appear , e.g. 'when protagonist visits the market'")
+    })).nullable().describe('Cast members not introduced in this scene, to appear later')
 })
+
+// triggerCondition makes the story flow pre determined , we should let the story flow in its own shape , we have to work on the architecture , this is for now.
 
 export const sceneResponseSchema = z.object({
     narration: z.string().describe("The scene narration"),

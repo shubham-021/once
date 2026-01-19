@@ -1,12 +1,9 @@
-import { extractEntities } from "@/extraction";
 import { buildInitializePrompt, buildSystemPrompt, generateStructuredWithTracking } from "@/llm";
-import { storySceneMemory } from "@/memory";
-import { db, eq, protagonists, scenes, stories } from "@once/database";
+import { creditTransactions, db, deferredCharacters, eq, protagonists, scenes, stories, userCredits } from "@once/database";
 import { protagonistSchema, scenesSchema, storySchema } from "@once/database/types";
 import { openSceneSchema } from "@once/shared";
 import { DebugCollector } from "@/debug";
-import { cleanupFailedStory } from "./cleanup";
-import { deductCredits, UsageCollector } from "@/credits";
+import { UsageCollector } from "@/credits";
 
 export interface CreateStoryProps {
     user: {
@@ -19,16 +16,19 @@ export interface CreateStoryProps {
         image?: string | null | undefined;
     };
     title: string;
-    description: string | undefined;
     genre: string;
     narrativeStance: "grimdark" | "heroic" | "grounded" | "mythic" | "noir";
     storyMode: "protagonist" | "narrator";
     storyIdea: string | undefined;
+    worldDescription: string | undefined;
+    promptForOnce: string | undefined;
+    startingScene: string | undefined;
+    castMode: 'strict' | 'flexible';
+    cast?: Array<{ name: string; description: string }>;
     protagonist?: {
         name: string;
-        description?: string;
+        description: string;
         traits: string[];
-        location: string;
     };
 }
 
@@ -43,132 +43,113 @@ interface CreateStoryResult {
 
 export async function createStory(props: CreateStoryProps, collector?: DebugCollector): Promise<CreateStoryResult> {
 
-    const { user, title, description, genre, narrativeStance, storyMode, storyIdea, protagonist } = props;
+    const { user, title, genre, narrativeStance, storyMode, storyIdea, worldDescription, promptForOnce, startingScene, cast, castMode, protagonist } = props;
 
     const usageCollector = process.env.DEV_MODE === "true" ? undefined : new UsageCollector();
-    let storyId: number | null = null;
 
-    try {
+    const systemPrompt = buildSystemPrompt(narrativeStance, storyMode, worldDescription, promptForOnce);
+    const initPrompt = buildInitializePrompt({ title, genre, stance: narrativeStance, mode: storyMode, plot: storyIdea, startingScene, cast, castMode, protagonist });
 
-        const [newStory] = await db.insert(stories).values({
+    const openingScene = await generateStructuredWithTracking(systemPrompt, initPrompt, openSceneSchema, "opening_scene", usageCollector);
+
+    // debug collector
+    collector?.add('llm', 'prompts', { systemPrompt, initPrompt });
+    collector?.add('llm', 'openingScene', openingScene);
+
+    const result = await db.transaction(async (tx) => {
+        const [newStory] = await tx.insert(stories).values({
             userId: user.id,
             title,
-            description,
             genre,
             narrativeStance,
-            storyMode
+            storyMode,
+            worldDescription,
+            promptForOnce,
+            startingScene
         }).returning();
 
-        storyId = newStory.id;
-
-        // debug collector
-        collector?.add('db', 'insert:stories', newStory);
-
-        let protagonistId: number | undefined;
+        let newProtagonist: typeof protagonists.$inferSelect | undefined;
 
         if (storyMode === "protagonist" && protagonist) {
-            const [newProtagonist] = await db.insert(protagonists).values({
+            [newProtagonist] = await tx.insert(protagonists).values({
                 storyId: newStory.id,
                 name: protagonist.name,
                 description: protagonist.description,
-                currentLocation: protagonist.location,
+                currentLocation: openingScene.extractedLocation,
                 baseTraits: protagonist.traits,
                 currentTraits: protagonist.traits
             }).returning();
-
-            protagonistId = newProtagonist.id;
         }
 
-        const systemPrompt = buildSystemPrompt(narrativeStance, storyMode);
-        const initPrompt = buildInitializePrompt({ title, genre, stance: narrativeStance, mode: storyMode, plot: storyIdea, protagonist });
-
-        //debug collector
-        collector?.add('llm', 'prompts', { systemPrompt, initPrompt });
-
-        const openingScene = await generateStructuredWithTracking(systemPrompt, initPrompt, openSceneSchema, "opening_scene", usageCollector);
-
-        //debug collector
-        collector?.add('llm', 'openingScene', openingScene);
-
-        if (!protagonist && openingScene.protagonistGenerated) {
-            const gen = openingScene.protagonistGenerated;
-            const [newProtagonist] = await db.insert(protagonists).values({
-                storyId: newStory.id,
-                name: gen.name,
-                description: gen.description,
-                currentLocation: gen.location,
-                baseTraits: gen.traits,
-                currentTraits: gen.traits
-            }).returning();
-
-            protagonistId = newProtagonist.id;
-
-            //debug collector
-            collector?.add('db', 'insert:protagonists', newProtagonist);
-        }
-
-        await db.insert(scenes).values({
+        const [newScene] = await tx.insert(scenes).values({
             storyId: newStory.id,
             turnNumber: 1,
             userAction: "[STORY_START]",
             narration: openingScene.narration,
-            protagonistId,
-        });
+            protagonistId: newProtagonist?.id,
+        }).returning();
 
-        //debug collector
-        collector?.add('db', 'insert:scenes', { storyId: newStory.id, turnNumber: 1 })
+        // let characters: Array<{ name: string, description: string, triggerCondition: string }> | undefined;
 
-        const entities = await extractEntities(openingScene.narration, protagonist?.name || "protagonist", usageCollector)
-        // .then(entities => storySceneMemory(
-        //     "1",
-        //     openingScene.narration,
-        //     newStory.id,
-        //     1,
-        //     entities
-        // ))
-        // .catch(console.error);
+        if (openingScene.deferredCharacter && openingScene.deferredCharacter.length > 0) {
+            await tx.insert(deferredCharacters).values(
+                openingScene.deferredCharacter.map(c => ({
+                    storyId: newStory.id,
+                    name: c.name,
+                    description: c.description,
+                    triggerCondition: c.triggerCondition
+                }))
+            );
+        }
 
-        collector?.add('llm', 'extractedEntities', entities);
-
-        await storySceneMemory(
-            "1",
-            openingScene.narration,
-            newStory.id,
-            1,
-            entities,
-            collector,
-            usageCollector
-        )
-
-        const storyWithRelations = await db.query.stories.findFirst({
-            where: eq(stories.id, newStory.id),
-            with: {
-                protagonist: true,
-                scenes: true,
-            },
-        });
-
-        let creditsRemaining: number | undefined;
+        let newBalance: number | undefined;
 
         if (usageCollector) {
             const creditsUsed = usageCollector.getCredits();
             const usage = usageCollector.getUsage();
 
-            creditsRemaining = await deductCredits({
-                userId: user.id,
-                storyId,
-                sceneId: 1,
-                creditsUsed,
-                usage
+            const userCredit = await tx.query.userCredits.findFirst({
+                where: eq(userCredits.userId, user.id)
             })
+
+            if (!userCredit) throw new Error(`No credit record for user ${user.id}`);
+
+            newBalance = userCredit.balance - creditsUsed;
+
+            await tx.update(userCredits).set({
+                balance: newBalance,
+                lifetimeUsed: userCredit.lifetimeUsed + creditsUsed,
+                updatedAt: new Date()
+            }).where(eq(userCredits.userId, user.id));
+
+            await tx.insert(creditTransactions).values({
+                userId: user.id,
+                type: "usage",
+                amount: -creditsUsed,
+                balanceAfter: newBalance,
+                storyId: newStory.id,
+                sceneId: newScene.id,
+                claudeInputTokens: usage.claudeInput,
+                claudeOutputTokens: usage.claudeOutput,
+                gptInputTokens: usage.gptInput,
+                gptOutputTokens: usage.gptOutput,
+                embeddingTokens: usage.embedding
+            });
         }
 
-        if (!storyWithRelations) throw new Error("Failed to fetch created story");
+        return { story: newStory, protagonist: newProtagonist ? [newProtagonist] : [], scenes: [newScene], creditsRemaining: newBalance }
+    })
 
-        return { storyWithRelations, creditsUsed: usageCollector?.getCredits(), creditsRemaining };
+    // debug collector
+    collector?.add('db', 'insert:stories', { story: result.story });
+    result.protagonist.length > 0 && collector?.add('db', 'insert:protagonist', { protagonist: result.protagonist });
+    collector?.add('db', 'insert:scene', { scene: result.scenes });
 
-    } catch (error) {
-        if (storyId) await cleanupFailedStory(storyId);
-        throw error;
+    const storyWithRelations = {
+        ...result.story,
+        protagonist: result.protagonist,
+        scenes: result.scenes
     }
+
+    return { storyWithRelations, creditsUsed: usageCollector?.getCredits(), creditsRemaining: result.creditsRemaining };
 }

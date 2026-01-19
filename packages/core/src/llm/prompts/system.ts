@@ -8,7 +8,7 @@ const stanceGuides: Record<NarrativeStance, string> = {
     noir: 'Morality is gray. Everyone has secrets. Trust is a liability. Victories are pyrrhic.',
 };
 
-export function buildSystemPrompt(stance: NarrativeStance, mode: StoryMode): string {
+export function buildSystemPrompt(stance: NarrativeStance, mode: StoryMode, worldDescription?: string | null, promptForOnce?: string | null): string {
     const perspective = mode === "protagonist"
         ? "You narrate in second person ('You step into the shadows...'). Track the protagonist's state, growth, and scars."
         : "You narrate in third person, following multiple perspectives. The story follows the world, not a single hero.";
@@ -21,6 +21,20 @@ export function buildSystemPrompt(stance: NarrativeStance, mode: StoryMode): str
             3. Be vivid and specific. No generic descriptions. Every scene exists only in THIS story.
             4. Show, don't tell. Actions reveal character.
             5. End scenes at moments of tension or decision.
+
+            ${worldDescription ? `
+                ## World
+                ${worldDescription}
+
+                These are the rules of this world. They must never be violated.
+            ` : ''}
+
+            ${promptForOnce ? `
+                ## Author Requirement
+                ${promptForOnce}
+
+                Honor these in every scene
+            ` : ''}
 
             ## Narrative Stance: ${stance.toUpperCase()}
             ${stanceGuides[stance]}

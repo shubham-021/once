@@ -23,6 +23,8 @@ interface InitializeContext extends StoryContext {
 }
 
 interface ContinueContext extends StoryContext {
+    promptForOnce?: string | null;
+    worldDescription?: string | null;
     protagonist?: {
         name: string;
         description?: string | null;
@@ -67,7 +69,7 @@ export async function generateOpeningScene(ctx: InitializeContext, usageCollecto
 }
 
 export async function generateContinuation(ctx: ContinueContext, usageCollector?: UsageCollector) {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode);
+    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
 
     const continuePrompt = buildContinuePrompt({
         stance: ctx.narrativeStance,

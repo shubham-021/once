@@ -2,6 +2,8 @@
 
 import { Plus, X } from "lucide-react";
 import type { StepProps } from "../types";
+import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 
 export function StepCast({ form, updateForm }: StepProps) {
     const addCastMember = () => {
@@ -26,6 +28,27 @@ export function StepCast({ form, updateForm }: StepProps) {
     return (
         <div className="space-y-6">
             <div className="space-y-2">
+                <div className="flex items-center justify-between py-3 border-b border-line mb-4">
+                    <div>
+                        <p className="text-sm text-foreground">Cast Mode</p>
+                        <p className="text-xs text-muted">
+                            {form.castMode === "strict"
+                                ? "Only use characters from your list"
+                                : "LLM can introduce its own characters"}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => updateForm("castMode", form.castMode === "strict" ? "flexible" : "strict")}
+                        className={cn("relative w-12 h-6 rounded-full transition-colors cursor-pointer", form.castMode === "strict" ? "bg-accent" : "bg-line")}
+                    >
+                        <motion.span
+                            className={cn("absolute top-1 left-1 w-4 h-4 bg-white rounded-full")}
+                            animate={{ x: form.castMode === "strict" ? 24 : 0 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        />
+                    </button>
+                </div>
                 <label className="text-sm text-muted">Cast (optional)</label>
                 <p className="text-xs text-muted/70">Characters you'd like woven into your story</p>
             </div>

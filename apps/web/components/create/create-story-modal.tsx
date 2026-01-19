@@ -47,6 +47,7 @@ export function CreateStoryModal() {
             worldDescription: form.worldDescription,
             promptForOnce: form.promptForOnce,
             startingScene: form.startingScene,
+            castMode: form.castMode,
             cast: form.cast.map(c => ({ name: c.name, description: c.description })),
             ...(form.storyMode === "protagonist" && form.protagonist && {
                 protagonist: {

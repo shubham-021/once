@@ -10,6 +10,7 @@ const initialState: CreateStoryFormState = {
     worldDescription: "",
     promptForOnce: "",
     startingScene: "",
+    castMode: "flexible",
     cast: [],
     protagonist: {
         name: "",

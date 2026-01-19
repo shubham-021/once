@@ -5,12 +5,14 @@ interface InitializeContext {
     genre: string;
     stance: NarrativeStance;
     mode: StoryMode;
-    plot?: string,
+    plot?: string;
+    startingScene?: string;
+    cast?: Array<{ name: string; description: string }>;
+    castMode?: 'strict' | 'flexible';
     protagonist?: {
         name: string;
         description?: string;
         traits: string[];
-        location: string;
     };
 }
 
@@ -25,11 +27,28 @@ export function buildInitializePrompt(ctx: InitializeContext): string {
             - Name: ${p.name}
             - Description: ${p.description || "Not specified — infer from traits"}
             - Traits: ${p.traits.length > 0 ? p.traits.join(", ") : "None specified"}
-            - Starting Location: ${p.location}
+
+            ${ctx.startingScene ? `
+            ## Opening Direction
+            The author envisions the story beginning with:
+
+            ${ctx.startingScene}
+            Use this as your starting point.
+            ` : ''}
+
+            ${ctx.cast && ctx.cast.length > 0 ? `
+            ## Cast
+            The author has defined these characters:
+            
+            ${ctx.cast.map(c => `- ${c.name}: ${c.description}`).join('\n')}
+            ${ctx.castMode === "strict"
+                    ? "Use ONLY these characters. Do not introduce anyone not on this list."
+                    : "You have to use these characters or create your own as the story requires, but give priority to this list if the story requirement can be fullfill by this"}
+                    For characters not introduced in this scene, output them as deferredCharacters with a natural trigger condition.
+            ` : ''}
 
             ## Requirements
             1. Begin in media res — the protagonist is already in motion, facing a situation
-            2. Establish ${p.location} with vivid sensory detail
             3. Introduce a hook — a problem, mystery, or choice that demands attention
             4. Show the protagonist's personality through action, not exposition
             5. End at a moment that invites the player to act
@@ -39,6 +58,20 @@ export function buildInitializePrompt(ctx: InitializeContext): string {
     }
 
     return `Create the opening scene for a ${ctx.genre} story titled "${ctx.title}".
+
+            ${ctx.startingScene ? `
+                ## Opening Direction
+                The author envisions the story beginning with:
+                ${ctx.startingScene}
+                Use this as your starting point.
+            ` : ''}
+
+            ${ctx.cast && ctx.cast.length > 0 ? `
+                ## Cast
+                The author has defined these characters for the story:
+                ${ctx.cast.map(c => `- ${c.name}: ${c.description}`).join('\n')}
+                Introduce characters naturally as the scene allows. For characters not introduced in this scene, they will be stored for later introduction. Output which characters you used and which should be deferred.
+            ` : ''}
 
             ## Requirements
             1. Generate a compelling protagonist with a name, appearance, and clear personality

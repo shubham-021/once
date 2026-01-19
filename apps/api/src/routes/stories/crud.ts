@@ -85,7 +85,7 @@ crudRouter.post("/", requireAuth, async (c) => {
         return error(c, "VALIDATION_ERROR", parsed.error.errors[0].message);
     }
 
-    const { title, description, genre, narrativeStance, storyMode, storyIdea, protagonist } = parsed.data;
+    const { title, genre, narrativeStance, storyMode, storyIdea, worldDescription, promptForOnce, startingScene, cast, castMode, protagonist } = parsed.data;
     const user = c.get("user")!;
 
     try {
@@ -94,11 +94,15 @@ crudRouter.post("/", requireAuth, async (c) => {
         const { storyWithRelations } = await createStory({
             user,
             title,
-            description,
             genre,
             narrativeStance,
             storyMode,
             storyIdea,
+            worldDescription,
+            promptForOnce,
+            startingScene,
+            castMode,
+            cast,
             protagonist
         });
 

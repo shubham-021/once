@@ -153,6 +153,8 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
 
         const response = await generateContinuation(
             {
+                promptForOnce: story.promptForOnce,
+                worldDescription: story.worldDescription,
                 narrativeStance: story.narrativeStance,
                 storyMode: story.storyMode,
                 protagonist: activeProtagonist ? {

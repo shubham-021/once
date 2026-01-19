@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { narrativeStanceSchema, storyModeSchema, traitsArraySchema } from "./common"
 
+export const castModeSchema = z.enum(["strict", "flexible"]).default("flexible");
+
 export const castMemberSchema = z.object({
     name: z.string().min(1, "Name required").max(10),
-    description: z.string().max(500).optional()
+    description: z.string().max(500)
 })
 
 export const createStorySchema = z.object({
@@ -16,11 +18,12 @@ export const createStorySchema = z.object({
     promptForOnce: z.string().max(500).optional(),
     startingScene: z.string().max(2000).optional(),
     cast: z.array(castMemberSchema).optional(),
+    castMode: castModeSchema,
     protagonist: z.object({
         name: z.string().min(1).max(100),
-        description: z.string().optional(),
+        description: z.string(),
         traits: traitsArraySchema.default([]),
-    }).optional()
+    })
 });
 
 export type CreateStoryInput = z.infer<typeof createStorySchema>;
