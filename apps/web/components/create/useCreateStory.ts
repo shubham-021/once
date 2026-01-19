@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { CreateStoryFormState } from "./types";
+import { genres } from "@once/shared";
 
 const initialState: CreateStoryFormState = {
     title: "",
-    genre: "",
+    genre: genres[0],
     narrativeStance: "heroic",
     storyMode: "protagonist",
     storyIdea: "",

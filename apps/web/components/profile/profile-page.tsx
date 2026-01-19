@@ -26,7 +26,6 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col h-screen md:flex-row bg-background">
-      {/* Desktop Sidebar - hidden on mobile */}
       <aside className="hidden md:flex w-64 border-r border-line bg-surface flex-col">
         <div className="p-6 border-b border-line">
           <h1 className="text-lg font-medium text-foreground">Settings</h1>
@@ -53,7 +52,6 @@ export function ProfilePage() {
           </ul>
         </nav>
 
-        {/* Sign Out at bottom */}
         <div className="p-4 border-t border-line">
           <button
             onClick={handleSignOut}
@@ -65,7 +63,6 @@ export function ProfilePage() {
         </div>
       </aside>
 
-      {/* Content Area */}
       <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
         {activeTab === "profile" && (
           <ProfileContent user={session?.user} onSignOut={handleSignOut} />
@@ -113,7 +110,7 @@ function ProfileContent({
   }
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="h-full relative flex flex-col p-4 md:p-8">
       <header className="mb-8">
         <h2 className="text-2xl text-foreground">Your Profile</h2>
         <p className="mt-1 text-sm text-muted">
@@ -121,8 +118,7 @@ function ProfileContent({
         </p>
       </header>
 
-      <div className="max-w-md space-y-6">
-        {/* Avatar */}
+      <div className="space-y-6">
         <div className="flex items-center gap-4">
           {user.image ? (
             <img
@@ -141,7 +137,6 @@ function ProfileContent({
           </div>
         </div>
 
-        {/* Info Cards */}
         <div className="space-y-4 pt-4 border-t border-line">
           <div>
             <label className="text-xs text-muted uppercase tracking-wide">
@@ -161,10 +156,10 @@ function ProfileContent({
         </div>
 
         {/* Sign Out Button (Mobile Only) */}
-        <div className="pt-6 md:hidden">
+        <div className="md:hidden flex absolute bottom-4 left-4 right-4">
           <button
             onClick={onSignOut}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md border border-line bg-surface text-muted hover:text-foreground hover:bg-background transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md border border-line bg-surface text-muted hover:text-foreground hover:bg-background transition-colors cursor-pointer"
           >
             <LogOut className="size-4" />
             Sign Out

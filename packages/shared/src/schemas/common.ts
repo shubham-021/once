@@ -25,6 +25,20 @@ export const storyVisibilitySchema = z.enum([
     "unlisted"
 ]);
 
+export const genres = [
+    "Action and Adventure",
+    "Science Fiction",
+    "Science Fantasy",
+    "Romance",
+    "Horror",
+    "Fantasy",
+    "Superhero",
+    "Comedy",
+    "Crime and Mystery"
+] as const;
+
+export type Genre = (typeof genres)[number];
+
 
 export const suggestedTraits = [
     "optimistic",

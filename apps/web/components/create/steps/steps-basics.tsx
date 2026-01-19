@@ -2,7 +2,7 @@
 
 import { User, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { suggestedTraits } from "@once/shared/schemas";
+import { genres, suggestedTraits } from "@once/shared/schemas";
 import type { StepProps } from "../types";
 
 export function StepBasics({ form, updateForm }: StepProps) {
@@ -25,7 +25,6 @@ export function StepBasics({ form, updateForm }: StepProps) {
 
     return (
         <div className="space-y-8">
-            {/* Title */}
             <div className="space-y-2">
                 <label className="text-sm text-muted">Title</label>
                 <input
@@ -37,19 +36,26 @@ export function StepBasics({ form, updateForm }: StepProps) {
                 />
             </div>
 
-            {/* Genre */}
             <div className="space-y-2">
                 <label className="text-sm text-muted">Genre</label>
-                <input
-                    type="text"
-                    value={form.genre}
-                    onChange={(e) => updateForm("genre", e.target.value)}
-                    placeholder="Dark Fantasy, Sci-Fi, Mystery..."
-                    className="w-full border-b border-line bg-transparent py-2 text-foreground placeholder:text-muted/50 focus:border-foreground focus:outline-none"
-                />
+                <div className="flex flex-wrap gap-2">
+                    {genres.map((genre) => (
+                        <button
+                            key={genre}
+                            type="button"
+                            onClick={() => updateForm("genre", genre)}
+                            className={cn(
+                                "px-3 py-1 text-sm border transition-colors cursor-pointer",
+                                form.genre === genre
+                                    ? "border-accent bg-accent/10 text-accent"
+                                    : "border-line text-muted hover:border-foreground/50"
+                            )}
+                        >
+                            {genre}
+                        </button>
+                    ))}
+                </div>
             </div>
-
-            {/* Narrative Stance */}
             <div className="space-y-2">
                 <label className="text-sm text-muted">Narrative Stance</label>
                 <div className="flex flex-wrap gap-2">
@@ -70,8 +76,6 @@ export function StepBasics({ form, updateForm }: StepProps) {
                     ))}
                 </div>
             </div>
-
-            {/* Mode Selector */}
             <div className="space-y-2">
                 <label className="text-sm text-muted">Story Mode</label>
                 <div className="grid grid-cols-2 gap-3">
@@ -99,8 +103,6 @@ export function StepBasics({ form, updateForm }: StepProps) {
                     </button>
                 </div>
             </div>
-
-            {/* Protagonist Name + Traits (conditional) */}
             {isProtagonistMode && (
                 <>
                     <div className="space-y-2">
@@ -137,7 +139,6 @@ export function StepBasics({ form, updateForm }: StepProps) {
                 </>
             )}
 
-            {/* Story Idea (for narrator mode on page 1) */}
             {!isProtagonistMode && (
                 <div className="space-y-2">
                     <label className="text-sm text-muted">Story Idea / Premise</label>

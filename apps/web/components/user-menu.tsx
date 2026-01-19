@@ -18,13 +18,6 @@ import { useCreateStore } from "@/stores/create-store";
 
 const navItems: RadialMenuItem[] = [
   {
-    title: "Home",
-    icon: (className: string) => (
-      <Home className={cn("h-full w-full", className)} />
-    ),
-    href: "/",
-  },
-  {
     title: "Library",
     icon: (className: string) => (
       <BookOpen className={cn("h-full w-full", className)} />
@@ -51,6 +44,13 @@ const navItems: RadialMenuItem[] = [
       <Coins className={cn("h-full w-full", className)} />
     ),
     href: "/credits"
+  },
+  {
+    title: "Home",
+    icon: (className: string) => (
+      <Home className={cn("h-full w-full", className)} />
+    ),
+    href: "/",
   }
 ];
 
@@ -69,14 +69,14 @@ export function UserMenu() {
   const setOpen = useCreateStore((s) => s.setOpen);
 
   const withCreateButton: RadialMenuItem[] = [
-    ...navItems,
     {
       title: 'Create',
       icon: (className: string) => (
         <PlusCircle className={cn("h-full w-full", className)} />
       ),
       onClick: () => setOpen(true)
-    }
+    },
+    ...navItems
   ]
 
   return (
