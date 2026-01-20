@@ -1,23 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowBigUp, BookOpen, User } from "lucide-react";
+import { ArrowBigUp, Layers, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 // import { GitFork } from "lucide-react";
 import { useUpvote } from "@/hooks/use-upvote";
+import { DiscoverResult } from "@once/shared";
 
-interface PublicStory {
-    id: string;
-    title: string;
-    author: string;
-    genre: string;
-    wordCount: number;
-    upvotes: number;
-    excerpt: string;
-}
 
-export function PublicStoryCard({ story }: { story: PublicStory }) {
+export function PublicStoryCard({ story }: { story: DiscoverResult }) {
 
     const { hasUpvoted, upvoteCount, isUpvoting, toggleUpvote } = useUpvote({
         storyId: story.id,
@@ -35,12 +27,12 @@ export function PublicStoryCard({ story }: { story: PublicStory }) {
                 <User className="size-3" />
                 {story.author}
             </p>
-            <p className="mt-3 text-sm text-muted/80 line-clamp-2">{story.excerpt}</p>
+            <p className="mt-3 text-sm text-muted/80 line-clamp-2">{story.description}</p>
             <div className="mt-auto pt-4 flex items-center justify-between text-xs text-muted">
                 <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">
-                        <BookOpen className="size-3" />
-                        {story.wordCount.toLocaleString()}
+                        <Layers className="size-3" />
+                        {story.turnCount.toLocaleString()}
                     </span>
                     <span>{story.genre}</span>
                 </div>

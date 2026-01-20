@@ -27,13 +27,25 @@ export const storyModeEnum = pgEnum("story_mode", [
     "narrator"
 ])
 
+export const genreEnum = pgEnum("genre", [
+    "Action and Adventure",
+    "Science Fiction",
+    "Science Fantasy",
+    "Romance",
+    "Horror",
+    "Fantasy",
+    "Superhero",
+    "Comedy",
+    "Crime and Mystery"
+]);
+
 export const stories = pgTable("stories", {
     id: serial("id").primaryKey(),
     userId: text("user_id").notNull(), // References auth provider's user table
 
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
-    genre: varchar("genre", { length: 50 }).notNull(),
+    genre: genreEnum("genre").notNull(),
     narrativeStance: narrativeStanceEnum("narrative_stance").default("heroic").notNull(),
     storyMode: storyModeEnum("story_mode").default("protagonist").notNull(),
     worldDescription: text("world_description"),

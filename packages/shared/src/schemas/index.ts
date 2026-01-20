@@ -5,3 +5,4 @@ export * from "./llm";
 export * from "./deferred";
 export * from "./protagonist";
 export * from "./social";
+export * from "./discover";

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader } from "lucide-react";
 import { ConstellationLoader } from "../loader";
 import { useCreateStore } from "@/stores/create-store";
+import { StoryCardSkeleton } from "./story-card-skeleton";
 
 export function Library() {
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
@@ -64,7 +65,9 @@ export function Library() {
         </div>
 
         {isLoading ? (
-          <div className="p-8 text-center text-muted">Loading stories...</div>
+          <div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => <StoryCardSkeleton key={i} />)}
+          </div>
         ) : filteredStories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <p className="text-muted mb-4">No stories yet</p>

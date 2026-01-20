@@ -38,6 +38,7 @@ export const genres = [
 ] as const;
 
 export type Genre = (typeof genres)[number];
+export type GenreFilter = Genre | 'All';
 
 
 export const suggestedTraits = [

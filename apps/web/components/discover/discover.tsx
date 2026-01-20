@@ -4,31 +4,63 @@ import React, { useState, useEffect } from "react";
 import { PublicStoryCard } from "./public-story-card";
 import { Flame, TrendingUp, Clock, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NavHeader } from "../nav-header";
 import MobileDrawer from "../mobile-drawer";
 import { storiesApi } from "@/lib/api";
-
-const genres = ["All", "Fantasy", "Sci-Fi", "Horror", "Mystery", "Romance", "Thriller", "Literary"];
+import { DiscoverResult, genres, Story } from "@once/shared";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
+import { PublicStoryCardSkeleton } from "./public-story-card-skeleton";
+import { Skeleton } from "../ui/skeleton";
 
 const trendingTags = ["grimdark", "time-loop", "redemption", "betrayal", "survival"];
+const genreOptions = ["All", ...genres] as const;
+
+// const mockStories: DiscoverResult[] = [
+//     { id: "1", title: "The Hollow King", author: "Marcus Webb", genre: "Fantasy", upvotes: 234, description: "A tale of a fallen monarch seeking redemption in a world that has forgotten him.", turnCount: 47 },
+//     { id: "2", title: "Signal in the Static", author: "Elena Cross", genre: "Science Fiction", upvotes: 189, description: "When the last radio station on Earth picks up a message from the void, everything changes.", turnCount: 23 },
+//     { id: "3", title: "Blood & Clockwork", author: "James Chen", genre: "Science Fantasy", upvotes: 156, description: "Victorian London meets eldritch horror in this steampunk thriller.", turnCount: 65 },
+//     { id: "4", title: "The Last Detective", author: "Sarah Mills", genre: "Crime and Mystery", upvotes: 112, description: "In a city where crime has been eradicated, one last murder changes everything.", turnCount: 31 },
+//     { id: "5", title: "Hearts of Iron", author: "Alex Rivera", genre: "Romance", upvotes: 98, description: "Two rival knights discover love on the battlefield.", turnCount: 19 },
+// ];
 
 export function Discover() {
 
     const [sortBy, setSortBy] = useState<"hot" | "new" | "top">("hot");
     const [selectedGenre, setSelectedGenre] = useState("All");
     const [showFilters, setShowFilters] = useState(false);
-    const [stories, setStories] = useState<any[]>([]);
+    const [stories, setStories] = useState<DiscoverResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalpages] = useState(1);
+    const [stats, setStats] = useState<{ storiesPublished: number; activeWriters: number } | null>(null);
 
     useEffect(() => {
         const fetchStories = async () => {
-            const response = await storiesApi.discover();
-            if (response.data) {
-                setStories(response.data);
-            }
+            setIsLoading(true);
+            const response = await storiesApi.discover({
+                genre: selectedGenre,
+                sortBy,
+                page
+            });
+
+            if (response.data) setStories(response.data);
+            if (response.meta?.total && response.meta?.pageSize) setTotalpages(Math.ceil(response.meta.total / response.meta.pageSize));
+
             setIsLoading(false);
         };
         fetchStories();
+        // setStories(mockStories);
+        // setTotalpages(3); 
+        // setIsLoading(false);
+    }, [selectedGenre, sortBy, page]);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const states = await storiesApi.discoverStats();
+            if (states.data) setStats(states.data);
+        }
+        fetchStats();
+        // setStats({ storiesPublished: 1247, activeWriters: 892 });
     }, []);
 
     return (
@@ -63,12 +95,7 @@ export function Discover() {
                                     icon={<Clock className="size-4" />}
                                     label="New"
                                 />
-                                <SortButton
-                                    active={sortBy === "top"}
-                                    onClick={() => setSortBy("top")}
-                                    icon={<TrendingUp className="size-4" />}
-                                    label="Top"
-                                />
+                                {/* <SortButton active={sortBy === "top"} onClick={() => setSortBy("top")} icon={<TrendingUp className="size-4" />} label="Top" /> */}
                             </div>
                         </SidebarSection>
 
@@ -102,12 +129,12 @@ export function Discover() {
                             <div className="space-y-1">
                                 <SortButton active={sortBy === "hot"} onClick={() => setSortBy("hot")} icon={<Flame className="size-4" />} label="Hot" />
                                 <SortButton active={sortBy === "new"} onClick={() => setSortBy("new")} icon={<Clock className="size-4" />} label="New" />
-                                <SortButton active={sortBy === "top"} onClick={() => setSortBy("top")} icon={<TrendingUp className="size-4" />} label="Top" />
+                                {/* <SortButton active={sortBy === "top"} onClick={() => setSortBy("top")} icon={<TrendingUp className="size-4" />} label="Top" /> */}
                             </div>
                         </SidebarSection>
                         <SidebarSection title="Genre">
                             <div className="space-y-1">
-                                {genres.map((genre) => (
+                                {genreOptions.map((genre) => (
                                     <button
                                         key={genre}
                                         onClick={() => { setSelectedGenre(genre); setShowFilters(false); }}
@@ -123,10 +150,12 @@ export function Discover() {
                         </SidebarSection>
                     </MobileDrawer>
 
-                    <main className="flex-1 p-6 overflow-y-auto">
+                    <main className="flex-1 p-6 overflow-y-auto" data-lenis-prevent>
                         <div className="max-w-2xl mx-auto space-y-4">
                             {isLoading ? (
-                                <p className="text-muted text-center py-8">Loading stories...</p>
+                                <div className="space-y-4">
+                                    {[1, 2, 3].map((i) => <PublicStoryCardSkeleton key={i} />)}
+                                </div>
                             ) : stories.length === 0 ? (
                                 <p className="text-muted text-center py-8">No public stories yet</p>
                             ) : (
@@ -135,6 +164,38 @@ export function Discover() {
                                 ))
                             )}
                         </div>
+
+                        {totalPages > 1 && (
+                            <Pagination className="mt-8">
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                                            className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+
+                                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
+                                        <PaginationItem key={p}>
+                                            <PaginationLink
+                                                onClick={() => setPage(p)}
+                                                isActive={page === p}
+                                                className="cursor-pointer"
+                                            >
+                                                {p}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ))}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                            className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        )}
                     </main>
 
                     <aside className="hidden xl:block w-72 shrink-0 dotted-border-l p-4 overflow-y-auto">
@@ -142,11 +203,19 @@ export function Discover() {
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-muted">Stories Published</span>
-                                    <span className="text-foreground">1,247</span>
+                                    {stats ? (
+                                        <span className="text-foreground">{stats.storiesPublished.toLocaleString()}</span>
+                                    ) : (
+                                        <Skeleton className="h-4 w-12" />
+                                    )}
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted">Active Writers</span>
-                                    <span className="text-foreground">892</span>
+                                    {stats ? (
+                                        <span className="text-foreground">{stats.activeWriters.toLocaleString()}</span>
+                                    ) : (
+                                        <Skeleton className="h-4 w-12" />
+                                    )}
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted">Words Written Today</span>

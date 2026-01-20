@@ -1,6 +1,6 @@
-import { CodexEntry, Scene, Story, Analytics, StreamCompleteData } from "@once/shared";
+import { CodexEntry, Scene, Story, Analytics, StreamCompleteData, ApiResponse } from "@once/shared";
 import { apiClient } from "./client";
-import type { CodexExtractionResponse, CreateStoryInput } from "@once/shared/schemas";
+import type { CreateStoryInput, DiscoverResult, Genre } from "@once/shared/schemas";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -11,7 +11,16 @@ export const storiesApi = {
         method: "POST",
         body: JSON.stringify(data)
     }),
-    discover: () => apiClient<Story[]>("/api/stories/discover"),
+    discover: (params?: { genre?: string; sortBy?: string; page?: number }) => {
+        const searchParams = new URLSearchParams();
+        if (params?.genre) searchParams.set("genre", params.genre);
+        if (params?.sortBy) searchParams.set("sortBy", params.sortBy);
+        if (params?.page) searchParams.set("page", String(params.page));
+
+        const query = searchParams.toString();
+        return apiClient<DiscoverResult[]>(`/api/stories/discover${query ? `?${query}` : ""}`)
+    },
+    discoverStats: () => apiClient<{ storiesPublished: number; activeWriters: number }>("/api/stories/discover/stats"),
     upvote: (id: string) => apiClient<{ upvoted: boolean; upvotes: number }>(`/api/stories/${id}/upvote`, {
         method: "POST"
     }),

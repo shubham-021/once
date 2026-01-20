@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { db, eq, desc, and } from "@once/database";
 import { stories } from "@once/database/schema";
 import { success, error, paginated } from "@/lib/response";
-import { createStorySchema } from "@once/shared/schemas";
+import { createStorySchema, GenreFilter } from "@once/shared/schemas";
 import { requireAuth, type AuthVariables } from "@/middleware/auth";
 import { checkCredits, createStory, InsufficientCreditsError } from "@once/core";
 
@@ -18,33 +18,51 @@ crudRouter.get("/", requireAuth, async (c) => {
     return success(c, userStories);
 });
 
+crudRouter.get("/discover/stats", async (c) => {
+    const storiesCount = await db.select({ count: stories.id }).from(stories).where(eq(stories.visibility, "public"));
+    const writersCount = await db.selectDistinct({ userId: stories.userId }).from(stories).where(eq(stories.visibility, "public"));
+    // wordsWrittenToday
+
+    return success(c, { storiesPublished: Number(storiesCount[0]?.count) || 0, activeWriters: writersCount.length })
+})
+
 crudRouter.get("/discover", async (c) => {
     const page = Number(c.req.query("page") || "1");
     const limit = Number(c.req.query("limit") || "20");
     const offset = (page - 1) * limit;
 
+    const genre = c.req.query("genre") as GenreFilter;
+    const sortBy = c.req.query("sortBy") || "hot";
+
+    const conditions = [eq(stories.visibility, "public")]
+
+    if (genre && genre !== "All") {
+        conditions.push(eq(stories.genre, genre))
+    }
+
     const publicStories = await db.query.stories.findMany({
-        where: (stories, { and, eq }) => and(
-            eq(stories.visibility, "public"),
-            eq(stories.allowForking, true)
-        ),
-        orderBy: desc(stories.upvotes),
+        where: (and(...conditions)),
+        orderBy: sortBy === 'new' ? desc(stories.createdAt) : desc(stories.upvotes),
         limit,
         offset,
-        with: {
-            protagonist: true,
-            user: true
-        },
+        with: { user: true },
     });
+
+    const formattedStories = publicStories.map(story => ({
+        id: String(story.id),
+        title: story.title,
+        author: story.user.name,
+        genre: story.genre,
+        upvotes: story.upvotes,
+        description: story.description ?? "",
+        turnCount: story.turnCount
+    }))
 
     const total = await db.select({ count: stories.id })
         .from(stories)
-        .where(and(
-            eq(stories.visibility, "public"),
-            eq(stories.allowForking, true)
-        ));
+        .where(and(...conditions));
 
-    return paginated(c, publicStories, { page, pageSize: limit, total: total[0]?.count || 0 });
+    return paginated(c, formattedStories, { page, pageSize: limit, total: total[0]?.count || 0 });
 });
 
 crudRouter.get("/:id", async (c) => {
