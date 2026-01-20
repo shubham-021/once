@@ -1,22 +1,20 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { creditTransactions, db, eq } from "@once/database";
-import { config } from "dotenv";
 import { user, session, account, verification } from "@once/database";
 import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
 import Dodopayments from "dodopayments";
 import { addCredits } from "@once/core";
-import { dirname, resolve } from "path";
-import { fileURLToPath } from "url";
 import { CREDITS_MAP } from "./rates";
+import { AT_PD_ID, DODO_API_KEY, EXP_PD_ID, FE_URL, STORY_PD_ID, STRTR_PD_ID, TEST_PD_ID } from "@/envProvider";
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-config({ path: resolve(__dirname, "../../../../.env") });
+// const __dirname = dirname(fileURLToPath(import.meta.url))
+// config({ path: resolve(__dirname, "../../../../.env") });
 
 // console.log(process.env.DODO_PAYMENT_API_KEY)
 
 const dodoClient = new Dodopayments({
-    bearerToken: process.env.DODO_PAYMENT_API_KEY,
+    bearerToken: DODO_API_KEY,
     environment: "live_mode"
 })
 
@@ -29,7 +27,7 @@ export const auth = betterAuth({
         enabled: true
     },
     trustedOrigins: [
-        "http://localhost:3000"
+        FE_URL
     ],
     plugins: [
         dodopayments({
@@ -38,13 +36,13 @@ export const auth = betterAuth({
             use: [
                 checkout({
                     products: [
-                        { productId: process.env.STARTER_PRODUCT_ID!, slug: "starter" },
-                        { productId: process.env.EXPLORER_PRODUCT_ID!, slug: "explorer" },
-                        { productId: process.env.STORYTELLER_PRODUCT_ID!, slug: "storyteller" },
-                        { productId: process.env.AUTHOR_PRODUCT_ID!, slug: "author" },
-                        { productId: process.env.TEST_PRODUCT_ID!, slug: "test" }
+                        { productId: STRTR_PD_ID, slug: "starter" },
+                        { productId: EXP_PD_ID, slug: "explorer" },
+                        { productId: STORY_PD_ID, slug: "storyteller" },
+                        { productId: AT_PD_ID, slug: "author" },
+                        { productId: TEST_PD_ID, slug: "test" }
                     ],
-                    successUrl: "http://localhost:3000/credits/success",
+                    successUrl: `${FE_URL}/credits/success`,
                     authenticatedUsersOnly: true
                 }),
                 portal(),
