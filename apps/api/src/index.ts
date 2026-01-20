@@ -8,7 +8,6 @@ import vaultRouter from "./routes/vault";
 import { auth } from "./lib/auth";
 import { authMiddleware, requireAuth } from "./middleware/auth";
 import creditsRouter from "./routes/credits";
-import { FE_URL } from "./envProvider";
 
 const app = new Hono();
 
@@ -17,7 +16,7 @@ app.use("*", logger()); // logs every incoming req (helps in debugging)
 app.use("*", prettyJSON()); // makes api response easier to read when testing in browser or curl
 app.use("*",
     cors({
-        origin: [FE_URL],
+        origin: [process.env.FRONTEND_URL || "http://localhost:3000"],
         credentials: true,
     })
 );

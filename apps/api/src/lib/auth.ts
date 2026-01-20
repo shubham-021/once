@@ -1,20 +1,22 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { creditTransactions, db, eq } from "@once/database";
+import { config } from "dotenv";
 import { user, session, account, verification } from "@once/database";
 import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
 import Dodopayments from "dodopayments";
 import { addCredits } from "@once/core";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import { CREDITS_MAP } from "./rates";
-import { AT_PD_ID, DODO_API_KEY, EXP_PD_ID, FE_URL, STORY_PD_ID, STRTR_PD_ID, TEST_PD_ID } from "@/envProvider";
 
-// const __dirname = dirname(fileURLToPath(import.meta.url))
-// config({ path: resolve(__dirname, "../../../../.env") });
+const __dirname = dirname(fileURLToPath(import.meta.url))
+config({ path: resolve(__dirname, "../../../../.env") });
 
 // console.log(process.env.DODO_PAYMENT_API_KEY)
 
 const dodoClient = new Dodopayments({
-    bearerToken: DODO_API_KEY,
+    bearerToken: process.env.DODO_PAYMENT_API_KEY,
     environment: "live_mode"
 })
 
@@ -27,8 +29,18 @@ export const auth = betterAuth({
         enabled: true
     },
     trustedOrigins: [
-        FE_URL
+        process.env.FRONTEND_URL || "http://localhost:3000"
     ],
+    advanced: {
+        defaultCookieAttributes: {
+            sameSite: "none",
+            secure: true
+        }
+    },
+    session: {
+        expiresIn: 60 * 60 * 24 * 7,
+        updateAge: 60 * 60 * 24,
+    },
     plugins: [
         dodopayments({
             client: dodoClient,
@@ -36,13 +48,13 @@ export const auth = betterAuth({
             use: [
                 checkout({
                     products: [
-                        { productId: STRTR_PD_ID, slug: "starter" },
-                        { productId: EXP_PD_ID, slug: "explorer" },
-                        { productId: STORY_PD_ID, slug: "storyteller" },
-                        { productId: AT_PD_ID, slug: "author" },
-                        { productId: TEST_PD_ID, slug: "test" }
+                        { productId: process.env.STARTER_PRODUCT_ID!, slug: "starter" },
+                        { productId: process.env.EXPLORER_PRODUCT_ID!, slug: "explorer" },
+                        { productId: process.env.STORYTELLER_PRODUCT_ID!, slug: "storyteller" },
+                        { productId: process.env.AUTHOR_PRODUCT_ID!, slug: "author" },
+                        { productId: process.env.TEST_PRODUCT_ID!, slug: "test" }
                     ],
-                    successUrl: `${FE_URL}/credits/success`,
+                    successUrl: `${process.env.FRONTEND_URL || "http://localhost:3000"}/credits/success`,
                     authenticatedUsersOnly: true
                 }),
                 portal(),
