@@ -8,6 +8,12 @@ import vaultRouter from "./routes/vault";
 import { auth } from "./lib/auth";
 import { authMiddleware, requireAuth } from "./middleware/auth";
 import creditsRouter from "./routes/credits";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+import { config } from "dotenv";
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+config({ path: resolve(__dirname, "../../../.env") });
 
 const app = new Hono();
 

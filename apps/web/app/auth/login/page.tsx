@@ -4,26 +4,32 @@ import { useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
         setLoading(true);
 
         const result = await signIn.email({
             email,
             password,
+        }, {
+            onError: (data) => {
+                if (data.error.status === 403) {
+                    toast.error("Please verify your email address first");
+                }
+            }
         });
 
         if (result.error) {
-            setError(result.error.message || "Login failed");
+            // setError(result.error.message || "Login failed");
+            toast.error(result.error.message || "Login failed")
             setLoading(false);
             return;
         }
@@ -40,10 +46,6 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
-                        <p className="text-sm text-danger text-center">{error}</p>
-                    )}
-
                     <input
                         type="email"
                         placeholder="Email"

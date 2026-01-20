@@ -9,6 +9,7 @@ import { addCredits } from "@once/core";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { CREDITS_MAP } from "./rates";
+import { sendEmail } from "./email";
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, "../../../../.env") });
@@ -26,7 +27,8 @@ export const auth = betterAuth({
         schema: { user, session, account, verification }
     }),
     emailAndPassword: {
-        enabled: true
+        enabled: true,
+        requireEmailVerification: true
     },
     trustedOrigins: [
         process.env.FRONTEND_URL || "http://localhost:3000"
@@ -40,6 +42,22 @@ export const auth = betterAuth({
     session: {
         expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24,
+    },
+    emailVerification: {
+        sendOnSignUp: true,
+        autoSignInAfterVerification: true,
+        sendVerificationEmail: async ({ user, url }) => {
+            void sendEmail({
+                to: user.email,
+                subject: 'Verify your email - Once',
+                html: `
+                    <h2>Welcome to Once!</h2>
+                    <p>Click the link below to verift your email address:</p>
+                    <a href="${url}">Verify Email</a>
+                    <p>If you didn't create an account , you can ignore this email.</p>
+                `
+            })
+        },
     },
     plugins: [
         dodopayments({

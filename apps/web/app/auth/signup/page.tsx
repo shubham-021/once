@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signUp } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -11,33 +12,36 @@ export default function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState("");
+    // const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
+        // setError("");
 
         if (password !== confirmPassword) {
-            setError("Passwords don't match");
+            // setError("Passwords don't match");
+            toast.error("Passwords don't match");
             return;
         }
 
         if (password.length < 8) {
-            setError("Password must be at least 8 characters");
+            // setError("Password must be atleast 8 characters");
+            toast.error("Password must be atleast 8 characters")
             return;
         }
 
         setLoading(true);
 
         const result = await signUp.email({
-            name,
-            email,
+            name: name.trim(),
+            email: email.trim(),
             password,
         });
 
         if (result.error) {
-            setError(result.error.message || "Signup failed");
+            // setError(result.error.message || "Signup failed");
+            toast.error(result.error.message || "Signup failed");
             setLoading(false);
             return;
         }
@@ -54,10 +58,6 @@ export default function SignupPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && (
-                        <p className="text-sm text-danger text-center">{error}</p>
-                    )}
-
                     <input
                         type="text"
                         placeholder="Name"
