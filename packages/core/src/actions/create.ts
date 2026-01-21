@@ -1,7 +1,7 @@
 import { buildInitializePrompt, buildSystemPrompt, generateStructuredWithTracking } from "@/llm";
 import { creditTransactions, db, deferredCharacters, eq, protagonists, scenes, stories, userCredits } from "@once/database";
 import { protagonistSchema, scenesSchema, storySchema } from "@once/database/types";
-import { openSceneSchema } from "@once/shared";
+import { Genre, openSceneSchema } from "@once/shared";
 import { DebugCollector } from "@/debug";
 import { UsageCollector } from "@/credits";
 
@@ -16,7 +16,7 @@ export interface CreateStoryProps {
         image?: string | null | undefined;
     };
     title: string;
-    genre: string;
+    genre: Genre;
     narrativeStance: "grimdark" | "heroic" | "grounded" | "mythic" | "noir";
     storyMode: "protagonist" | "narrator";
     storyIdea: string | undefined;

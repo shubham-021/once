@@ -1,4 +1,4 @@
-import { db, eq } from "@once/database";
+import { db, DBTransaction, eq } from "@once/database";
 import { deferredCharacters } from "@once/database/schema";
 import { generateStructured, generateStructuredWithTracking } from "../llm";
 import { buildDeferredCharPrompt } from "../llm/prompts/deferred";
@@ -36,8 +36,8 @@ export async function evaluateDeferredCharacters(ctx: DeferredCharEvalContext, u
     return ctx.pendingCharacters.filter(c => result.triggeredCharacterIds.includes(c.id));
 }
 
-export async function markCharacterIntroduced(characterId: number, sceneId: number) {
-    await db.update(deferredCharacters)
+export async function markCharacterIntroduced(characterId: number, sceneId: number, tx: DBTransaction) {
+    await tx.update(deferredCharacters)
         .set({
             introduced: true,
             introducedAtSceneId: sceneId,

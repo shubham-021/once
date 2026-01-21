@@ -1,4 +1,4 @@
-import { db, eq } from "@once/database";
+import { db, DBTransaction, eq } from "@once/database";
 import { protagonists } from "@once/database/schema";
 
 interface ProtagonistUpdates {
@@ -24,7 +24,8 @@ interface CurrentProtagonist {
 
 export async function updateProtagonistState(
     protagonist: CurrentProtagonist,
-    updates: ProtagonistUpdates
+    updates: ProtagonistUpdates,
+    tx: DBTransaction,
 ): Promise<CurrentProtagonist> {
     let newTraits = protagonist.currentTraits || [];
     if (updates.addTraits) newTraits = [...newTraits, ...updates.addTraits];
@@ -47,7 +48,7 @@ export async function updateProtagonistState(
         scars: newScars,
     };
 
-    await db.update(protagonists)
+    await tx.update(protagonists)
         .set({
             health: updates.health ?? protagonist.health,
             energy: updates.energy ?? protagonist.energy,

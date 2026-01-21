@@ -2,11 +2,11 @@ import { extractCodexEntries, extractEntities } from "@/extraction";
 import { buildContext, storySceneMemory } from "@/memory";
 import { updateProtagonistState } from "@/protagonist";
 import { evaluateDeferredCharacters, evaluateEchoes, generateContinuation, markCharacterIntroduced, plantEcho, resolveEchoes } from "@/story";
-import { db, eq, scenes, stories } from "@once/database";
+import { creditTransactions, db, eq, scenes, stories, userCredits } from "@once/database";
 import { deferredCharactersSchema, echoesSchema, protagonistSchema, scenesSchema, storySchema } from "@once/database/types";
 import { DebugCollector } from "@/debug";
 import { cleanupFailedScene } from "./cleanup";
-import { UsageCollector, deductCredits, checkCredits, InsufficientCreditsError } from "@/credits";
+import { UsageCollector } from "@/credits";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
@@ -184,71 +184,94 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
 
         const newTurnNumber = (story.turnCount || 0) + 1;
 
-        let updatedProtagonist = activeProtagonist;
-        if (activeProtagonist && response.protagonistUpdates) {
-            const updates = await updateProtagonistState(activeProtagonist, response.protagonistUpdates);
-            updatedProtagonist = { ...activeProtagonist, ...updates }
-        }
+        const result = await db.transaction(async (tx) => {
+            let updatedProtagonist = activeProtagonist;
+            if (activeProtagonist && response.protagonistUpdates) {
+                const updates = await updateProtagonistState(activeProtagonist, response.protagonistUpdates, tx);
+                updatedProtagonist = { ...activeProtagonist, ...updates }
+            }
 
-        const [newScene] = await db.insert(scenes).values({
-            storyId,
-            turnNumber: newTurnNumber,
-            userAction,
-            narration: response.narration,
-            protagonistId: updatedProtagonist?.id,
-            protagonistSnapshot: updatedProtagonist ? {
-                name: updatedProtagonist.name,
-                description: updatedProtagonist.description,
-                health: updatedProtagonist.health,
-                energy: updatedProtagonist.energy,
-                currentLocation: updatedProtagonist.currentLocation,
-                baseTraits: updatedProtagonist.baseTraits,
-                currentTraits: updatedProtagonist.currentTraits,
-                inventory: updatedProtagonist.inventory,
-                scars: updatedProtagonist.scars,
-            } : null,
-        }).returning();
-
-        sceneId = newScene.id;
-
-        // debug collector
-        collector?.add('db', 'insert:scenes', newScene);
-
-        await Promise.all([
-            db.update(stories).set({ turnCount: newTurnNumber, updatedAt: new Date() }).where(eq(stories.id, storyId)),
-            ...triggeredCharacters.map(character => markCharacterIntroduced(character.id, newScene.id))
-        ])
-
-        collector?.add('db', 'update:stories', { storyId, turnCount: newTurnNumber });
-
-        const entities = await extractEntities(response.narration, activeProtagonist?.name || "protagonist", usageCollector)
-
-        // debug collector
-        collector?.add('llm', 'extractedEntities', entities);
-
-        await storySceneMemory(newScene.id.toString(), response.narration, storyId, newTurnNumber, entities, collector, usageCollector);
-
-        await Promise.all([
-            resolveEchoes(triggeredEchoes.map(e => e.id), newScene.id, collector),
-            response.echoPlanted ? plantEcho(storyId, newScene.id, response.echoPlanted.description, response.echoPlanted.triggerCondition) : Promise.resolve(),
-            extractCodexEntries(storyId, response.narration, collector, usageCollector)
-        ])
-
-        if (usageCollector) {
-            const creditsUsed = usageCollector.getCredits();
-            const usage = usageCollector.getUsage();
-
-            await deductCredits({
-                userId: story.userId,
+            const [newScene] = await tx.insert(scenes).values({
                 storyId,
-                sceneId: newScene.id,
-                creditsUsed,
-                usage
-            })
-        }
+                turnNumber: newTurnNumber,
+                userAction,
+                narration: response.narration,
+                protagonistId: updatedProtagonist?.id,
+                protagonistSnapshot: updatedProtagonist ? {
+                    name: updatedProtagonist.name,
+                    description: updatedProtagonist.description,
+                    health: updatedProtagonist.health,
+                    energy: updatedProtagonist.energy,
+                    currentLocation: updatedProtagonist.currentLocation,
+                    baseTraits: updatedProtagonist.baseTraits,
+                    currentTraits: updatedProtagonist.currentTraits,
+                    inventory: updatedProtagonist.inventory,
+                    scars: updatedProtagonist.scars,
+                } : null,
+            }).returning();
+
+            sceneId = newScene.id;
+
+            // debug collector
+            collector?.add('db', 'insert:scenes', newScene);
+
+            const entities = await extractEntities(response.narration, activeProtagonist?.name || "protagonist", usageCollector)
+
+            // debug collector
+            collector?.add('llm', 'extractedEntities', entities);
+
+            await Promise.all([
+                tx.update(stories).set({ turnCount: newTurnNumber, updatedAt: new Date() }).where(eq(stories.id, storyId)),
+                ...triggeredCharacters.map(character => markCharacterIntroduced(character.id, newScene.id, tx)),
+                storySceneMemory(newScene.id.toString(), response.narration, storyId, newTurnNumber, entities, collector, usageCollector),
+                resolveEchoes(triggeredEchoes.map(e => e.id), newScene.id, tx, collector),
+                response.echoPlanted ? plantEcho(storyId, newScene.id, response.echoPlanted.description, response.echoPlanted.triggerCondition, tx) : Promise.resolve(),
+                extractCodexEntries(storyId, response.narration, tx, collector, usageCollector)
+            ])
+
+            collector?.add('db', 'update:stories', { storyId, turnCount: newTurnNumber });
+
+            let newBalance: number | undefined;
+
+            if (usageCollector) {
+                const creditsUsed = usageCollector.getCredits();
+                const usage = usageCollector.getUsage();
+                const userId = story.userId;
+
+                const userCredit = await tx.query.userCredits.findFirst({
+                    where: eq(userCredits.userId, userId)
+                })
+
+                if (!userCredit) throw new Error(`No credit record for user ${userId}`);
+
+                newBalance = userCredit.balance - creditsUsed;
+
+                await tx.update(userCredits).set({
+                    balance: newBalance,
+                    lifetimeUsed: userCredit.lifetimeUsed + creditsUsed,
+                    updatedAt: new Date()
+                }).where(eq(userCredits.userId, userId));
+
+                await tx.insert(creditTransactions).values({
+                    userId: userId,
+                    type: "usage",
+                    amount: -creditsUsed,
+                    balanceAfter: newBalance,
+                    storyId: story.id,
+                    sceneId: newScene.id,
+                    claudeInputTokens: usage.claudeInput,
+                    claudeOutputTokens: usage.claudeOutput,
+                    gptInputTokens: usage.gptInput,
+                    gptOutputTokens: usage.gptOutput,
+                    embeddingTokens: usage.embedding
+                });
+            }
+
+            return { newScene };
+        })
 
         return {
-            scene: newScene,
+            scene: result.newScene,
             response,
             protagonistUpdates: response.protagonistUpdates,
             echoPlanted: response.echoPlanted ? true : false,
@@ -257,7 +280,6 @@ export async function continueStory(props: ContinueStoryProps, collector?: Debug
         };
 
     } catch (error) {
-
         if (sceneId) await cleanupFailedScene(storyId, sceneId);
         throw error;
     }

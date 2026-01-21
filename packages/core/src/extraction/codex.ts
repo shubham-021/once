@@ -1,4 +1,4 @@
-import { db, eq } from "@once/database";
+import { db, DBTransaction, eq } from "@once/database";
 import { codexEntries } from "@once/database/schema";
 import { generateStructured, generateStructuredWithTracking } from "../llm/generate";
 import { buildCodexExtractionPrompt } from "../llm/prompts/codex";
@@ -6,8 +6,8 @@ import { CodexExtractionResponse, codexExtractionSchema } from "@once/shared/sch
 import { DebugCollector } from "@/debug";
 import { UsageCollector } from "@/credits/collector";
 
-export async function extractCodexEntries(storyId: number, narration: string, collector?: DebugCollector, usageCollector?: UsageCollector) {
-    const existingEntries = await db.query.codexEntries.findMany({
+export async function extractCodexEntries(storyId: number, narration: string, tx: DBTransaction, collector?: DebugCollector, usageCollector?: UsageCollector) {
+    const existingEntries = await tx.query.codexEntries.findMany({
         where: eq(codexEntries.storyId, storyId)
     })
 
@@ -31,7 +31,7 @@ export async function extractCodexEntries(storyId: number, narration: string, co
     collector?.add('llm', 'generatedStructuredOutput', extraction);
 
     if (extraction.newEntries.length > 0) {
-        await db.insert(codexEntries).values(
+        await tx.insert(codexEntries).values(
             extraction.newEntries.map(entry => ({
                 storyId,
                 entryType: entry.entryType,
@@ -50,7 +50,7 @@ export async function extractCodexEntries(storyId: number, narration: string, co
                 e.name.toLowerCase() === update.name.toLowerCase()
             );
             if (existing && !existing.userEdited) {
-                await db.update(codexEntries)
+                await tx.update(codexEntries)
                     .set({
                         summary: `${existing.summary}\n\n${update.newInfo}`,
                         updatedAt: new Date(),

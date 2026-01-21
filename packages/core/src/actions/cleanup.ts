@@ -11,12 +11,6 @@ export async function cleanupFailedStory(storyId: number): Promise<void> {
     await deleteStoryGraph(storyId).catch(e =>
         console.error("Cleanup: Graph cleanup failed:", e)
     );
-
-    await db.delete(stories).where(eq(stories.id, storyId)).catch(e =>
-        console.error("Cleanup: DB cleanup failed:", e)
-    );
-
-    console.log(`Cleanup: Story ${storyId} rolled back`);
 }
 
 export async function cleanupFailedScene(storyId: number, sceneId: number): Promise<void> {
@@ -29,10 +23,4 @@ export async function cleanupFailedScene(storyId: number, sceneId: number): Prom
     await deleteSceneGraph(storyId, sceneId).catch(e =>
         console.error("Cleanup: Graph cleanup failed:", e)
     );
-
-    await db.delete(scenes).where(eq(scenes.id, sceneId)).catch(e =>
-        console.error("Cleanup: DB cleanup failed:", e)
-    );
-
-    console.log(`Cleanup: Scene ${sceneId} rolled back`);
 }

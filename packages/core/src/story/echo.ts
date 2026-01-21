@@ -1,4 +1,4 @@
-import { db, eq, inArray } from "@once/database";
+import { db, DBTransaction, eq, inArray } from "@once/database";
 import { echoes } from "@once/database/schema";
 import { generateStructured, generateStructuredWithTracking } from "../llm/generate";
 import { buildEchoEvalPrompt } from "../llm/prompts/echo";
@@ -47,9 +47,10 @@ export async function plantEcho(
     storyId: number,
     sourceSceneId: number,
     description: string,
-    triggerCondition: string
+    triggerCondition: string,
+    tx: DBTransaction
 ) {
-    await db.insert(echoes).values({
+    await tx.insert(echoes).values({
         storyId,
         sourceSceneId,
         description,
@@ -58,9 +59,9 @@ export async function plantEcho(
     })
 }
 
-export async function resolveEchoes(echoIds: number[], resolvedAtSceneId: number, collector?: DebugCollector) {
+export async function resolveEchoes(echoIds: number[], resolvedAtSceneId: number, tx: DBTransaction, collector?: DebugCollector) {
     if (echoIds.length === 0) return;
-    await db.update(echoes)
+    await tx.update(echoes)
         .set({
             status: "resolved",
             resolvedAtSceneId,
