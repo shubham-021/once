@@ -1,10 +1,11 @@
-import { generateStructured, generateStructuredWithTracking } from "../llm/generate";
+import { generateStructured, generateStructuredWithTracking, streamNarrationWithTracking } from "../llm/generate";
 import { buildSystemPrompt } from "../llm/prompts/system";
 import { buildInitializePrompt } from "../llm/prompts/initialize";
 import { buildContinuePrompt } from "../llm/prompts/continue";
 import { openSceneSchema, sceneResponseSchema } from "@once/shared/schemas";
 import type { NarrativeStance, StoryMode } from "@once/shared/schemas";
 import { UsageCollector } from "@/credits/collector";
+import { buildRevisionPrompt, buildRevisionSystemPrompt } from "@/llm/prompts/revision";
 
 interface StoryContext {
     narrativeStance: NarrativeStance;
@@ -89,4 +90,27 @@ export async function generateContinuation(ctx: ContinueContext, usageCollector?
         "scene_response",
         usageCollector
     );
+}
+
+export async function* streamNarrationOnly(ctx: ContinueContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
+    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
+    const continuePrompt = buildContinuePrompt({
+        stance: ctx.narrativeStance,
+        mode: ctx.storyMode,
+        protagonist: ctx.protagonist,
+        recentScenes: ctx.recentScenes,
+        userAction: ctx.userAction,
+        triggeredEchoes: ctx.triggeredEchoes,
+        factualKnowledge: ctx.factualKnowledge,
+        introducedCharacters: ctx.introducedCharacters
+    });
+
+    yield* streamNarrationWithTracking(systemPrompt, continuePrompt, usageCollector);
+}
+
+export async function* streamRevision(originalNarration: string, userComment: string, usageCollector?: UsageCollector): AsyncGenerator<string> {
+    const systemPrompt = buildRevisionSystemPrompt();
+    const revisionPrompt = buildRevisionPrompt({ originalNarration, userComment });
+
+    yield* streamNarrationWithTracking(systemPrompt, revisionPrompt, usageCollector);
 }

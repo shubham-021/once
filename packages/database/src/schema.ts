@@ -239,6 +239,7 @@ export const creditTransactions = pgTable("credit_transactions", {
     amountPaid: integer("amount_paid"),
     storyId: integer("story_id"),
     sceneId: integer("scene_id"),
+    draftId: integer("draft_id"),
     claudeInputTokens: integer("claude_input_tokens"),
     claudeOutputTokens: integer("claude_output_tokens"),
     gptInputTokens: integer("gpt_input_tokens"),
@@ -246,6 +247,46 @@ export const creditTransactions = pgTable("credit_transactions", {
     embeddingTokens: integer("embedding_tokens"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const drafts = pgTable("drafts", {
+    id: serial("id").primaryKey(),
+    storyId: integer("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    userAction: text("user_action").notNull(),
+    narration: text("narration").notNull(),
+    turnNumber: integer("turn_number").notNull(),
+    triggeredEchoes: json("triggered_echoes").$type<Array<{
+        id: number;
+        description: string;
+    }>>().default([]).notNull(),
+    triggeredCharacters: json("triggered_characters").$type<Array<{
+        id: number;
+        name: string;
+        description: string | null;
+        role: string | null;
+    }>>().default([]).notNull(),
+    protagonistSnapshot: json("protagonist_snapshot").$type<{
+        id: number;
+        name: string;
+        description: string | null;
+        health: number;
+        energy: number;
+        currentLocation: string;
+        baseTraits: string[];
+        currentTraits: string[];
+        inventory: string[];
+        scars: string[];
+    } | null>(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export const draftsRelations = relations(drafts, ({ one }) => ({
+    story: one(stories, {
+        fields: [drafts.storyId],
+        references: [stories.id]
+    })
+}))
 
 export const userCreditsRelations = relations(userCredits, ({ one }) => ({
     user: one(user, {
@@ -276,7 +317,8 @@ export const storiesRelations = relations(stories, ({ one, many }) => ({
     user: one(user, {
         fields: [stories.userId],
         references: [user.id]
-    })
+    }),
+    draft: one(drafts)
 }));
 
 export const protagonistsRelations = relations(protagonists, ({ one }) => ({

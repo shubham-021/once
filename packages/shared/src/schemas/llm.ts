@@ -35,6 +35,13 @@ export const sceneResponseSchema = z.object({
     }).nullable().describe("A consequence planted for future resolution"),
 });
 
+export const sceneExtractionSchema = sceneResponseSchema.pick({
+    protagonistUpdates: true,
+    echoPlanted: true
+})
+
+export type SceneExtraction = z.infer<typeof sceneExtractionSchema>;
+
 export type OpeningSceneResponse = z.infer<typeof openSceneSchema>;
 export type SceneResponse = z.infer<typeof sceneResponseSchema>;
 
