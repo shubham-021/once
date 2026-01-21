@@ -80,24 +80,24 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          <LenisProvider>
-            {/* <EmberCursor /> */}
-            <FontProvider>
-              <CreditsProvider>
-                <Toaster
-                  position="bottom-right"
-                  toastOptions={{
-                    style: {
-                      background: 'var(--surface)',
-                      border: '1px solid var(--line)',
-                      color: 'var(--foreground)',
-                    },
-                  }}
-                />
-                {children}
-              </CreditsProvider>
-            </FontProvider>
-          </LenisProvider>
+          {/* <LenisProvider> */}
+          {/* <EmberCursor /> */}
+          <FontProvider>
+            <CreditsProvider>
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  style: {
+                    background: 'var(--surface)',
+                    border: '1px solid var(--line)',
+                    color: 'var(--foreground)',
+                  },
+                }}
+              />
+              {children}
+            </CreditsProvider>
+          </FontProvider>
+          {/* </LenisProvider> */}
         </ThemeProvider>
       </body>
     </html>

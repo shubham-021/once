@@ -21,6 +21,7 @@ export function NarrationEditor({
         extensions: [StarterKit],
         content,
         editable,
+        immediatelyRender: false,
         editorProps: {
             attributes: {
                 class: cn(
@@ -45,10 +46,11 @@ export function NarrationEditor({
     return (
         <div className={cn(
             "rounded-lg border border-line bg-surface/50",
+            "max-h-[400px] overflow-y-auto",
             editable && "focus-within:border-accent/50 transition-colors",
             className
         )}>
-            <EditorContent editor={editor} />
+            <EditorContent editor={editor} data-lenis-prevent />
         </div>
     );
 }
