@@ -23,7 +23,7 @@ export const createStorySchema = z.object({
         name: z.string().min(1).max(100),
         description: z.string(),
         traits: traitsArraySchema.default([]),
-    })
+    }).optional()
 });
 
 export type CreateStoryInput = z.infer<typeof createStorySchema>;

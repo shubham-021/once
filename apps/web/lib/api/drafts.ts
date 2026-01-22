@@ -1,4 +1,4 @@
-import { Scene, StreamCompleteData } from "@once/shared";
+import { CreateStoryInput, Scene, StreamCompleteData } from "@once/shared";
 import { apiClient } from "./client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -11,6 +11,16 @@ export interface DraftAcceptResult {
 }
 
 export const draftsApi = {
+
+    getDraft: (storyId: number) => apiClient<{ id: number; narration: string; userAction: string; turnNumber: number } | null>(
+        `/api/stories/draft/${storyId}`
+    ),
+
+    createDraft: (data: CreateStoryInput) => apiClient<{ storyId: number; draftId: number }>(`api/stories/draft`, {
+        method: "POST",
+        body: JSON.stringify(data)
+    }),
+
     continueStream: (
         storyId: number,
         action: string,

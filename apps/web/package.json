@@ -19,6 +19,7 @@
     "@react-three/fiber": "^9.5.0",
     "@svgdotjs/svg.js": "^3.2.5",
     "@tabler/icons-react": "^3.36.1",
+    "@tiptap/core": "^3.16.0",
     "@tiptap/pm": "^3.16.0",
     "@tiptap/react": "^3.16.0",
     "@tiptap/starter-kit": "^3.16.0",

@@ -100,5 +100,5 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
 
     const setNarration = (narration: string) => setDraft(prev => prev ? { ...prev, narration } : null)
 
-    return { draft, isStreaming, isAccepting, startContinue, revise, saveEdits, accept, discard, setNarration }
+    return { draft, setDraft, isStreaming, isAccepting, startContinue, revise, saveEdits, accept, discard, setNarration }
 }

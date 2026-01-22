@@ -11,7 +11,7 @@ import { createStorySchema, suggestedTraits } from "@once/shared/schemas";
 import { NavHeader } from "../nav-header";
 import { toast } from "sonner";
 import { storiesApi } from "@/lib/api";
-import { ConstellationLoader } from "../loader";
+import { ConstellationLoader } from "../ui/loader";
 
 
 

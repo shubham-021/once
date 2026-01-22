@@ -1,4 +1,4 @@
-import { generateStructured, generateStructuredWithTracking, streamNarrationWithTracking } from "../llm/generate";
+import { generateResponseWithTracking, generateStructured, generateStructuredWithTracking, streamNarrationWithTracking } from "../llm/generate";
 import { buildSystemPrompt } from "../llm/prompts/system";
 import { buildInitializePrompt } from "../llm/prompts/initialize";
 import { buildContinuePrompt } from "../llm/prompts/continue";
@@ -101,6 +101,23 @@ export async function* streamOpeningScene(ctx: OpeningContext, usageCollector?: 
     });
 
     yield* streamNarrationWithTracking(systemPrompt, initPrompt, usageCollector);
+}
+
+export async function generateOpeningNarration(ctx: OpeningContext, usageCollector?: UsageCollector): Promise<string> {
+    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
+    const initPrompt = buildInitializePrompt({
+        title: ctx.title,
+        genre: ctx.genre,
+        stance: ctx.narrativeStance,
+        mode: ctx.storyMode,
+        plot: ctx.storyIdea,
+        startingScene: ctx.startingScene,
+        cast: ctx.cast,
+        castMode: ctx.castMode,
+        protagonist: ctx.protagonist,
+    });
+
+    return generateResponseWithTracking(systemPrompt, initPrompt, usageCollector);
 }
 
 export async function generateContinuation(ctx: ContinueContext, usageCollector?: UsageCollector) {

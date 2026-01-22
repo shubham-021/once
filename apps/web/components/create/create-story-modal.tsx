@@ -11,9 +11,9 @@ import { useCreateStore } from "@/stores/create-store";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createStorySchema } from "@once/shared";
-import { storiesApi } from "@/lib/api";
+import { draftsApi, storiesApi } from "@/lib/api";
 import { useState } from "react";
-import { ConstellationLoader } from "../loader";
+import { ConstellationLoader } from "../ui/loader";
 
 export function CreateStoryModal() {
 
@@ -30,7 +30,8 @@ export function CreateStoryModal() {
     } = useCreateStory();
 
     const { open, setOpen } = useCreateStore();
-    const [isCreating, setIsCreating] = useState(false);
+    const setIsCreating = useCreateStore(s => s.setIsCreating);
+    const isCreating = useCreateStore(s => s.isCreating);
 
     const handleClose = () => {
         reset();
@@ -69,16 +70,25 @@ export function CreateStoryModal() {
 
         setIsCreating(true);
 
-        const response = await storiesApi.create(result.data);
-
-        if (response.error) {
-            toast.error(response.error.message);
-            setIsCreating(false);
-            return;
+        try {
+            const { data, error } = await draftsApi.createDraft(result.data);
+            if (error) {
+                if (error.code === "INSUFFICIENT_BALANCE") {
+                    toast.error("Insufficient credits");
+                } else {
+                    toast.error("Failed to create story");
+                }
+                setIsCreating(false)
+                return;
+            }
+            toast.success("Story created!");
+            setOpen(false);
+            reset();
+            router.push(`/story/${data?.storyId}`);
+        } catch (error) {
+            toast.error("Failed to create story");
+            setIsCreating(false)
         }
-
-        toast.success("Story created!");
-        router.push(`/story/${response.data.id}`);
     };
 
     const isLastStep = currentStep === totalSteps - 1;
@@ -113,10 +123,6 @@ export function CreateStoryModal() {
 
     return (
         <>
-            {isCreating && (
-                <ConstellationLoader message="Crafting the beginning of your story..." />
-            )}
-
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogPortal>
                     <DialogOverlay className="bg-black/70" />

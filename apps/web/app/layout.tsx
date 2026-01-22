@@ -33,6 +33,7 @@ import { NavHeader } from "@/components/nav-header";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { CreditsProvider } from "@/components/credits-provider";
+import { ConstellationLoader } from "@/components/constellationLoader";
 
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair", display: "swap" });
 const cormorant = Cormorant_Garamond({ subsets: ["latin"], variable: "--font-cormorant", weight: ["400", "500", "600"], display: "swap" });
@@ -84,6 +85,7 @@ export default function RootLayout({
           {/* <EmberCursor /> */}
           <FontProvider>
             <CreditsProvider>
+              <ConstellationLoader />
               <Toaster
                 position="bottom-right"
                 toastOptions={{

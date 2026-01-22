@@ -7,7 +7,7 @@ import { BookOpen, User, Wand } from "lucide-react";
 import MobileDrawer from "./mobile-drawer";
 import { storiesApi } from "@/lib/api";
 import type { Story, Scene, Protagonist, CodexEntry } from "@once/shared";
-import { ConstellationLoader } from "./loader";
+import { ConstellationLoader } from "./ui/loader";
 
 
 export function StoryInterface({ storyId }: { storyId: string }) {

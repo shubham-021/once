@@ -8,7 +8,7 @@ import { storiesApi } from "@/lib/api";
 import type { Story } from "@once/shared";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
-import { ConstellationLoader } from "../loader";
+import { ConstellationLoader } from "../ui/loader";
 import { useCreateStore } from "@/stores/create-store";
 import { StoryCardSkeleton } from "./story-card-skeleton";
 
