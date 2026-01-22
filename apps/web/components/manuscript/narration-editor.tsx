@@ -43,6 +43,10 @@ export function NarrationEditor({
         }
     }, [content, editor]);
 
+    useEffect(() => {
+        if (editor) editor.setEditable(editable);
+    }, [editable, editor]);
+
     return (
         <div className={cn(
             "rounded-lg border border-line bg-surface/50",
