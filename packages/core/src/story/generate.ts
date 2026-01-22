@@ -7,12 +7,9 @@ import type { NarrativeStance, StoryMode } from "@once/shared/schemas";
 import { UsageCollector } from "@/credits/collector";
 import { buildRevisionPrompt, buildRevisionSystemPrompt } from "@/llm/prompts/revision";
 
-interface StoryContext {
+interface InitializeContext {
     narrativeStance: NarrativeStance;
     storyMode: StoryMode;
-}
-
-interface InitializeContext extends StoryContext {
     title: string;
     genre: string;
     protagonist?: {
@@ -23,7 +20,9 @@ interface InitializeContext extends StoryContext {
     };
 }
 
-interface ContinueContext extends StoryContext {
+interface ContinueContext {
+    narrativeStance: NarrativeStance;
+    storyMode: StoryMode;
     promptForOnce?: string | null;
     worldDescription?: string | null;
     protagonist?: {
@@ -50,6 +49,24 @@ interface ContinueContext extends StoryContext {
     }>;
 }
 
+interface OpeningContext {
+    narrativeStance: NarrativeStance;
+    storyMode: StoryMode;
+    title: string;
+    genre: string;
+    storyIdea?: string;
+    worldDescription?: string;
+    promptForOnce?: string;
+    startingScene?: string;
+    cast?: Array<{ name: string; description: string }>;
+    castMode?: 'strict' | 'flexible';
+    protagonist?: {
+        name: string;
+        description?: string;
+        traits: string[];
+    };
+}
+
 export async function generateOpeningScene(ctx: InitializeContext, usageCollector?: UsageCollector) {
     const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode);
     const initPrompt = buildInitializePrompt({
@@ -67,6 +84,23 @@ export async function generateOpeningScene(ctx: InitializeContext, usageCollecto
         "opening_scene",
         usageCollector
     );
+}
+
+export async function* streamOpeningScene(ctx: OpeningContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
+    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
+    const initPrompt = buildInitializePrompt({
+        title: ctx.title,
+        genre: ctx.genre,
+        stance: ctx.narrativeStance,
+        mode: ctx.storyMode,
+        plot: ctx.storyIdea,
+        startingScene: ctx.startingScene,
+        cast: ctx.cast,
+        castMode: ctx.castMode,
+        protagonist: ctx.protagonist,
+    });
+
+    yield* streamNarrationWithTracking(systemPrompt, initPrompt, usageCollector);
 }
 
 export async function generateContinuation(ctx: ContinueContext, usageCollector?: UsageCollector) {
