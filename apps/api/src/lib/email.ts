@@ -10,7 +10,7 @@ interface SendEmailPramas {
 
 export async function sendEmail({ to, subject, html }: SendEmailPramas) {
     const { data, error } = await resend.emails.send({
-        from: 'Once <noreply@once-arka.vercel.app>',
+        from: 'Once <noreply@once.im-arka.in>',
         to: [to],
         subject,
         html
