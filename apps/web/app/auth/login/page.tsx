@@ -19,13 +19,15 @@ export default function LoginPage() {
         const result = await signIn.email({
             email,
             password,
-        }, {
-            onError: (data) => {
-                if (data.error.status === 403) {
-                    toast.error("Please verify your email address first");
-                }
-            }
-        });
+        },
+            // {
+            //     onError: (data) => {
+            //         if (data.error.status === 403) {
+            //             toast.error("Please verify your email address first");
+            //         }
+            //     }
+            // }
+        );
 
         if (result.error) {
             // setError(result.error.message || "Login failed");
