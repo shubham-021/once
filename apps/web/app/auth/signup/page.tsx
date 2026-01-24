@@ -37,7 +37,7 @@ export default function SignupPage() {
             name: name.trim(),
             email: email.trim(),
             password,
-            // callbackURL: "/auth/login"
+            callbackURL: "https://once.im-arka.in/auth/login"
         });
 
         if (result.error) {
