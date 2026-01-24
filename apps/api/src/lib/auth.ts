@@ -131,6 +131,9 @@ export const auth = betterAuth({
             async sendVerificationOTP({email,otp,type}) {
                 if (type === "email-verification"){
                     try {
+                        console.log(`[OTP VERIFICATION]: ${email}`);
+                        console.log(`[OTP VERIFICATION]: ${otp}`);
+                        console.log(`[OTP VERIFICATION]: ${type}`);
                         const result = await sendEmail({
                             to: email,
                             subject: 'Verify your email - Once',

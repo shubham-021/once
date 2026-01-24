@@ -155,6 +155,7 @@ export default function SignupPage() {
                             <button
                                 type="submit"
                                 onClick={handleSubmit}
+                                disabled={loading || otp.trim().length === 0}
                                 className={cn(
                                     "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
                                 )}
