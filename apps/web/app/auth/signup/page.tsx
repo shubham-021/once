@@ -15,6 +15,7 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     // const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [sendingOtp, setSendingOtp] = useState(false);
     const [showOtpfield,setShowOtpField] = useState(false);
     const [otp,setOtp] = useState("");
 
@@ -34,6 +35,7 @@ export default function SignupPage() {
         }
 
         try{
+            setSendingOtp(true);
             const {error} = await emailOtp.sendVerificationOtp({
                 email,
                 type: "email-verification"
@@ -43,12 +45,19 @@ export default function SignupPage() {
             setShowOtpField(true);
         }catch{
             toast.error("Failed to send otp , try again later !!");
+        }finally{
+            setSendingOtp(false);
         }
     }
 
     const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         // setError("");
+
+        if(otp.trim().length === 0){
+            toast.error("OTP is required !!")
+            return;
+        }
 
         setLoading(true);
 
@@ -59,7 +68,10 @@ export default function SignupPage() {
                 otp
             })
     
-            if(error) throw new Error(error.message || "Invalid OTP");
+            if(error){
+                toast.error("Invalid OTP !!");
+                return;
+            }
     
             const result = await signUp.email({
                 name: name.trim(),
@@ -133,12 +145,13 @@ export default function SignupPage() {
 
                             <button
                                 type="submit"
+                                disabled={sendingOtp}
                                 onClick={handleOtp}
                                 className={cn(
                                     "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
                                 )}
                             >
-                                Submit
+                                {sendingOtp ? 'Sending OTP...':'Submit'}
                             </button>
                         </div>
                     ):
@@ -155,7 +168,7 @@ export default function SignupPage() {
                             <button
                                 type="submit"
                                 onClick={handleSubmit}
-                                disabled={loading || otp.trim().length === 0}
+                                disabled={loading}
                                 className={cn(
                                     "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
                                 )}
