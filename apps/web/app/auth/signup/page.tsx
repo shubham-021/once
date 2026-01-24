@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { signUp } from "@/lib/auth-client";
+import React, { ButtonHTMLAttributes, useState } from "react";
+import { emailOtp, signUp } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -14,10 +15,11 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     // const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showOtpfield,setShowOtpField] = useState(false);
+    const [otp,setOtp] = useState("");
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        // setError("");
 
         if (password !== confirmPassword) {
             // setError("Passwords don't match");
@@ -31,23 +33,54 @@ export default function SignupPage() {
             return;
         }
 
+        try{
+            const {error} = await emailOtp.sendVerificationOtp({
+                email,
+                type: "email-verification"
+            })
+    
+            if(!error) toast.success("Otp sent to your email");
+            setShowOtpField(true);
+        }catch{
+            toast.error("Failed to send otp , try again later !!");
+        }
+    }
+
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        // setError("");
+
         setLoading(true);
 
-        const result = await signUp.email({
-            name: name.trim(),
-            email: email.trim(),
-            password,
-            callbackURL: "https://once.im-arka.in/auth/login"
-        });
-
-        if (result.error) {
-            // setError(result.error.message || "Signup failed");
-            toast.error(result.error.message || "Signup failed");
+        try{
+            const {data,error} = await emailOtp.checkVerificationOtp({
+                email,
+                type: "email-verification",
+                otp
+            })
+    
+            if(error) throw new Error(error.message || "Invalid OTP");
+    
+            const result = await signUp.email({
+                name: name.trim(),
+                email: email.trim(),
+                password
+            });
+    
+            if (result.error) throw new Error(result.error.message || "Signup failed");
+            //     {
+            //     // setError(result.error.message || "Signup failed");
+            //     toast.error(result.error.message || "Signup failed");
+            //     setLoading(false);
+            //     return;
+            // }
+    
+            router.push("/library");
+        } catch(error){
+            toast.error((error as Error).message);
+        } finally{
             setLoading(false);
-            return;
         }
-
-        router.push("/library");
     };
 
     return (
@@ -58,52 +91,78 @@ export default function SignupPage() {
                     <p className="text-sm text-muted mt-2">Start writing stories that matter</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="text"
-                        placeholder="Name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                        required
-                    />
+                {!showOtpfield 
+                    ? (
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                required
+                            />
 
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                        required
-                    />
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                required
+                            />
 
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                        required
-                        minLength={8}
-                    />
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                required
+                                minLength={8}
+                            />
 
-                    <input
-                        type="password"
-                        placeholder="Confirm Password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                        required
-                    />
+                            <input
+                                type="password"
+                                placeholder="Confirm Password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                required
+                            />
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
-                    >
-                        {loading ? "Creating account..." : "Create Account"}
-                    </button>
-                </form>
+                            <button
+                                type="submit"
+                                onClick={handleOtp}
+                                className={cn(
+                                    "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
+                                )}
+                            >
+                                Submit
+                            </button>
+                        </div>
+                    ):
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Otp"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                required
+                            />
+
+                            <button
+                                type="submit"
+                                onClick={handleSubmit}
+                                className={cn(
+                                    "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
+                                )}
+                            >
+                                {loading ? 'Creating Account...' : 'Create Account'}
+                            </button>
+                        </div>
+                }
 
                 <p className="text-center text-sm text-muted">
                     Already have an account?{" "}

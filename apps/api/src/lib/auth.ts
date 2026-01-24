@@ -10,6 +10,7 @@ import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { CREDITS_MAP } from "./rates";
 import { sendEmail } from "./email";
+import { emailOTP } from "better-auth/plugins";
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, "../../../../.env") });
@@ -28,7 +29,6 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
-        requireEmailVerification: true
     },
     trustedOrigins: [
         process.env.FRONTEND_URL || "http://localhost:3000"
@@ -43,30 +43,30 @@ export const auth = betterAuth({
         expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24,
     },
-    emailVerification: {
-        sendOnSignUp: true,
-        autoSignInAfterVerification: true,
-        callbackURL:  `${process.env.FRONTEND_URL}/auth/login`,
-        sendVerificationEmail: async ({ user, url }) => {
-            // console.log(`[Auth] Sending verification email to: ${user.email}`);
-            console.log(`[CALLBACK] Callback url: ${process.env.FRONTEND_URL}`);
-            try {
-                const result = await sendEmail({
-                    to: user.email,
-                    subject: 'Verify your email - Once',
-                    html: `
-                        <h2>Welcome to Once!</h2>
-                        <p>Click the link below to verify your email address:</p>
-                        <a href="${url}">Verify Email</a>
-                        <p>If you didn't create an account, you can ignore this email.</p>
-                    `
-                });
-                // console.log(`[Auth] Email sent successfully:`, result);
-            } catch (error) {
-                console.error(`[Auth] Failed to send verification email:`, error);
-            }
-        },
-    },
+    // emailVerification: {
+    //     sendOnSignUp: true,
+    //     autoSignInAfterVerification: true,
+    //     callbackURL:  `${process.env.FRONTEND_URL}/auth/login`,
+    //     sendVerificationEmail: async ({ user, url }) => {
+    //         // console.log(`[Auth] Sending verification email to: ${user.email}`);
+    //         // console.log(`[CALLBACK] Callback url: ${process.env.FRONTEND_URL}`);
+    //         try {
+    //             const result = await sendEmail({
+    //                 to: user.email,
+    //                 subject: 'Verify your email - Once',
+    //                 html: `
+    //                     <h2>Welcome to Once!</h2>
+    //                     <p>Click the link below to verify your email address:</p>
+    //                     <a href="${url}">Verify Email</a>
+    //                     <p>If you didn't create an account, you can ignore this email.</p>
+    //                 `
+    //             });
+    //             // console.log(`[Auth] Email sent successfully:`, result);
+    //         } catch (error) {
+    //             console.error(`[Auth] Failed to send verification email:`, error);
+    //         }
+    //     },
+    // },
     plugins: [
         dodopayments({
             client: dodoClient,
@@ -126,6 +126,27 @@ export const auth = betterAuth({
                     }
                 })
             ]
+        }),
+        emailOTP({
+            async sendVerificationOTP({email,otp,type}) {
+                if (type === "email-verification"){
+                    try {
+                        const result = await sendEmail({
+                            to: email,
+                            subject: 'Verify your email - Once',
+                            html: `
+                                <h2>Welcome to Once!</h2>
+                                <p>Here is your otp for verification: </p>
+                                ${otp}
+                                <p>If you didn't create an account, you can ignore this email.</p>
+                            `
+                        });
+                    // console.log(`[Auth] Email sent successfully:`, result);
+                    } catch (error) {
+                        console.error(`[Auth] Failed to send verification email:`, error);
+                    }
+                }
+            }
         })
     ]
     // socialProviders: {
