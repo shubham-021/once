@@ -46,9 +46,10 @@ export const auth = betterAuth({
     emailVerification: {
         sendOnSignUp: true,
         autoSignInAfterVerification: true,
-        callbackURL: `${process.env.FRONTEND_URL || "http://localhost:3000"}/auth/login`,
+        callbackURL:  `${process.env.FRONTEND_URL}/auth/login`,
         sendVerificationEmail: async ({ user, url }) => {
-            console.log(`[Auth] Sending verification email to: ${user.email}`);
+            // console.log(`[Auth] Sending verification email to: ${user.email}`);
+            console.log(`[CALLBACK] Callback url: ${process.env.FRONTEND_URL}`);
             try {
                 const result = await sendEmail({
                     to: user.email,
@@ -60,7 +61,7 @@ export const auth = betterAuth({
                         <p>If you didn't create an account, you can ignore this email.</p>
                     `
                 });
-                console.log(`[Auth] Email sent successfully:`, result);
+                // console.log(`[Auth] Email sent successfully:`, result);
             } catch (error) {
                 console.error(`[Auth] Failed to send verification email:`, error);
             }

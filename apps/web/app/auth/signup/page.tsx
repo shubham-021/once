@@ -37,7 +37,7 @@ export default function SignupPage() {
             name: name.trim(),
             email: email.trim(),
             password,
-            callbackURL: "/auth/login"
+            // callbackURL: "/auth/login"
         });
 
         if (result.error) {
