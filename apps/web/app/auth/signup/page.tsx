@@ -34,19 +34,20 @@ export default function SignupPage() {
             return;
         }
 
-        try {
-            setSendingOtp(true);
-            const { error } = await emailOtp.sendVerificationOtp({
-                email,
-                type: "sign-in"
-            })
 
-            if (!error) toast.success("Otp sent to your email");
-            setShowOtpField(true);
-        } catch {
+        setSendingOtp(true);
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/sendOtp`, {
+            method: "POST",
+            body: JSON.stringify({ email })
+        })
+
+        if (!response.ok) {
             toast.error("Failed to send otp , try again later !!");
-        } finally {
-            setSendingOtp(false);
+            return;
+        } else {
+            toast.success("Otp sent to your email");
+            setShowOtpField(true);
         }
     }
 

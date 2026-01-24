@@ -9,8 +9,6 @@ import { addCredits } from "@once/core";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { CREDITS_MAP } from "./rates";
-import { sendEmail } from "./email";
-import { emailOTP } from "better-auth/plugins";
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, "../../../../.env") });
@@ -130,35 +128,6 @@ export const auth = betterAuth({
                     }
                 })
             ]
-        }),
-        emailOTP({
-            overrideDefaultEmailVerification: true,
-            disableSignUp: true,
-            otpLength: 6,
-            expiresIn: 300,
-            async sendVerificationOTP({ email, otp, type }) {
-                console.log(`[OTP VERIFICATION]: ${email}`);
-                console.log(`[OTP VERIFICATION]: ${otp}`);
-                console.log(`[OTP VERIFICATION]: ${type}`);
-
-                if (type === "sign-in") {
-                    try {
-                        const result = await sendEmail({
-                            to: email,
-                            subject: 'Verify your email - Once',
-                            html: `
-                                <h2>Welcome to Once!</h2>
-                                <p>Here is your OTP for verification: </p>
-                                <h3>${otp}</h3>
-                                <p>If you didn't create an account, you can ignore this email.</p>
-                            `
-                        });
-                        // console.log(`[Auth] Email sent successfully:`, result);
-                    } catch (error) {
-                        console.error(`[Auth] Failed to send verification email:`, error);
-                    }
-                }
-            }
         })
     ]
     // socialProviders: {
