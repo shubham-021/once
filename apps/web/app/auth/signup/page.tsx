@@ -16,8 +16,8 @@ export default function SignupPage() {
     // const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [sendingOtp, setSendingOtp] = useState(false);
-    const [showOtpfield,setShowOtpField] = useState(false);
-    const [otp,setOtp] = useState("");
+    const [showOtpfield, setShowOtpField] = useState(false);
+    const [otp, setOtp] = useState("");
 
     const handleOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -34,18 +34,18 @@ export default function SignupPage() {
             return;
         }
 
-        try{
+        try {
             setSendingOtp(true);
-            const {error} = await emailOtp.sendVerificationOtp({
+            const { error } = await emailOtp.sendVerificationOtp({
                 email,
-                type: "email-verification"
+                type: "sign-in"
             })
-    
-            if(!error) toast.success("Otp sent to your email");
+
+            if (!error) toast.success("Otp sent to your email");
             setShowOtpField(true);
-        }catch{
+        } catch {
             toast.error("Failed to send otp , try again later !!");
-        }finally{
+        } finally {
             setSendingOtp(false);
         }
     }
@@ -54,31 +54,31 @@ export default function SignupPage() {
         e.preventDefault();
         // setError("");
 
-        if(otp.trim().length === 0){
+        if (otp.trim().length === 0) {
             toast.error("OTP is required !!")
             return;
         }
 
         setLoading(true);
 
-        try{
-            const {data,error} = await emailOtp.checkVerificationOtp({
+        try {
+            const { data, error } = await emailOtp.checkVerificationOtp({
                 email,
-                type: "email-verification",
+                type: "sign-in",
                 otp
             })
-    
-            if(error){
+
+            if (error) {
                 toast.error("Invalid OTP !!");
                 return;
             }
-    
+
             const result = await signUp.email({
                 name: name.trim(),
                 email: email.trim(),
                 password
             });
-    
+
             if (result.error) throw new Error(result.error.message || "Signup failed");
             //     {
             //     // setError(result.error.message || "Signup failed");
@@ -86,11 +86,11 @@ export default function SignupPage() {
             //     setLoading(false);
             //     return;
             // }
-    
+
             router.push("/library");
-        } catch(error){
+        } catch (error) {
             toast.error((error as Error).message);
-        } finally{
+        } finally {
             setLoading(false);
         }
     };
@@ -103,7 +103,7 @@ export default function SignupPage() {
                     <p className="text-sm text-muted mt-2">Start writing stories that matter</p>
                 </div>
 
-                {!showOtpfield 
+                {!showOtpfield
                     ? (
                         <div className="space-y-4">
                             <input
@@ -151,31 +151,31 @@ export default function SignupPage() {
                                     "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
                                 )}
                             >
-                                {sendingOtp ? 'Sending OTP...':'Submit'}
+                                {sendingOtp ? 'Sending OTP...' : 'Submit'}
                             </button>
                         </div>
-                    ):
-                        <div className="space-y-4">
-                            <input
-                                type="text"
-                                placeholder="Otp"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                                required
-                            />
+                    ) :
+                    <div className="space-y-4">
+                        <input
+                            type="text"
+                            placeholder="Otp"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                            required
+                        />
 
-                            <button
-                                type="submit"
-                                onClick={handleSubmit}
-                                disabled={loading}
-                                className={cn(
-                                    "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
-                                )}
-                            >
-                                {loading ? 'Creating Account...' : 'Create Account'}
-                            </button>
-                        </div>
+                        <button
+                            type="submit"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className={cn(
+                                "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
+                            )}
+                        >
+                            {loading ? 'Creating Account...' : 'Create Account'}
+                        </button>
+                    </div>
                 }
 
                 <p className="text-center text-sm text-muted">

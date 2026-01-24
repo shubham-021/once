@@ -39,6 +39,10 @@ export const auth = betterAuth({
             secure: true
         }
     },
+    logger: {
+        level: "debug",
+        disabled: false
+    },
     session: {
         expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24,
@@ -131,23 +135,24 @@ export const auth = betterAuth({
             overrideDefaultEmailVerification: true,
             otpLength: 6,
             expiresIn: 300,
-            async sendVerificationOTP({email,otp,type}) {
+            async sendVerificationOTP({ email, otp, type }) {
                 console.log(`[OTP VERIFICATION]: ${email}`);
                 console.log(`[OTP VERIFICATION]: ${otp}`);
                 console.log(`[OTP VERIFICATION]: ${type}`);
-                if (type === "email-verification"){
+
+                if (type === "sign-in") {
                     try {
                         const result = await sendEmail({
                             to: email,
                             subject: 'Verify your email - Once',
                             html: `
                                 <h2>Welcome to Once!</h2>
-                                <p>Here is your otp for verification: </p>
-                                ${otp}
+                                <p>Here is your OTP for verification: </p>
+                                <h3>${otp}</h3>
                                 <p>If you didn't create an account, you can ignore this email.</p>
                             `
                         });
-                    // console.log(`[Auth] Email sent successfully:`, result);
+                        // console.log(`[Auth] Email sent successfully:`, result);
                     } catch (error) {
                         console.error(`[Auth] Failed to send verification email:`, error);
                     }
