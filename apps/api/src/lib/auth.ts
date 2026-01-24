@@ -133,6 +133,7 @@ export const auth = betterAuth({
         }),
         emailOTP({
             overrideDefaultEmailVerification: true,
+            disableSignUp: true,
             otpLength: 6,
             expiresIn: 300,
             async sendVerificationOTP({ email, otp, type }) {

@@ -69,7 +69,8 @@ export default function SignupPage() {
             })
 
             if (error) {
-                toast.error("Invalid OTP !!");
+                console.log("[OTP CHECK ERROR]:", error);
+                toast.error(error.message || "Invalid OTP !!");
                 return;
             }
 
