@@ -3,7 +3,7 @@ import { db, eq, and, desc, user, stories, scenes, drafts, userCredits, creditTr
 import { success, error } from "@/lib/response";
 import { streamSSE } from "hono/streaming";
 import { requireAuth } from "@/middleware/auth";
-import { checkCredits, evaluateDeferredCharacters, evaluateEchoes, extractCodexEntries, extractEntities, extractSceneData, generateOpeningNarration, InsufficientCreditsError, markCharacterIntroduced, plantEcho, resolveEchoes, storySceneMemory, streamNarrationOnly, streamOpeningScene, streamRevision, updateProtagonistState, UsageCollector } from "@once/core";
+import { checkCredits, evaluateDeferredCharacters, evaluateEchoes, extractCodexEntries, extractEntities, extractSceneData, generateOpeningNarration, InsufficientCreditsError, markCharacterIntroduced, plantEcho, resolveEchoes, storySceneMemory, streamNarrationOnly, streamOpeningRevision, streamOpeningScene, streamRevision, updateProtagonistState, UsageCollector } from "@once/core";
 import { createStorySchema } from "@once/shared";
 
 
@@ -56,6 +56,7 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
                 userId: user.id,
                 title,
                 genre,
+                description: storyIdea,
                 narrativeStance,
                 storyMode,
                 worldDescription,
@@ -390,7 +391,28 @@ draftsRouter.put("/draft/:draftId/revise", requireAuth, async (c) => {
         let fullNarration = "";
 
         try {
-            const revisionStream = streamRevision(narration, comment, usageCollector);
+            let revisionStream: AsyncGenerator<string>;
+
+            if (draft.turnNumber === 1) {
+                const story = await db.query.stories.findFirst({
+                    where: eq(stories.id, draft.storyId),
+                    with: { protagonist: true }
+                })
+
+                if (!story) return;
+
+                revisionStream = streamOpeningRevision({
+                    originalNarration: narration,
+                    userComment: comment,
+                    title: story.title,
+                    genre: story.genre,
+                    protagonist: story.protagonist[0], // protagonist is singular for storyMode protagonist and undefined for narrator , fix this 
+                    worldDescription: story.worldDescription,
+                    storyIdea: story.description
+                }, usageCollector);
+            } else {
+                revisionStream = streamRevision(narration, comment, usageCollector);
+            }
 
             for await (const chunk of revisionStream) {
                 fullNarration += chunk;

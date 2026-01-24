@@ -5,7 +5,7 @@ import { buildContinuePrompt } from "../llm/prompts/continue";
 import { openSceneSchema, sceneResponseSchema } from "@once/shared/schemas";
 import type { NarrativeStance, StoryMode } from "@once/shared/schemas";
 import { UsageCollector } from "@/credits/collector";
-import { buildRevisionPrompt, buildRevisionSystemPrompt } from "@/llm/prompts/revision";
+import { buildOpeningRevisionPrompt, buildRevisionPrompt, buildRevisionSystemPrompt } from "@/llm/prompts/revision";
 
 interface InitializeContext {
     narrativeStance: NarrativeStance;
@@ -67,6 +67,31 @@ interface OpeningContext {
     };
 }
 
+interface OpeningRevisionContext {
+    originalNarration: string;
+    userComment: string;
+    title: string;
+    genre: string;
+    protagonist?: {
+        id: number;
+        description: string | null;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        storyId: number;
+        health: number;
+        energy: number;
+        currentLocation: string;
+        baseTraits: string[];
+        currentTraits: string[];
+        inventory: string[];
+        scars: string[];
+        isActive: boolean;
+    };
+    worldDescription?: string | null;
+    storyIdea?: string | null;
+}
+
 export async function generateOpeningScene(ctx: InitializeContext, usageCollector?: UsageCollector) {
     const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode);
     const initPrompt = buildInitializePrompt({
@@ -101,6 +126,13 @@ export async function* streamOpeningScene(ctx: OpeningContext, usageCollector?: 
     });
 
     yield* streamNarrationWithTracking(systemPrompt, initPrompt, usageCollector);
+}
+
+export async function* streamOpeningRevision(ctx: OpeningRevisionContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
+    const systemPrompt = buildRevisionSystemPrompt();
+    const revisionPrompt = buildOpeningRevisionPrompt(ctx);
+
+    yield* streamNarrationWithTracking(systemPrompt, revisionPrompt, usageCollector);
 }
 
 export async function generateOpeningNarration(ctx: OpeningContext, usageCollector?: UsageCollector): Promise<string> {
