@@ -4,6 +4,8 @@ export const ERROR_CODES = {
     INVALID_ID: { status: 400, message: "Invalid ID format" },
     INVALID_USER_ID: { status: 400, message: "Invalid User ID" },
     MISSING_FIELD: { status: 400, message: "Required field missing" },
+    INVALID_OTP: { status: 400, message: "Invalid OTP" },
+    EXPIRED_OTP: { status: 400, message: "OTP has expired" },
 
     // Authentication errors (401)
     UNAUTHORIZED: { status: 401, message: "Authentication required" },

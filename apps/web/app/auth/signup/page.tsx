@@ -63,15 +63,15 @@ export default function SignupPage() {
         setLoading(true);
 
         try {
-            const { data, error } = await emailOtp.checkVerificationOtp({
-                email,
-                type: "sign-in",
-                otp
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/verifyOtp`, {
+                method: "POST",
+                body: JSON.stringify({ email, otp })
             })
 
-            if (error) {
-                console.log("[OTP CHECK ERROR]:", error);
-                toast.error(error.message || "Invalid OTP !!");
+            if (!response.ok) {
+                const errorData = await response.json();
+                toast.error(errorData.message || "Invalid OTP");
                 return;
             }
 

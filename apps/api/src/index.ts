@@ -12,6 +12,7 @@ import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
 import { sendEmail } from "./lib/email";
+import { db, eq, verification } from "@once/database";
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, "../../../.env") });
@@ -40,11 +41,24 @@ app.post("/sendOtp", async (c) => {
     const body = await c.req.json();
     const email = body.email;
 
-    if (!email) return error(c, "MISSING_FIELD", "Email is required");
+    if (!email || typeof email !== "string") return error(c, "MISSING_FIELD", "Email is required");
 
     const otp = Math.floor(Math.random() * 900000) + 100000;
+    const identifier = `signup-otp-${email.toLocaleLowerCase()}`;
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     try {
+
+        await db.transaction(async (tx) => {
+            await tx.delete(verification).where(eq(verification.identifier, identifier));
+            await tx.insert(verification).values({
+                id: crypto.randomUUID(),
+                identifier: identifier,
+                value: otp.toString(),
+                expiresAt: expiresAt
+            })
+        })
+
         await sendEmail({
             to: email,
             subject: 'Verify your email - Once',
@@ -59,6 +73,38 @@ app.post("/sendOtp", async (c) => {
         return success(c, { data: "OTP sent" });
     } catch (err) {
         return error(c, "INTERNAL_ERROR", "Failed to send otp");
+    }
+})
+
+app.post("/verifyOtp", async (c) => {
+    const body = await c.req.json();
+    const { email, otp } = body;
+
+    if (!email || !otp) return error(c, "MISSING_FIELD", "Email and otp are required");
+
+    const identifier = `signup-otp-${email.toLocaleLowerCase()}`;
+
+    try {
+        const record = await db.query.verification.findFirst({
+            where: eq(verification.identifier, identifier)
+        })
+
+        if (!record) return error(c, "INVALID_OTP", "Invalid or expired otp");
+
+        if (record.expiresAt < new Date()) {
+            await db.delete(verification).where(eq(verification.identifier, identifier));
+            return error(c, "EXPIRED_OTP", "OTP has expired");
+        }
+
+        if (record.value !== otp.toString()) {
+            return error(c, "INVALID_OTP", "Invalid otp");
+        }
+
+        await db.delete(verification).where(eq(verification.identifier, identifier));
+        return success(c, { verified: true });
+    } catch (err) {
+        console.error("Verify otp error: ", err);
+        return error(c, "INTERNAL_ERROR", "Failed to verify otp");
     }
 })
 
