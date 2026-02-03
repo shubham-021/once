@@ -65,6 +65,7 @@ export function CreateStoryModal() {
         if (!result.success) {
             const firstError = result.error.errors[0];
             toast.error(firstError.message);
+            // console.log(JSON.stringify(result.error));
             return;
         }
 
@@ -76,6 +77,7 @@ export function CreateStoryModal() {
                 if (error.code === "INSUFFICIENT_BALANCE") {
                     toast.error("Insufficient credits");
                 } else {
+                    // console.log(error);
                     toast.error("Failed to create story");
                 }
                 setIsCreating(false)

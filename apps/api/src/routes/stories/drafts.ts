@@ -24,6 +24,7 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
             await checkCredits(user.id);
         } catch (err) {
             if (err instanceof InsufficientCreditsError) {
+                console.log(err.message);
                 return error(c, "INSUFFICIENT_BALANCE", undefined, { balance: err.balance });
             }
             throw err;
@@ -32,114 +33,138 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
 
     const usageCollector = process.env.DEV_MODE !== "true" ? new UsageCollector() : undefined;
 
-    try {
-        const fullNarration = await generateOpeningNarration({
-            narrativeStance,
-            storyMode,
-            title,
-            genre,
-            storyIdea,
-            worldDescription,
-            promptForOnce,
-            startingScene,
-            cast,
-            castMode,
-            protagonist: protagonist ? {
-                name: protagonist.name,
-                description: protagonist.description,
-                traits: protagonist.traits,
-            } : undefined,
-        }, usageCollector);
+    return streamSSE(c, async (stream) => {
+        let fullNarration = "";
 
-        const result = await db.transaction(async (tx) => {
-            const [newStory] = await tx.insert(stories).values({
-                userId: user.id,
-                title,
-                genre,
-                description: storyIdea,
+        try {
+            const initialData = await db.transaction(async (tx) => {
+                const [newStory] = await tx.insert(stories).values({
+                    userId: user.id,
+                    title,
+                    genre,
+                    description: storyIdea,
+                    narrativeStance,
+                    storyMode,
+                    worldDescription,
+                    promptForOnce,
+                    startingScene,
+                    turnCount: 0,
+                }).returning();
+
+                let newProtagonist: typeof protagonists.$inferSelect | undefined;
+
+                if (storyMode === "protagonist" && protagonist) {
+                    [newProtagonist] = await tx.insert(protagonists).values({
+                        storyId: newStory.id,
+                        name: protagonist.name,
+                        description: protagonist.description,
+                        currentLocation: "Unknown",
+                        baseTraits: protagonist.traits,
+                        currentTraits: protagonist.traits,
+                    }).returning();
+                }
+
+                return { newStory, newProtagonist };
+            })
+
+            await stream.writeSSE({
+                event: 'init',
+                data: JSON.stringify({ storyId: initialData.newStory.id })
+            })
+
+            const narrationStream = streamOpeningScene({
                 narrativeStance,
                 storyMode,
+                title,
+                genre,
+                storyIdea,
                 worldDescription,
                 promptForOnce,
                 startingScene,
-                turnCount: 0,
-            }).returning();
-
-            let newProtagonist: typeof protagonists.$inferSelect | undefined;
-
-            if (storyMode === "protagonist" && protagonist) {
-                [newProtagonist] = await tx.insert(protagonists).values({
-                    storyId: newStory.id,
+                cast,
+                castMode,
+                protagonist: protagonist ? {
                     name: protagonist.name,
                     description: protagonist.description,
-                    currentLocation: "Unknown",
-                    baseTraits: protagonist.traits,
-                    currentTraits: protagonist.traits,
-                }).returning();
+                    traits: protagonist.traits,
+                } : undefined,
+            }, usageCollector);
+
+            for await (const chunk of narrationStream) {
+                fullNarration += chunk;
+                await stream.writeSSE({ event: 'narration', data: chunk });
             }
 
-            const [draft] = await tx.insert(drafts).values({
-                storyId: newStory.id,
-                userId: user.id,
-                userAction: "[STORY_START]",
-                narration: fullNarration,
-                turnNumber: 1,
-                triggeredEchoes: [],
-                triggeredCharacters: [],
-                protagonistSnapshot: newProtagonist ? {
-                    id: newProtagonist.id,
-                    name: newProtagonist.name,
-                    description: newProtagonist.description,
-                    health: newProtagonist.health,
-                    energy: newProtagonist.energy,
-                    currentLocation: newProtagonist.currentLocation,
-                    baseTraits: newProtagonist.baseTraits,
-                    currentTraits: newProtagonist.currentTraits,
-                    inventory: newProtagonist.inventory,
-                    scars: newProtagonist.scars,
-                } : null,
-            }).returning();
-
-            if (usageCollector) {
-                const creditsUsed = usageCollector.getCredits();
-                const usage = usageCollector.getUsage();
-                const userCredit = await tx.query.userCredits.findFirst({
-                    where: eq(userCredits.userId, user.id),
-                });
-
-                if (!userCredit) throw new Error(`No credit record for user ${user.id}`);
-
-                const newBalance = userCredit.balance - creditsUsed;
-
-                await tx.update(userCredits).set({
-                    balance: newBalance,
-                    lifetimeUsed: userCredit.lifetimeUsed + creditsUsed,
-                    updatedAt: new Date(),
-                }).where(eq(userCredits.userId, user.id));
-
-                await tx.insert(creditTransactions).values({
+            const result = await db.transaction(async (tx) => {
+                const [draft] = await tx.insert(drafts).values({
+                    storyId: initialData.newStory.id,
                     userId: user.id,
-                    type: "usage",
-                    amount: -creditsUsed,
-                    balanceAfter: newBalance,
-                    storyId: newStory.id,
-                    sceneId: null,
-                    draftId: draft.id,
-                    claudeInputTokens: usage.claudeInput,
-                    claudeOutputTokens: usage.claudeOutput,
-                    gptInputTokens: usage.gptInput,
-                    gptOutputTokens: usage.gptOutput,
-                    embeddingTokens: usage.embedding,
-                });
-            }
-            return { newStory, draft };
-        });
+                    userAction: "[STORY_START]",
+                    narration: fullNarration,
+                    turnNumber: 1,
+                    triggeredEchoes: [],
+                    triggeredCharacters: [],
+                    protagonistSnapshot: initialData.newProtagonist ? {
+                        id: initialData.newProtagonist.id,
+                        name: initialData.newProtagonist.name,
+                        description: initialData.newProtagonist.description,
+                        health: initialData.newProtagonist.health,
+                        energy: initialData.newProtagonist.energy,
+                        currentLocation: initialData.newProtagonist.currentLocation,
+                        baseTraits: initialData.newProtagonist.baseTraits,
+                        currentTraits: initialData.newProtagonist.currentTraits,
+                        inventory: initialData.newProtagonist.inventory,
+                        scars: initialData.newProtagonist.scars,
+                    } : null,
+                }).returning();
 
-        return success(c, { storyId: result.newStory.id, draftId: result.draft.id });
-    } catch (err) {
-        console.error("Opening scene draft error:", err);
-        return error(c, "LLM_ERROR");
-    }
+                if (usageCollector) {
+                    const creditsUsed = usageCollector.getCredits();
+                    const usage = usageCollector.getUsage();
+                    const userCredit = await tx.query.userCredits.findFirst({
+                        where: eq(userCredits.userId, user.id),
+                    });
+
+                    if (!userCredit) throw new Error(`No credit record for user ${user.id}`);
+
+                    const newBalance = userCredit.balance - creditsUsed;
+
+                    await tx.update(userCredits).set({
+                        balance: newBalance,
+                        lifetimeUsed: userCredit.lifetimeUsed + creditsUsed,
+                        updatedAt: new Date(),
+                    }).where(eq(userCredits.userId, user.id));
+
+                    await tx.insert(creditTransactions).values({
+                        userId: user.id,
+                        type: "usage",
+                        amount: -creditsUsed,
+                        balanceAfter: newBalance,
+                        storyId: initialData.newStory.id,
+                        sceneId: null,
+                        draftId: draft.id,
+                        claudeInputTokens: usage.claudeInput,
+                        claudeOutputTokens: usage.claudeOutput,
+                        gptInputTokens: usage.gptInput,
+                        gptOutputTokens: usage.gptOutput,
+                        embeddingTokens: usage.embedding,
+                    });
+                }
+                return { draft };
+            });
+
+            await stream.writeSSE({
+                event: 'complete',
+                data: JSON.stringify({ draftId: result.draft.id })
+            })
+
+            // return success(c, { storyId: initialData.newStory.id, draftId: result.draft.id });
+        } catch (err) {
+            console.error("Opening scene draft error:", err);
+            // return error(c, "LLM_ERROR");
+            await stream.writeSSE({ event: "error", data: JSON.stringify({ code: "LLM_ERROR" }) });
+        }
+    })
 });
 
 

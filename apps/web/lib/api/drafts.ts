@@ -16,7 +16,7 @@ export const draftsApi = {
         `/api/stories/draft/${storyId}`
     ),
 
-    createDraft: (data: CreateStoryInput) => apiClient<{ storyId: number; draftId: number }>(`api/stories/draft`, {
+    createDraft: (data: CreateStoryInput) => apiClient<{ storyId: number; draftId: number }>(`/api/stories/draft`, {
         method: "POST",
         body: JSON.stringify(data)
     }),

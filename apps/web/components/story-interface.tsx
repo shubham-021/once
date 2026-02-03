@@ -45,7 +45,7 @@ export function StoryInterface({ storyId }: { storyId: string }) {
                     setProtagonists(storyRes.data.protagonist);
                 }
             }
-            if (scenesRes.data) setScenes(scenesRes.data);
+            if (scenesRes.data) setScenes(scenesRes.data.storyScenes);
             if (codexRes.data) setCodex(codexRes.data);
 
             setIsLoading(false);
