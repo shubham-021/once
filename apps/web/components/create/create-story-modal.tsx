@@ -38,6 +38,8 @@ export function CreateStoryModal() {
         setOpen(false);
     };
 
+    const setFormData = useCreateStore(s => s.setFormData);
+
     const handleCreate = async () => {
         const payload = {
             title: form.title,
@@ -69,28 +71,33 @@ export function CreateStoryModal() {
             return;
         }
 
+        setFormData(result.data);
         setIsCreating(true);
+        setOpen(false);
+        reset();
 
-        try {
-            const { data, error } = await draftsApi.createDraft(result.data);
-            if (error) {
-                if (error.code === "INSUFFICIENT_BALANCE") {
-                    toast.error("Insufficient credits");
-                } else {
-                    // console.log(error);
-                    toast.error("Failed to create story");
-                }
-                setIsCreating(false)
-                return;
-            }
-            toast.success("Story created!");
-            setOpen(false);
-            reset();
-            router.push(`/story/${data?.storyId}`);
-        } catch (error) {
-            toast.error("Failed to create story");
-            setIsCreating(false)
-        }
+        router.push('/story/new');
+
+        // try {
+        //     const { data, error } = await draftsApi.createDraft(result.data);
+        //     if (error) {
+        //         if (error.code === "INSUFFICIENT_BALANCE") {
+        //             toast.error("Insufficient credits");
+        //         } else {
+        //             // console.log(error);
+        //             toast.error("Failed to create story");
+        //         }
+        //         setIsCreating(false)
+        //         return;
+        //     }
+        //     toast.success("Story created!");
+        //     setOpen(false);
+        //     reset();
+        //     router.push(`/story/${data?.storyId}`);
+        // } catch (error) {
+        //     toast.error("Failed to create story");
+        //     setIsCreating(false)
+        // }
     };
 
     const isLastStep = currentStep === totalSteps - 1;

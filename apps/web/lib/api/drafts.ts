@@ -16,6 +16,72 @@ export const draftsApi = {
         `/api/stories/draft/${storyId}`
     ),
 
+    createStreamingDraft: (
+        data: CreateStoryInput,
+        onInit: (data: { storyId: number }) => void,
+        onChunk: (text: string) => void,
+        onComplete: (data: { draftId: number }) => void,
+        onError?: (error: { code: string }) => void
+    ) => {
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                const response = await fetch(`${API_BASE}/api/stories/draft`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify(data)
+                })
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    if (onError) onError(error.error?.code);
+                    return reject(new Error(error.error?.code));
+                }
+
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+                if (!reader) return reject(new Error("No reader"));
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    let currentEvent = "";
+
+                    for (const line of chunk.split("\n")) {
+                        if (line.startsWith("event: ")) {
+                            currentEvent = line.slice(7).trim();
+                            continue;
+                        }
+
+                        if (line.startsWith("data: ")) {
+                            const rawData = line.slice(6);
+                            switch (currentEvent) {
+                                case "init":
+                                    onInit(JSON.parse(rawData));
+                                    break;
+                                case "narration":
+                                    onChunk(rawData);
+                                    break;
+                                case "complete":
+                                    onComplete(JSON.parse(rawData));
+                                    break;
+                                case "error":
+                                    if (onError) onError(JSON.parse(rawData));
+                                    return reject(new Error(rawData));
+                            }
+                            currentEvent = "";
+                        }
+                    }
+                }
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        })
+    },
+
     createDraft: (data: CreateStoryInput) => apiClient<{ storyId: number; draftId: number }>(`/api/stories/draft`, {
         method: "POST",
         body: JSON.stringify(data)

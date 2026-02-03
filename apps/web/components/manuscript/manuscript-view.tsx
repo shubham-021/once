@@ -13,7 +13,7 @@ import { UnifiedEditor } from "./unified-editor";
 import { DraftControls } from "./draft-controls";
 import { useCreateStore } from "@/stores/create-store";
 
-export function ManuscriptView({ storyId }: { storyId: string }) {
+export function ManuscriptView({ storyId, initialDraft, isInitialStreaming }: { storyId: string; initialDraft?: { id: number; narration: string }; isInitialStreaming?: boolean; }) {
     const router = useRouter();
 
     const [storyTitle, setStoryTitle] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export function ManuscriptView({ storyId }: { storyId: string }) {
     const {
         draft,
         setDraft,
-        isStreaming,
+        isStreaming: isDraftStreaming,
         isAccepting,
         startContinue,
         revise,
@@ -41,7 +41,16 @@ export function ManuscriptView({ storyId }: { storyId: string }) {
         }
     });
 
+    const isStreaming = isInitialStreaming || isDraftStreaming;
+
     useEffect(() => {
+
+        if (initialDraft) {
+            setDraft({ id: initialDraft.id, narration: initialDraft.narration });
+            setIsCreating(false);
+            return;
+        }
+
         const fetchData = async () => {
             try {
                 if (!isCreating) setIsLoading(true)
