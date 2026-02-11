@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import FontDropdown from "./font-dropdown";
 import { SketchyBar } from "@/components/sketchy-bar";
 import { BookOpen, User, Wand } from "lucide-react";
 import MobileDrawer from "./mobile-drawer";
@@ -122,7 +121,6 @@ export function StoryInterface({ storyId }: { storyId: string }) {
                     </button>
                     <div className="flex items-center gap-5">
                         <h1 className="text-lg text-foreground">{story?.title || "Loading..."}</h1>
-                        <FontDropdown />
                     </div>
                     {storyMode === "protagonist" && activeProtagonist && (
                         <button

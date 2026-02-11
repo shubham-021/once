@@ -12,7 +12,7 @@ interface DraftControlsProps {
     onRevise: (narration: string, comment: string) => void
     onSaveEdits: (narration: string) => void
     onAccept: () => void
-    onDiscard: () => void
+    onDiscard: (() => void) | undefined;
 }
 
 export function DraftControls({
@@ -102,16 +102,18 @@ export function DraftControls({
 
                 <div className="flex-1" />
 
-                <Button
-                    variant="default"
-                    size="sm"
-                    onClick={onDiscard}
-                    disabled={disabled}
-                    className="text-red-600 border border-transparent hover:border-red-600"
-                >
-                    <X className="size-4 mr-2" />
-                    Discard
-                </Button>
+                {onDiscard && (
+                    <Button
+                        variant="default"
+                        size="sm"
+                        onClick={onDiscard}
+                        disabled={disabled}
+                        className="text-red-600 border border-transparent hover:border-red-600"
+                    >
+                        <X className="size-4 mr-2" />
+                        Discard
+                    </Button>
+                )}
 
                 <Button
                     variant="default"

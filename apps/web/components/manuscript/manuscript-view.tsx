@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import FontDropdown from "@/components/font-dropdown";
 import { draftsApi, storiesApi } from "@/lib/api";
-import type { Scene } from "@once/shared";
+import type { CreateStoryInput, Scene } from "@once/shared";
 import { useDraft } from "@/hooks/useDrafts";
 import { ActionInput } from "./action-input";
 import { toast } from "sonner";
@@ -13,21 +12,23 @@ import { UnifiedEditor } from "./unified-editor";
 import { DraftControls } from "./draft-controls";
 import { useCreateStore } from "@/stores/create-store";
 
-export function ManuscriptView({ storyId, initialDraft, isInitialStreaming }: { storyId: string; initialDraft?: { id: number; narration: string }; isInitialStreaming?: boolean; }) {
+export function ManuscriptView({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
 
+    const [storyId, setStoryId] = useState<string | null>(initialStoryId ?? null);
     const [storyTitle, setStoryTitle] = useState<string | null>(null);
     const [scenes, setScenes] = useState<Scene[]>([]);
-
-    const isCreating = useCreateStore(s => s.isCreating);
-    const setIsCreating = useCreateStore(s => s.setIsCreating);
     const [isLoading, setIsLoading] = useState(false);
+
+    const setIsCreating = useCreateStore(s => s.setIsCreating);
+    const setFormData = useCreateStore(s => s.setFormData);
 
     const {
         draft,
         setDraft,
-        isStreaming: isDraftStreaming,
+        isStreaming,
         isAccepting,
+        startCreate,
         startContinue,
         revise,
         saveEdits,
@@ -35,25 +36,34 @@ export function ManuscriptView({ storyId, initialDraft, isInitialStreaming }: { 
         discard,
         setNarration
     } = useDraft({
-        storyId: parseInt(storyId),
+        storyId: storyId ? parseInt(storyId) : 0,
         onAccept: async (result) => {
             setScenes(prev => [...prev, result.scene]);
         }
     });
 
-    const isStreaming = isInitialStreaming || isDraftStreaming;
+    const started = useRef(false);
 
     useEffect(() => {
 
-        if (initialDraft) {
-            setDraft({ id: initialDraft.id, narration: initialDraft.narration });
-            setIsCreating(false);
-            return;
+        if (creationData) {
+            if (started.current) return;
+            started.current = true;
+
+            startCreate(creationData, (newStoryId) => {
+                setStoryId(newStoryId.toString());
+                setIsCreating(false);
+                setFormData(null);
+                window.history.replaceState(null, '', `/story/${newStoryId}`);
+                return;
+            })
         }
+
+        if (!storyId) return;
 
         const fetchData = async () => {
             try {
-                if (!isCreating) setIsLoading(true)
+                setIsLoading(true)
                 const [draftRes, scenesRes] = await Promise.all([
                     draftsApi.getDraft(parseInt(storyId)),
                     storiesApi.getScenes(storyId)
@@ -68,11 +78,8 @@ export function ManuscriptView({ storyId, initialDraft, isInitialStreaming }: { 
                     const { id, narration } = draftRes.data;
                     setDraft({ id, narration });
                 }
-
-                setIsCreating(false);
             } catch (error) {
                 toast.error("Failed to load story");
-                setIsCreating(false);
                 router.push("/library");
             } finally {
                 setIsLoading(false);
@@ -91,11 +98,8 @@ export function ManuscriptView({ storyId, initialDraft, isInitialStreaming }: { 
 
     return (
         <div className="flex h-screen flex-col bg-background">
-            <header className="flex h-14 items-center justify-center dotted-border-b gap-2 md:gap-4">
-                <div className="flex items-center gap-5">
-                    <h1 className="text-lg text-foreground">{storyTitle}</h1>
-                    <FontDropdown />
-                </div>
+            <header className="flex items-center justify-center dotted-border-b gap-2 md:gap-4 p-2">
+                <h1 className="text-2xl tracking-widest text-accent italic">{storyTitle}</h1>
             </header>
 
             <div className="flex flex-1 overflow-hidden">
@@ -117,7 +121,7 @@ export function ManuscriptView({ storyId, initialDraft, isInitialStreaming }: { 
                                     onRevise={revise}
                                     onSaveEdits={saveEdits}
                                     onAccept={accept}
-                                    onDiscard={discard}
+                                    onDiscard={scenes.length > 0 ? discard : undefined}
                                 />
                             )}
                         </div>

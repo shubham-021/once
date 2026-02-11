@@ -1,6 +1,7 @@
 "use client"
 
 import { DraftAcceptResult, draftsApi } from "@/lib/api/drafts";
+import { CreateStoryInput } from "@once/shared";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +15,32 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
     const [draft, setDraft] = useState<{ id: number; narration: string } | null>(null);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isAccepting, setIsAccepting] = useState(false);
+
+    const startCreate = useCallback(async (formData: CreateStoryInput, onStoryCreated: (storyId: number) => void) => {
+        setIsStreaming(true);
+        setDraft({ id: 0, narration: "" });
+
+        try {
+            await draftsApi.createStreamingDraft(
+                formData,
+                //onInit
+                (data) => onStoryCreated(data.storyId),
+                //onChunk
+                (chunk) => setDraft(prev => prev ? { ...prev, narration: prev.narration + chunk } : null),
+                //onComplete
+                (data) => setDraft(prev => prev ? { ...prev, id: data.draftId } : null),
+                //onError
+                (error) => {
+                    toast.error(`Failed: ${error.code}`);
+                    setDraft(null);
+                }
+            )
+        } catch {
+            setDraft(null);
+        } finally {
+            setIsStreaming(false);
+        }
+    }, [])
 
     const startContinue = useCallback(async (action: string) => {
         setIsStreaming(true);
@@ -100,5 +127,5 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
 
     const setNarration = (narration: string) => setDraft(prev => prev ? { ...prev, narration } : null)
 
-    return { draft, setDraft, isStreaming, isAccepting, startContinue, revise, saveEdits, accept, discard, setNarration }
+    return { draft, setDraft, isStreaming, isAccepting, startCreate, startContinue, revise, saveEdits, accept, discard, setNarration }
 }

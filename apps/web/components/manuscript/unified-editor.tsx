@@ -53,7 +53,7 @@ function buildContent(scenes: Scene[], draft: { id: number; narration: string } 
     return { type: 'doc', content }
 }
 
-export function UnifiedEditor({ scenes, draft, isStreaming, onNarrationChange }: UnifiedEditorProps) {
+export function UnifiedEditor({ scenes, draft, isStreaming, isAccepting, onNarrationChange }: UnifiedEditorProps) {
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -64,7 +64,7 @@ export function UnifiedEditor({ scenes, draft, isStreaming, onNarrationChange }:
             DraftBlock,
         ],
         content: buildContent(scenes, draft),
-        editable: !isStreaming && !!draft,
+        editable: !isStreaming && !isAccepting && !!draft,
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
             if (onNarrationChange && draft) {
@@ -80,8 +80,8 @@ export function UnifiedEditor({ scenes, draft, isStreaming, onNarrationChange }:
     }, [scenes.length])
 
     useEffect(() => {
-        if (editor) editor.setEditable(!isStreaming && !!draft)
-    }, [editor, isStreaming, !!draft])
+        if (editor) editor.setEditable(!isStreaming && !!draft && !isAccepting)
+    }, [editor, isStreaming, isAccepting, !!draft])
 
 
     useEffect(() => {

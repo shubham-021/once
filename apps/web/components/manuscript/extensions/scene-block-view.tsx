@@ -8,8 +8,8 @@ export function SceneBlockView({ node }: NodeViewProps) {
             {/* User action line (if exists and not opening) */}
             {
                 userAction && userAction !== '[STORY_START]' && (
-                    <p className="text-muted-foreground italic mb-3" >
-                        <span className="mr-2 text-muted-foreground/50" >›</span>
+                    <p className="text-accent italic mb-3" >
+                        <span className="mr-2 text-accent" >{">"}</span>
                         {userAction}
                     </p>
                 )
