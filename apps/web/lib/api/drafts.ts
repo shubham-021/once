@@ -1,4 +1,4 @@
-import { CreateStoryInput, Scene, StreamCompleteData } from "@once/shared";
+import { CodexEntry, CreateStoryInput, Protagonist, Scene, StreamCompleteData } from "@once/shared";
 import { apiClient } from "./client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -7,7 +7,8 @@ let i = 0;
 
 export interface DraftAcceptResult {
     scene: Scene;
-    protagonistUpdates?: StreamCompleteData["protagonistUpdates"];
+    protagonist?: Protagonist | null;
+    codex?: CodexEntry[];
     echoPlanted: boolean;
     creditsUsed?: number;
 }

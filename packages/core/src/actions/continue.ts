@@ -41,6 +41,7 @@ interface ContinueStoryResult {
     response: {
         narration: string;
         protagonistUpdates: {
+            description: string | null;
             health: number | null;
             energy: number | null;
             location: string | null;
@@ -56,6 +57,7 @@ interface ContinueStoryResult {
         } | null;
     },
     protagonistUpdates: {
+        description: string | null;
         health: number | null;
         energy: number | null;
         location: string | null;

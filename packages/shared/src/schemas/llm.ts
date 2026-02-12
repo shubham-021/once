@@ -20,6 +20,7 @@ export const openSceneSchema = z.object({
 export const sceneResponseSchema = z.object({
     narration: z.string().describe("The scene narration"),
     protagonistUpdates: z.object({
+        description: z.string().nullable().describe("Updated appeareance description if it changed significantly this scene"),
         health: z.number().nullable(),
         energy: z.number().nullable(),
         location: z.string().nullable(),
@@ -55,6 +56,7 @@ export const codexExtractionSchema = z.object({
         name: z.string().describe("Entity name"),
         entryType: z.enum(["character", "location", "item", "faction", "event", "lore"]),
         summary: z.string().describe("Brief description based on the scene"),
+        metadata: z.record(z.string()).nullable().describe("Structured key-value pairs. For characters: role, status, affiliation. For location: region, dangerLevel, type. For items: rarity, type. For events/lore: timeline, impact")
     })).describe("New entities to add to codex"),
 
     updates: z.array(z.object({

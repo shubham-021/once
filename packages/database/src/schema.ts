@@ -175,6 +175,7 @@ export const codexEntries = pgTable("codex_entries", {
     entryType: codexEntryTypeEnum("entry_type").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     summary: text("summary").notNull(),
+    metadata: json("metadata").$type<Record<string, string>>(),
 
     // Relationships and context
 

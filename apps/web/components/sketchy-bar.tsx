@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { useMemo } from "react";
 
@@ -8,6 +9,7 @@ interface SketchyBarProps {
     max: number;
     width?: number;
     height?: number;
+    textColor?: string;
 }
 
 // Deterministic pseudo-random for consistent server/client
@@ -16,7 +18,7 @@ const seededRandom = (seed: number) => {
     return x - Math.floor(x);
 };
 
-export function SketchyBar({ value, max, width = 100, height = 16 }: SketchyBarProps) {
+export function SketchyBar({ value, max, width = 100, height = 16, textColor }: SketchyBarProps) {
     const fillWidth = (value / max) * width;
 
     const hatchLines = useMemo(() => {
@@ -40,7 +42,7 @@ export function SketchyBar({ value, max, width = 100, height = 16 }: SketchyBarP
             <svg
                 width={width}
                 height={height}
-                className="text-foreground overflow-visible"
+                className={cn("text-foreground overflow-visible", textColor)}
             >
                 <rect
                     x={0.5}
@@ -77,7 +79,6 @@ export function SketchyBar({ value, max, width = 100, height = 16 }: SketchyBarP
                     ))}
                 </g>
             </svg>
-            <span className="font-mono text-xs text-muted">{value}/{max}</span>
         </div>
     );
 }

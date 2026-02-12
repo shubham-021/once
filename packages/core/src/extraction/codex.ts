@@ -6,7 +6,7 @@ import { CodexExtractionResponse, codexExtractionSchema } from "@once/shared/sch
 import { DebugCollector } from "@/debug";
 import { UsageCollector } from "@/credits/collector";
 
-export async function extractCodexEntries(storyId: number, narration: string, tx: DBTransaction, collector?: DebugCollector, usageCollector?: UsageCollector) {
+export async function extractCodexEntries(storyId: number, narration: string, tx: DBTransaction, collector?: DebugCollector, usageCollector?: UsageCollector): Promise<typeof codexEntries.$inferSelect[]> {
     const existingEntries = await tx.query.codexEntries.findMany({
         where: eq(codexEntries.storyId, storyId)
     })
@@ -36,7 +36,8 @@ export async function extractCodexEntries(storyId: number, narration: string, tx
                 storyId,
                 entryType: entry.entryType,
                 name: entry.name,
-                summary: entry.summary
+                summary: entry.summary,
+                metadata: entry.metadata ?? null
             }))
         )
 
@@ -62,4 +63,10 @@ export async function extractCodexEntries(storyId: number, narration: string, tx
             }
         }
     }
+
+    const allEntries = await tx.query.codexEntries.findMany({
+        where: eq(codexEntries.storyId, storyId)
+    });
+
+    return allEntries;
 }

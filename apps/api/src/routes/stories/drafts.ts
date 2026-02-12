@@ -552,13 +552,15 @@ draftsRouter.put("/draft/:draftId/accept", requireAuth, async (c) => {
 
             const entities = await extractEntities(draft.narration, activeProtagonist?.name || "protagonist", usageCollector);
 
+            let codexResult: any[] = [];
+
             await Promise.all([
                 tx.update(stories).set({ turnCount: draft.turnNumber, updatedAt: new Date() }).where(eq(stories.id, draft.storyId)),
                 ...draft.triggeredCharacters.map((c) => markCharacterIntroduced(c.id, newScene.id, tx)),
                 storySceneMemory(newScene.id.toString(), draft.narration, draft.storyId, draft.turnNumber, entities, undefined, usageCollector),
                 resolveEchoes(draft.triggeredEchoes.map((e) => e.id), newScene.id, tx),
                 extraction.echoPlanted ? plantEcho(draft.storyId, newScene.id, extraction.echoPlanted.description, extraction.echoPlanted.triggerCondition, tx) : Promise.resolve(),
-                extractCodexEntries(draft.storyId, draft.narration, tx, undefined, usageCollector),
+                extractCodexEntries(draft.storyId, draft.narration, tx, undefined, usageCollector).then(e => { codexResult = e }),
             ]);
 
             if (usageCollector) {
@@ -595,12 +597,19 @@ draftsRouter.put("/draft/:draftId/accept", requireAuth, async (c) => {
 
             await tx.delete(drafts).where(eq(drafts.id, draftId));
 
-            return { newScene, protagonistUpdates: extraction.protagonistUpdates, echoPlanted: !!extraction.echoPlanted };
+            return {
+                newScene,
+                protagonistUpdates: extraction.protagonistUpdates,
+                updatedProtagonist,
+                codex: codexResult,
+                echoPlanted: !!extraction.echoPlanted
+            };
         });
 
         return success(c, {
             scene: result.newScene,
-            protagonistUpdates: result.protagonistUpdates,
+            protagonist: result.updatedProtagonist,
+            codex: result.codex,
             echoPlanted: result.echoPlanted,
             creditsUsed: usageCollector?.getCredits(),
         });

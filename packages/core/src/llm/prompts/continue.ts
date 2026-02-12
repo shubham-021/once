@@ -100,7 +100,8 @@ export function buildContinuePrompt(ctx: ContinueContext): string {
         ## Requirements
         1. Respond to the action naturally within the world's rules
         2. Show consequences — actions have weight
-        3. Update the protagonist's state if relevant (health, energy, location, inventory, traits)
+        3a. Update the protagonist's state if relevant (health, energy, location, inventory, traits)
+        3b. If the protagonist's appearance changes significantly, update their description
         4. If this action plants a seed for future consequences, note it
         5. End at a moment of tension or decision
 

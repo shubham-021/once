@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { draftsApi, storiesApi } from "@/lib/api";
-import type { CreateStoryInput, Scene } from "@once/shared";
+import type { CodexEntry, CreateStoryInput, Protagonist, Scene } from "@once/shared";
 import { useDraft } from "@/hooks/useDrafts";
 import { ActionInput } from "./action-input";
 import { toast } from "sonner";
@@ -11,6 +11,9 @@ import { useRouter } from "next/navigation";
 import { UnifiedEditor } from "./unified-editor";
 import { DraftControls } from "./draft-controls";
 import { useCreateStore } from "@/stores/create-store";
+import { ProtagonistSidebar } from "./protagonist-sidebar";
+import { BookOpen, User } from "lucide-react";
+import { CodexSidebar } from "./codex-sidebar";
 
 export function ManuscriptView({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
@@ -19,6 +22,9 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
     const [storyTitle, setStoryTitle] = useState<string | null>(null);
     const [scenes, setScenes] = useState<Scene[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    const [protagonist, setProtagonist] = useState<Protagonist | null>(null);
+    const [codex, setCodex] = useState<CodexEntry[]>([]);
 
     const setIsCreating = useCreateStore(s => s.setIsCreating);
     const setFormData = useCreateStore(s => s.setFormData);
@@ -39,6 +45,8 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
         storyId: storyId ? parseInt(storyId) : 0,
         onAccept: async (result) => {
             setScenes(prev => [...prev, result.scene]);
+            if (result.protagonist) setProtagonist(result.protagonist);
+            if (result.codex) setCodex(result.codex);
         }
     });
 
@@ -64,14 +72,27 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
         const fetchData = async () => {
             try {
                 setIsLoading(true)
-                const [draftRes, scenesRes] = await Promise.all([
+                const [draftRes, scenesRes, codexRes, storyRes] = await Promise.all([
                     draftsApi.getDraft(parseInt(storyId)),
-                    storiesApi.getScenes(storyId)
+                    storiesApi.getScenes(storyId),
+                    storiesApi.getCodex(storyId),
+                    storiesApi.get(storyId),
                 ]);
 
                 if (scenesRes.data) {
                     setScenes(scenesRes.data.storyScenes);
                     setStoryTitle(scenesRes.data.storyTitle);
+                }
+
+                if (codexRes.data) setCodex(codexRes.data);
+
+                if (storyRes.data) {
+                    const storyData = storyRes.data;
+                    if (storyData.protagonist) {
+                        const protagonists = Array.isArray(storyData.protagonist) ? storyData.protagonist : [storyData.protagonist];
+                        const active = protagonists.find(p => p.isActive);
+                        if (active) setProtagonist(active);
+                    }
                 }
 
                 if (draftRes.data) {
@@ -103,6 +124,15 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
             </header>
 
             <div className="flex flex-1 overflow-hidden">
+                {/* Codex Sidebar — Left */}
+                <aside className="hidden lg:block w-64 overflow-y-auto dotted-border-r p-4">
+                    {/* <h2 className="flex items-center gap-2 text-sm font-semibold text-muted mb-4">
+                        <BookOpen size={16} /> Codex
+                    </h2> */}
+                    <CodexSidebar codex={codex} protagonistName={protagonist?.name} />
+                </aside>
+
+                {/* Main Content */}
                 <main className="flex flex-1 flex-col overflow-hidden">
                     <div className="flex-1 overflow-y-auto px-8 py-6">
                         <div className="mx-auto max-w-4xl space-y-6">
@@ -133,7 +163,17 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
                         </div>
                     )}
                 </main>
+
+                {/* Protagonist Sidebar — Right */}
+                {protagonist && (
+                    <aside className="hidden lg:block w-64 overflow-y-auto dotted-border-l p-4">
+                        {/* <h2 className="flex items-center gap-2 text-sm font-semibold text-muted mb-4">
+                            <User size={16} /> Protagonist
+                        </h2> */}
+                        <ProtagonistSidebar protagonist={protagonist} />
+                    </aside>
+                )}
             </div>
-        </div>
+        </div >
     );
 }
