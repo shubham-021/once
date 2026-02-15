@@ -14,6 +14,8 @@ import { useCreateStore } from "@/stores/create-store";
 import { ProtagonistSidebar } from "./protagonist-sidebar";
 import { BookOpen, User } from "lucide-react";
 import { CodexSidebar } from "./codex-sidebar";
+import { AnimatePresence, motion } from "motion/react";
+import { useCreditStore } from "@/stores/credits-store";
 
 export function ManuscriptView({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
@@ -22,6 +24,8 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
     const [storyTitle, setStoryTitle] = useState<string | null>(null);
     const [scenes, setScenes] = useState<Scene[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const balance = useCreditStore(s => s.balance);
+    const setBalance = useCreditStore(s => s.setBalance);
 
     const [protagonist, setProtagonist] = useState<Protagonist | null>(null);
     const [codex, setCodex] = useState<CodexEntry[]>([]);
@@ -47,6 +51,10 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
             setScenes(prev => [...prev, result.scene]);
             if (result.protagonist) setProtagonist(result.protagonist);
             if (result.codex) setCodex(result.codex);
+            if(result.creditsUsed){
+                const newBalance = balance-result.creditsUsed;
+                setBalance(newBalance);
+            }
         }
     });
 
@@ -119,8 +127,9 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
 
     return (
         <div className="flex h-screen flex-col bg-background">
-            <header className="flex items-center justify-center dotted-border-b gap-2 md:gap-4 p-2">
-                <h1 className="text-2xl tracking-widest text-accent italic">{storyTitle}</h1>
+            <header className="flex items-center justify-between dotted-border-b gap-2 md:gap-4 py-2 px-4">
+                <div><span>Writing: </span><span className="tracking-widest text-accent italic">{storyTitle}</span></div>
+                <div className="italic text-muted"><span>Credits: </span><span className="text-accent">{balance}</span></div>
             </header>
 
             <div className="flex flex-1 overflow-hidden">
@@ -165,14 +174,19 @@ export function ManuscriptView({ storyId: initialStoryId, creationData }: { stor
                 </main>
 
                 {/* Protagonist Sidebar — Right */}
-                {protagonist && (
-                    <aside className="hidden lg:block w-64 overflow-y-auto dotted-border-l p-4">
-                        {/* <h2 className="flex items-center gap-2 text-sm font-semibold text-muted mb-4">
-                            <User size={16} /> Protagonist
-                        </h2> */}
-                        <ProtagonistSidebar protagonist={protagonist} />
-                    </aside>
-                )}
+                <AnimatePresence>
+                    {protagonist && (
+                        <motion.aside
+                            key="protagonist-sidebar"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                            className="hidden lg:block w-64 overflow-y-auto dotted-border-l p-4"
+                        >
+                            <ProtagonistSidebar protagonist={protagonist} />
+                        </motion.aside>
+                    )}
+                </AnimatePresence>
             </div>
         </div >
     );

@@ -1,6 +1,7 @@
 import { Heart, Zap, MapPin } from "lucide-react";
 import type { Protagonist } from "@once/shared";
 import { SketchyBar } from "@/components/sketchy-bar";
+import { AnimatePresence, motion } from "motion/react";
 
 interface Props {
     protagonist: Protagonist;
@@ -43,20 +44,38 @@ export function ProtagonistSidebar({ protagonist }: Props) {
             </div>
 
             {/* Location */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground border p-2 rounded-md bg-surface/50 border-line/50">
-                <MapPin size={16} />
-                <span>{protagonist.currentLocation}</span>
-            </div>
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={protagonist.currentLocation}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground border p-2 rounded-md bg-surface/50 border-line/50"
+                >
+                    <MapPin size={16} />
+                    <span>{protagonist.currentLocation}</span>
+                </motion.div>
+            </AnimatePresence>
 
             {/* Traits */}
             <div>
                 <h3 className="text-xs uppercase tracking-widest text-muted mb-3 border-b border-dashed border-line pb-1">Traits</h3>
                 <div className="flex flex-wrap gap-2">
-                    {protagonist.currentTraits.map((trait) => (
-                        <span key={trait} className="px-2 py-1 text-xs bg-accent/10 text-accent rounded-full border border-accent/20">
-                            {trait}
-                        </span>
-                    ))}
+                    <AnimatePresence>
+                        {protagonist.currentTraits.map((trait) => (
+                            <motion.span
+                                key={trait}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.25 }}
+                                className="px-2 py-1 text-xs bg-accent/10 text-accent rounded-full border border-accent/20"
+                            >
+                                {trait}
+                            </motion.span>
+                        ))}
+                    </AnimatePresence>
                 </div>
             </div>
 
@@ -64,9 +83,20 @@ export function ProtagonistSidebar({ protagonist }: Props) {
             <div>
                 <h3 className="text-xs uppercase tracking-widest text-muted mb-3 border-b border-dashed border-line pb-1">Inventory</h3>
                 <ul className="space-y-1 text-sm list-disc pl-4 marker:text-muted">
-                    {protagonist.inventory.map((item) => (
-                        <li key={item} className="text-foreground/90">{item}</li>
-                    ))}
+                    <AnimatePresence>
+                        {protagonist.inventory.map((item) => (
+                            <motion.li
+                                key={item}
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -8 }}
+                                transition={{ duration: 0.25 }}
+                                className="text-foreground/90"
+                            >
+                                {item}
+                            </motion.li>
+                        ))}
+                    </AnimatePresence>
                 </ul>
             </div>
         </div>

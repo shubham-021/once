@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import type { CodexEntry } from "@once/shared";
+import { AnimatePresence, motion } from "motion/react";
 
 interface Props {
     codex: CodexEntry[];
@@ -35,37 +36,57 @@ export function CodexSidebar({ codex, protagonistName }: Props) {
                         {category}
                     </h3>
                     <ul className="space-y-2">
-                        {entries.map((entry) => (
-                            <li key={entry.id}>
-                                <button
-                                    onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
-                                    className={`flex items-start text-left w-full group transition-colors ${expandedId === entry.id
+                        <AnimatePresence initial={false}>
+                            {entries.map((entry) => (
+                                <motion.li
+                                    key={entry.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    transition={{ duration: 0.3 }}
+                                    layout
+                                >
+                                    <button
+                                        onClick={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
+                                        className={`flex items-start text-left w-full group transition-colors cursor-pointer ${expandedId === entry.id
                                             ? "text-accent"
                                             : protagonistName === entry.name
                                                 ? "text-accent font-medium"
                                                 : "text-foreground hover:text-accent"
-                                        }`}
-                                >
-                                    <span className="mt-1 mr-1 opacity-50">
-                                        {expandedId === entry.id ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                                    </span>
-                                    <span className="text-sm font-medium">{entry.name}</span>
-                                </button>
+                                            }`}
+                                    >
+                                        <span className="mt-1 mr-1 opacity-50">
+                                            {expandedId === entry.id ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                                        </span>
+                                        <span className="text-sm font-medium">{entry.name}</span>
+                                    </button>
 
-                                {expandedId === entry.id && (
-                                    <div className="ml-4 mt-2 text-xs text-muted-foreground italic border-l-2 border-accent/20 pl-2 py-1 animate-in slide-in-from-top-1 fade-in duration-200">
-                                        <p>{entry.summary}</p>
-                                        {entry.metadata && (
-                                            <div className="mt-2 grid grid-cols-2 gap-1 opacity-70 not-italic">
-                                                {Object.entries(entry.metadata).map(([k, v]) => (
-                                                    <span key={k}>{k}: {v}</span>
-                                                ))}
-                                            </div>
+                                    <AnimatePresence initial={false}>
+                                        {expandedId === entry.id && (
+                                            <motion.div
+                                                key={entry.id}
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.25, ease: "easeInOut" }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="ml-4 mt-2 text-xs text-muted-foreground italic border-l-2 border-accent/20 pl-2 py-1">
+                                                    <p>{entry.summary}</p>
+                                                    {entry.metadata && (
+                                                        <div className="mt-2 grid grid-cols-2 gap-1 opacity-70 not-italic">
+                                                            {Object.entries(entry.metadata).map(([k, v]) => (
+                                                                <span key={k}>{k}: {v}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
                                         )}
-                                    </div>
-                                )}
-                            </li>
-                        ))}
+                                    </AnimatePresence>
+                                </motion.li>
+                            ))}
+                        </AnimatePresence>
                     </ul>
                 </div>
             ))}

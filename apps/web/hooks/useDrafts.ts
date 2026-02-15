@@ -1,6 +1,7 @@
 "use client"
 
 import { DraftAcceptResult, draftsApi } from "@/lib/api/drafts";
+import { useCreditStore } from "@/stores/credits-store";
 import { CreateStoryInput } from "@once/shared";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -100,7 +101,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
         if (!draft) return;
         setIsAccepting(true);
 
-        const result = await draftsApi.accept(draft.id);
+        const result = await draftsApi.accept(draft.id); 
         setIsAccepting(false);
 
         if (result.error) {

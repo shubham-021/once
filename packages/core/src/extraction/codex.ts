@@ -11,6 +11,8 @@ export async function extractCodexEntries(storyId: number, narration: string, tx
         where: eq(codexEntries.storyId, storyId)
     })
 
+    const existingNames = new Set(existingEntries.map(e => `${e.entryType.toLowerCase()}::${e.name.toLowerCase()}`));
+
     const prompt = buildCodexExtractionPrompt({
         narration,
         existingEntries: existingEntries.map(e => ({ name: e.name, entryType: e.entryType }))
@@ -27,12 +29,14 @@ export async function extractCodexEntries(storyId: number, narration: string, tx
         usageCollector
     );
 
+    const trueEntries = extraction.newEntries.filter(e => !existingNames.has(`${e.entryType.toLowerCase()}::${e.name.toLowerCase()}`));
+
     // debug collector
     collector?.add('llm', 'generatedStructuredOutput', extraction);
 
-    if (extraction.newEntries.length > 0) {
+    if (trueEntries.length > 0) {
         await tx.insert(codexEntries).values(
-            extraction.newEntries.map(entry => ({
+            trueEntries.map(entry => ({
                 storyId,
                 entryType: entry.entryType,
                 name: entry.name,
