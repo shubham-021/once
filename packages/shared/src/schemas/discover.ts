@@ -1,4 +1,4 @@
-import { Genre } from "./common";
+import  type { Genre } from "./common";
 
 export type DiscoverResult = {
     id: string;

@@ -38,7 +38,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
             ]);
 
             if (storyRes.data) setStory(storyRes.data);
-            if (scenesRes.data) setScenes(scenesRes.data);
+            if (scenesRes.data) setScenes(scenesRes.data.storyScenes);
             setIsLoading(false);
         };
         fetchData();

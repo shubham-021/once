@@ -3,10 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCreateStore } from "@/stores/create-store";
-import { draftsApi } from "@/lib/api";
-import { toast } from "sonner";
-import { ConstellationLoader } from "@/components/ui/loader";
-import { ManuscriptView } from "@/components/story/storyInterface";
+import { StoryInterface } from "@/components/story/storyInterface";
 
 export default function NewStoryPage() {
   const router = useRouter();
@@ -20,6 +17,6 @@ export default function NewStoryPage() {
   if (!creationData) return null;
 
   return (
-    <ManuscriptView creationData={creationData} />
+    <StoryInterface creationData={creationData} />
   );
 }

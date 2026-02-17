@@ -18,7 +18,7 @@ import { SceneBlock } from "./scene-block";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { SimpleToggle } from "../simple-theme-toggler";
 
-export function ManuscriptView({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
+export function StoryInterface({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
 
     const [storyId, setStoryId] = useState<string | null>(initialStoryId ?? null);

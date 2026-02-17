@@ -1,7 +1,6 @@
-import { ManuscriptView } from "@/components/story/storyInterface";
-import { StoryInterface } from "@/components/story-interface";
+import { StoryInterface } from "@/components/story/storyInterface";
 
 export default async function StoryPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    return <ManuscriptView storyId={id} />
+    return <StoryInterface storyId={id} />
 }
