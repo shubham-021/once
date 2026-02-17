@@ -7,6 +7,7 @@ type Props = {
     narration: string;
     protagonist: {
         name: string;
+        description?:string;
         health: number;
         energy: number;
         location: string;

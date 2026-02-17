@@ -3,6 +3,7 @@ Only report explicit changes.`;
 
 export function buildSceneExtractionPrompt(narration: string, protagonist: {
     name: string;
+    description?: string;
     health: number;
     energy: number;
     location: string;
@@ -11,6 +12,7 @@ export function buildSceneExtractionPrompt(narration: string, protagonist: {
 }): string {
     return `
         ## Protagonist: ${protagonist.name}
+        ${protagonist.description ? `Description: ${protagonist.description}` : ""}
         Health: ${protagonist.health}/100, Energy: ${protagonist.energy}/100
         Location: ${protagonist.location}
         Traits: ${protagonist.traits.join(", ") || "None"}

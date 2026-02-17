@@ -8,6 +8,11 @@ interface Props {
 }
 
 export function ProtagonistSidebar({ protagonist }: Props) {
+    // console.log(JSON.stringify(protagonist));
+
+    // for now, backend should check for duplicates key produced by the llm.
+    const traits = new Set([...protagonist.currentTraits]);
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -67,7 +72,7 @@ export function ProtagonistSidebar({ protagonist }: Props) {
                 <h3 className="text-xs uppercase tracking-widest text-muted mb-3 border-b border-dashed border-line pb-1">Traits</h3>
                 <div className="flex flex-wrap gap-2">
                     <AnimatePresence>
-                        {protagonist.currentTraits.map((trait) => (
+                        {[...traits].map((trait) => (
                             <motion.span
                                 key={trait}
                                 initial={{ opacity: 0, scale: 0.8 }}

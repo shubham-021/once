@@ -17,7 +17,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
     const [isStreaming, setIsStreaming] = useState(false);
     const [isAccepting, setIsAccepting] = useState(false);
 
-    const startCreate = useCallback(async (formData: CreateStoryInput, onStoryCreated: (storyId: number) => void) => {
+    const startCreate = useCallback(async (formData: CreateStoryInput, onStoryCreated: (storyId: number, storyTitle:string) => void) => {
         setIsStreaming(true);
         setDraft({ id: 0, narration: "" });
 
@@ -25,7 +25,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
             await draftsApi.createStreamingDraft(
                 formData,
                 //onInit
-                (data) => onStoryCreated(data.storyId),
+                (data) => onStoryCreated(data.storyId,data.storyTitle),
                 //onChunk
                 (chunk) => setDraft(prev => prev ? { ...prev, narration: prev.narration + chunk } : null),
                 //onComplete

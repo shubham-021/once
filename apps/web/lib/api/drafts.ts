@@ -3,7 +3,7 @@ import { apiClient } from "./client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-let i = 0;
+// let i = 0;
 
 export interface DraftAcceptResult {
     scene: Scene;
@@ -21,15 +21,15 @@ export const draftsApi = {
 
     createStreamingDraft: (
         data: CreateStoryInput,
-        onInit: (data: { storyId: number }) => void,
+        onInit: (data: { storyId: number, storyTitle: string }) => void,
         onChunk: (text: string) => void,
         onComplete: (data: { draftId: number }) => void,
         onError?: (error: { code: string }) => void
     ) => {
         return new Promise<void>(async (resolve, reject) => {
             try {
-                console.log(`Req ${i} to /api/stories/draft`);
-                i++;
+                // console.log(`Req ${i} to /api/stories/draft`);
+                // i++;
                 const response = await fetch(`${API_BASE}/api/stories/draft`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -64,7 +64,7 @@ export const draftsApi = {
                             const rawData = line.slice(6);
                             switch (currentEvent) {
                                 case "init":
-                                    console.log(JSON.parse(rawData));
+                                    // console.log(JSON.parse(rawData));
                                     onInit(JSON.parse(rawData));
                                     break;
                                 case "narration":

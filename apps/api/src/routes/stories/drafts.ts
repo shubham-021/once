@@ -69,7 +69,7 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
 
             await stream.writeSSE({
                 event: 'init',
-                data: JSON.stringify({ storyId: initialData.newStory.id })
+                data: JSON.stringify({ storyId: initialData.newStory.id, storyTitle: initialData.newStory.title })
             })
 
             const narrationStream = streamOpeningScene({
@@ -524,6 +524,7 @@ draftsRouter.put("/draft/:draftId/accept", requireAuth, async (c) => {
             protagonist: activeProtagonist
                 ? {
                     name: activeProtagonist.name,
+                    description: activeProtagonist.description ?? undefined,
                     health: activeProtagonist.health,
                     energy: activeProtagonist.energy,
                     location: activeProtagonist.currentLocation,

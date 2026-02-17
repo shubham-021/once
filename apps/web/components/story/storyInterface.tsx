@@ -29,7 +29,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
     const setBalance = useCreditStore(s => s.setBalance);
 
     const [protagonist, setProtagonist] = useState<Protagonist | null>(null);
-    const [codex, setCodex] = useState<CodexEntry[]>([]);
+    const [codex, setCodex] = useState<CodexEntry[] | null>(null);
 
     const [toggleProtagonistSidebar,setToggleProtagonistSidebar] = useState(false);
     const [toggleCodexSidebar,setToggleCodexSidebar] = useState(false);
@@ -95,8 +95,9 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
             if (started.current) return;
             started.current = true;
 
-            startCreate(creationData, (newStoryId) => {
+            startCreate(creationData, (newStoryId,newStoryTitle) => {
                 setStoryId(newStoryId.toString());
+                setStoryTitle(newStoryTitle);
                 setIsCreating(false);
                 setFormData(null);
                 window.history.replaceState(null, '', `/story/${newStoryId}`);
@@ -177,23 +178,27 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Codex Sidebar — Desktop */}
-                <motion.aside
-                    animate={{ width: toggleCodexSidebar ? 256 : 0 }}
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className={cn(
-                        "hidden lg:block overflow-hidden shrink-0",
-                        toggleCodexSidebar && "dotted-border-r"
-                    )}
-                >
-                    <div className="w-64 p-4 h-full overflow-y-auto">
-                        <CodexSidebar codex={codex} protagonistName={protagonist?.name} />
-                    </div>
-                </motion.aside>
+                {codex && (
+                    <>
+                        <motion.aside
+                        animate={{ width: toggleCodexSidebar ? 256 : 0 }}
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className={cn(
+                            "hidden lg:block overflow-hidden shrink-0",
+                            toggleCodexSidebar && "dotted-border-r"
+                        )}
+                    >
+                        <div className="w-64 p-4 h-full overflow-y-auto">
+                            <CodexSidebar codex={codex} protagonistName={protagonist?.name} />
+                        </div>
+                    </motion.aside>
+                    </>
+                )}
 
                 {/* Codex Sidebar — Mobile */}
                 <AnimatePresence>
-                    {toggleCodexSidebar && (
+                    {toggleCodexSidebar && codex && (
                         <>
                             <motion.div
                                 key="codex-backdrop"
@@ -313,30 +318,34 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                 </AnimatePresence>
 
                 {/* Codex Toggle — Desktop */}
-                <motion.button
-                    onClick={codexToggler}
-                    animate={{ left: toggleCodexSidebar ? 220 : 8 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="hidden lg:flex fixed top-14.5 items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-50"
-                >
-                    {toggleCodexSidebar
-                        ? <ChevronsLeft className="size-5" />
-                        : <ChevronsRight className="size-5" />
-                    }
-                </motion.button>
+                {codex && (
+                    <>
+                        <motion.button
+                            onClick={codexToggler}
+                            animate={{ left: toggleCodexSidebar ? 220 : 8 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="hidden lg:flex fixed top-14.5 items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-50"
+                        >
+                            {toggleCodexSidebar
+                                ? <ChevronsLeft className="size-5" />
+                                : <ChevronsRight className="size-5" />
+                            }
+                        </motion.button>
 
-                {/* Codex Toggle — Mobile */}
-                <motion.button
-                    onClick={codexToggler}
-                    animate={{ left: toggleCodexSidebar ? 220 : 4 , top: toggleCodexSidebar ? 16 : 48 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-60"
-                >
-                    {toggleCodexSidebar
-                        ? <ChevronsLeft className="size-5" />
-                        : <ChevronsRight className="size-5" />
-                    }
-                </motion.button>
+                        {/* Codex Toggle — Mobile */}
+                        <motion.button
+                            onClick={codexToggler}
+                            animate={{ left: toggleCodexSidebar ? 220 : 4 , top: toggleCodexSidebar ? 16 : 48 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-60"
+                        >
+                            {toggleCodexSidebar
+                                ? <ChevronsLeft className="size-5" />
+                                : <ChevronsRight className="size-5" />
+                            }
+                        </motion.button>
+                    </>
+                )}
 
                 { protagonist && (
                     <>
