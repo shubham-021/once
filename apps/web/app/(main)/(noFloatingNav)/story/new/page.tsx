@@ -6,7 +6,7 @@ import { useCreateStore } from "@/stores/create-store";
 import { draftsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { ConstellationLoader } from "@/components/ui/loader";
-import { ManuscriptView } from "@/components/manuscript/manuscript-view";
+import { ManuscriptView } from "@/components/story/storyInterface";
 
 export default function NewStoryPage() {
   const router = useRouter();

@@ -1,11 +1,37 @@
 "use client"
 
-import { Plus, X } from "lucide-react";
+import { BookUser, Plus, X } from "lucide-react";
 import type { StepProps } from "../types";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { VaultCharacter } from "@once/shared";
+import { vaultApi } from "@/lib/api";
 
 export function StepCast({ form, updateForm }: StepProps) {
+
+    const [vaultCharacters, setVaultCharacters] = useState<VaultCharacter[]>([]);
+    const [vaultLoading, setVaultLoading] = useState(true);
+    const [showVaultDropdown, setShowVaultDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        vaultApi.list().then(res => {
+            if (res.data) setVaultCharacters(res.data);
+            setVaultLoading(false);
+        });
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setShowVaultDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     const addCastMember = () => {
         const newMember = {
             id: crypto.randomUUID(),
@@ -24,6 +50,26 @@ export function StepCast({ form, updateForm }: StepProps) {
             m.id === id ? { ...m, [field]: value } : m
         ));
     };
+
+    const addFromVault = (vc: VaultCharacter) => {
+        const parts: string[] = [];
+
+        if (vc.description) parts.push(vc.description);
+        if (vc.traits.length > 0) parts.push(`Traits: ${vc.traits.join(", ")}`);
+        if (vc.backstory) parts.push(vc.backstory);
+
+        const newMember = {
+            id: crypto.randomUUID(),
+            name: vc.name,
+            description: parts.join("\n"),
+            vaultCharacterId: vc.id,
+        };
+
+        updateForm("cast", [...form.cast, newMember]);
+        setShowVaultDropdown(false);
+    };
+
+    const isVaultCharInCast = (vcId: string) => form.cast.some(m => m.name.toLowerCase() === vcId.toLowerCase());
 
     return (
         <div className="space-y-6">
@@ -64,6 +110,11 @@ export function StepCast({ form, updateForm }: StepProps) {
                                 placeholder="Character name..."
                                 className="flex-1 border-b border-line bg-transparent py-2 text-foreground placeholder:text-muted/50 focus:border-foreground focus:outline-none"
                             />
+                            {member.vaultCharacterId && (
+                                <span className="text-[10px] text-muted border border-line px-1.5 py-0.5 whitespace-nowrap">
+                                    vault
+                                </span>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => removeCastMember(member.id)}
@@ -83,14 +134,59 @@ export function StepCast({ form, updateForm }: StepProps) {
                 ))}
             </div>
 
-            <button
-                type="button"
-                onClick={addCastMember}
-                className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
-            >
-                <Plus className="size-4" />
-                Add character
-            </button>
+            <div className="flex items-center gap-4">
+                <button
+                    type="button"
+                    onClick={addCastMember}
+                    className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
+                >
+                    <Plus className="size-4" />
+                    Add character
+                </button>
+                <div className="relative" ref={dropdownRef}>
+                    <button
+                        type="button"
+                        onClick={() => setShowVaultDropdown(!showVaultDropdown)}
+                        className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
+                    >
+                        <BookUser className="size-4" />
+                        Add from Vault
+                    </button>
+
+                    {showVaultDropdown && (
+                        <div className="absolute left-0 bottom-full mb-2 w-72 max-h-60 overflow-y-auto border border-line bg-surface shadow-lg z-20">
+                            {vaultLoading ? (
+                                <p className="px-4 py-3 text-xs text-muted">Loading...</p>
+                            ) : vaultCharacters.length === 0 ? (
+                                <p className="px-4 py-3 text-xs text-muted">No characters in your vault</p>
+                            ) : (
+                                vaultCharacters.map(vc => {
+                                    const alreadyAdded = isVaultCharInCast(vc.name);
+                                    return (
+                                        <button
+                                            key={vc.id}
+                                            type="button"
+                                            disabled={alreadyAdded}
+                                            onClick={() => addFromVault(vc)}
+                                            className={cn(
+                                                "w-full text-left px-4 py-3 border-b border-line last:border-b-0 transition-colors",
+                                                alreadyAdded
+                                                    ? "opacity-40 cursor-not-allowed"
+                                                    : "hover:bg-background cursor-pointer"
+                                            )}
+                                        >
+                                            <p className="text-sm text-foreground">{vc.name}</p>
+                                            {vc.description && (
+                                                <p className="text-xs text-muted mt-0.5 line-clamp-1">{vc.description}</p>
+                                            )}
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

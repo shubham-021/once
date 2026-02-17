@@ -197,7 +197,7 @@ export function CampfireToggle() {
     return (
         <motion.button
             onClick={toggleTheme}
-            className="fixed right-0 bottom-0 w-12 h-12 z-50 cursor-pointer"
+            className="fixed md:block hidden right-0 bottom-0 w-12 h-12 z-50 cursor-pointer"
             whileTap={{ scale: 0.95 }}
             aria-label="Toggle theme"
         >

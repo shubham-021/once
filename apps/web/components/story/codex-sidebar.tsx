@@ -30,6 +30,9 @@ export function CodexSidebar({ codex, protagonistName }: Props) {
 
     return (
         <div className="space-y-8 font-serif">
+            <div className="w-full flex justify-center items-center border-b border-dashed border-line pb-2 text-lg font-semibold">
+                <span>Codex</span>
+            </div>
             {Object.entries(grouped).map(([category, entries]) => (
                 <div key={category}>
                     <h3 className="text-xs uppercase tracking-widest text-muted mb-3 border-b border-dashed border-line pb-1">

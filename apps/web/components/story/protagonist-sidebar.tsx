@@ -9,8 +9,12 @@ interface Props {
 
 export function ProtagonistSidebar({ protagonist }: Props) {
     return (
-        <div className="space-y-6 font-serif">
+        <div className="space-y-6">
             {/* Header */}
+            <div className="w-full flex justify-center items-center border-b border-dashed border-line pb-2 text-lg font-semibold">
+                <span>Protagonist</span>
+            </div>
+
             <div className="text-center pb-4 border-b border-dashed border-line">
                 <h2 className="text-xl font-bold text-accent">{protagonist.name}</h2>
                 {protagonist.description && (
@@ -53,7 +57,7 @@ export function ProtagonistSidebar({ protagonist }: Props) {
                     transition={{ duration: 0.3 }}
                     className="flex items-center gap-2 text-sm text-muted-foreground border p-2 rounded-md bg-surface/50 border-line/50"
                 >
-                    <MapPin size={16} />
+                    <MapPin size={16} className="shrink-0"/>
                     <span>{protagonist.currentLocation}</span>
                 </motion.div>
             </AnimatePresence>

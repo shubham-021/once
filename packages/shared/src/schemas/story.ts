@@ -4,7 +4,7 @@ import { genres, narrativeStanceSchema, storyModeSchema, traitsArraySchema } fro
 export const castModeSchema = z.enum(["strict", "flexible"]).default("flexible");
 
 export const castMemberSchema = z.object({
-    name: z.string().min(1, "Name required").max(10),
+    name: z.string().min(1, "Name required").max(100),
     description: z.string().max(500)
 })
 
