@@ -73,10 +73,10 @@ export interface VaultCharacter {
 export interface CodexEntry {
     id: number;
     storyId: number;
-    entryType: "character" | "location" | "item" | "event" | "concept";
+    entryType: "character" | "location" | "item" | "event" | "faction" | "lore";
     name: string;
-    description?: string;
-    metadata?: Record<string, unknown>;
+    summary: string;
+    metadata?: Record<string, string> | null;
     firstMentionedSceneId?: number;
 }
 
@@ -114,6 +114,7 @@ export interface StreamCompleteData {
     };
     protagonistSnapshot?: Record<string, unknown> | null;
     protagonistUpdates?: {
+        description?: string | null;
         health?: number | null;
         energy?: number | null;
         location?: string | null;

@@ -32,7 +32,7 @@ export const storiesApi = {
         method: "POST",
         body: JSON.stringify({ sceneId })
     }),
-    getScenes: (id: string) => apiClient<Scene[]>(`/api/stories/${id}/scenes`),
+    getScenes: (id: string) => apiClient<{ storyScenes: Scene[], storyTitle: string }>(`/api/stories/${id}/scenes`),
     continue: (id: string, action: string) => apiClient<{ scene: Scene; protagonistUpdates?: any }>(`/api/stories/${id}/continue`, {
         method: "POST",
         body: JSON.stringify({ action })

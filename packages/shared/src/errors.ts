@@ -24,10 +24,12 @@ export const ERROR_CODES = {
     STORY_NOT_FOUND: { status: 404, message: "Story not found" },
     PROTAGONIST_NOT_FOUND: { status: 404, message: "Protagonist not found" },
     SCENE_NOT_FOUND: { status: 404, message: "Scene not found" },
+    DRAFT_NOT_FOUND: { status: 404, message: "Draft not found" },
 
     // Conflict errors (409)
     ALREADY_EXISTS: { status: 409, message: "Resource already exists" },
     STORY_COMPLETED: { status: 409, message: "Cannot modify completed story" },
+    DRAFT_EXISTS: { status: 409, message: "A draft already exists for this story" },
 
     // Rate limiting (429)
     RATE_LIMITED: { status: 429, message: "Too many requests" },

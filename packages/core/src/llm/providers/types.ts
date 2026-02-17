@@ -15,6 +15,7 @@ export interface LLMProvider {
     generateStructured<T extends z.ZodTypeAny>(instructions: string, input: string, schema: T, schemaName: string): Promise<z.infer<T>>;
     streamText(instructions: string, input: string): AsyncGenerator<string>;
 
+    streamTextWithUsage(instructions: string, input: string): AsyncGenerator<string, LLMUsage>;
     generateTextWithUsage(instructions: string, input: string): Promise<LLMResponse<string>>;
     generateStructuredWithUsage<T>(instructions: string, input: string, schema: z.ZodSchema<T>, schemaName?: string): Promise<LLMResponse<T>>;
 }

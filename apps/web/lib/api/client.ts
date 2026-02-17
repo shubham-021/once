@@ -23,6 +23,7 @@ export async function apiClient<T>(endpoint: string, options?: RequestInit): Pro
 
         return { data: json.data, meta: json.meta };
     } catch (err) {
+        // console.log(err);
         return {
             error: { message: "Network error", code: "NETWORK_ERROR" }
         }

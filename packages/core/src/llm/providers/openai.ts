@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
-import type { LLMProvider, EmbeddingProvider, LLMResponse } from "./types";
+import type { LLMProvider, EmbeddingProvider, LLMResponse, LLMUsage } from "./types";
 import { config } from "dotenv";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
@@ -61,6 +61,32 @@ export const openaiLLM: LLMProvider = {
         return response.output_parsed
     },
 
+    async *streamTextWithUsage(instructions: string, input: string): AsyncGenerator<string, LLMUsage> {
+        const stream = await getOpenAI().responses.create({
+            model: LLM_MODEL,
+            instructions,
+            input,
+            stream: true
+        })
+
+        let usage: LLMUsage = { inputTokens: 0, outputTokens: 0 };
+
+        for await (const event of stream) {
+            if (event.type === 'response.output_text.delta') {
+                yield event.delta
+            }
+
+            if (event.type === 'response.completed') {
+                usage = {
+                    inputTokens: event.response.usage?.input_tokens || 0,
+                    outputTokens: event.response.usage?.output_tokens || 0
+                }
+            }
+        }
+
+        return usage;
+    },
+
     async *streamText(instructions: string, input: string): AsyncGenerator<string> {
         const stream = await getOpenAI().responses.create({
             model: LLM_MODEL,
@@ -68,6 +94,7 @@ export const openaiLLM: LLMProvider = {
             input,
             stream: true
         })
+
         for await (const event of stream) {
             if (event.type === 'response.output_text.delta') {
                 yield event.delta

@@ -27,7 +27,7 @@ scenesRouter.get("/:id/scenes", async (c) => {
         orderBy: scenes.turnNumber,
     });
 
-    return success(c, storyScenes);
+    return success(c, { storyScenes: storyScenes, storyTitle: story.title });
 });
 
 scenesRouter.get("/:id/codex", requireAuth, async (c) => {

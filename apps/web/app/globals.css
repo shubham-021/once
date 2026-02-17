@@ -38,6 +38,7 @@
   --font-patrick-hand: var(--font-patrick-hand);
   --font-orbitron: var(--font-orbitron);
   --font-silkscreen: var(--font-silkscreen);
+  --font-cinzel: var(--font-cinzel);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -48,34 +49,34 @@
   --radius: 0.5rem;
 
   /* Ocean - Light Mode */
-  --background: #F0F4F8;
+  --background: #f0f4f8;
   /* Soft blue-grey */
-  --surface: #FFFFFF;
+  --surface: #ffffff;
   /* Clean white */
   --foreground: #586c81;
   /* Deep navy text */
-  --muted: #5A7A8A;
+  --muted: #5a7a8a;
   /* Muted blue-grey */
-  --muted-foreground: #5A7A8A;
+  --muted-foreground: #5a7a8a;
   --accent: #00b4d8;
   /* Ocean blue */
-  --danger: #C1121F;
+  --danger: #c1121f;
   /* Red (keep for errors) */
-  --line: #B8D4E3;
+  --line: #b8d4e3;
   /* Light blue-grey */
-  --charcoal: #1A2B3C;
+  --charcoal: #1a2b3c;
 }
 
 .dark {
   /* Black + Ember hints */
-  --background: #0A0A0A;
+  --background: #0a0a0a;
   --surface: #141414;
-  --foreground: #EAEAEA;
+  --foreground: #eaeaea;
   --muted: #dad8d8;
   --muted-foreground: #666666;
-  --accent: #FF4D00;
-  --danger: #A34A4A;
-  --line: #3D2A1A;
+  --accent: #ff4d00;
+  --danger: #a34a4a;
+  --line: #3d2a1a;
   /* Ember-tinted line (dark brown with orange) */
   --charcoal: #141414;
 }
@@ -121,27 +122,6 @@
   border-bottom: 1px dashed var(--line);
 }
 
-/* Typography utilities */
-.font-playfair {
-  font-family: var(--font-playfair), serif;
-}
-
-.font-cormorant {
-  font-family: var(--font-cormorant), serif;
-}
-
-.font-crimson {
-  font-family: var(--font-crimson), serif;
-}
-
-.font-lora {
-  font-family: var(--font-lora), serif;
-}
-
-.font-garamond {
-  font-family: var(--font-garamond), serif;
-}
-
 .text-accent {
   color: var(--accent);
 }
@@ -151,78 +131,27 @@
   color: var(--background);
 }
 
-.font-inter {
-  font-family: var(--font-inter), sans-serif;
-}
-
-.font-dm-sans {
-  font-family: var(--font-dm-sans), sans-serif;
-}
-
 .font-outfit {
   font-family: var(--font-outfit), sans-serif;
 }
 
-.font-sora {
-  font-family: var(--font-sora), sans-serif;
+/* Tiptap Editor Styles */
+.tiptap {
+  font-family: inherit;
 }
 
-.font-nunito {
-  font-family: var(--font-nunito), sans-serif;
+.tiptap p {
+  margin-bottom: 1em;
 }
 
-.font-source-sans {
-  font-family: var(--font-source-sans), sans-serif;
+.tiptap:focus {
+  outline: none;
 }
 
-.font-spectral {
-  font-family: var(--font-spectral), serif;
-}
-
-.font-literata {
-  font-family: var(--font-literata), serif;
-}
-
-.font-jetbrains {
-  font-family: var(--font-jetbrains), monospace;
-}
-
-.font-ibm-mono {
-  font-family: var(--font-ibm-mono), monospace;
-}
-
-.font-space-grotesk {
-  font-family: var(--font-space-grotesk), sans-serif;
-}
-
-.font-caveat {
-  font-family: var(--font-caveat), cursive;
-}
-
-.font-indie-flower {
-  font-family: var(--font-indie-flower), cursive;
-}
-
-.font-press-start {
-  font-family: var(--font-press-start), monospace;
-}
-
-.font-vt323 {
-  font-family: var(--font-vt323), monospace;
-}
-
-.font-permanent-marker {
-  font-family: var(--font-permanent-marker), cursive;
-}
-
-.font-patrick-hand {
-  font-family: var(--font-patrick-hand), cursive;
-}
-
-.font-orbitron {
-  font-family: var(--font-orbitron), sans-serif;
-}
-
-.font-silkscreen {
-  font-family: var(--font-silkscreen), monospace;
+.tiptap p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }

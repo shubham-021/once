@@ -3,7 +3,7 @@ import { CreateStoryInput } from "@once/shared";
 // something new , first time seeing these formats
 
 export interface CreateStoryFormState extends Omit<CreateStoryInput, 'cast'> {
-    cast: Array<{ id: string; name: string; description: string }>
+    cast: Array<{ id: string; name: string; description: string; vaultCharacterId?: number }>
 }
 
 export interface StepProps {

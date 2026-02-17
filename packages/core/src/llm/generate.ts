@@ -6,6 +6,20 @@ export async function* streamNarration(instructions: string, input: string): Asy
     yield* llm.streamText(instructions, input);
 }
 
+export async function* streamNarrationWithTracking(instructions: string, input: string, collector?: UsageCollector): AsyncGenerator<string> {
+    const generator = llm.streamTextWithUsage(instructions, input);
+
+    let result = await generator.next();
+    while (!result.done) {
+        yield result.value;
+        result = await generator.next();
+    }
+
+    if (collector && result.value) {
+        collector.addGptUsage(result.value.inputTokens, result.value.outputTokens)
+    }
+}
+
 export async function generateResponse(instructions: string, input: string): Promise<string> {
     return llm.generateText(instructions, input)
 }

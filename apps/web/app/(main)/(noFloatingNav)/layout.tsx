@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { CampfireToggle } from "@/components/campfire-toggle";
+import { SimpleToggle } from "@/components/simple-theme-toggler";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -31,6 +32,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <>
             <main>{children}</main>
             <CampfireToggle />
+            {/* <SimpleToggle/> */}
         </>
     );
 }

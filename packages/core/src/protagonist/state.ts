@@ -2,6 +2,7 @@ import { db, DBTransaction, eq } from "@once/database";
 import { protagonists } from "@once/database/schema";
 
 interface ProtagonistUpdates {
+    description?: string | null;
     health?: number | null;
     energy?: number | null;
     location?: string | null;
@@ -14,6 +15,7 @@ interface ProtagonistUpdates {
 
 interface CurrentProtagonist {
     id: number;
+    description?: string | null;
     health: number;
     energy: number;
     currentLocation: string;
@@ -40,6 +42,7 @@ export async function updateProtagonistState(
 
     const updatedState = {
         id: protagonist.id,
+        description: updates.description ?? protagonist.description,
         health: updates.health ?? protagonist.health,
         energy: updates.energy ?? protagonist.energy,
         currentLocation: updates.location ?? protagonist.currentLocation,
@@ -48,14 +51,11 @@ export async function updateProtagonistState(
         scars: newScars,
     };
 
+    const { id, ...forDB } = updatedState;
+
     await tx.update(protagonists)
         .set({
-            health: updates.health ?? protagonist.health,
-            energy: updates.energy ?? protagonist.energy,
-            currentLocation: updates.location ?? protagonist.currentLocation,
-            currentTraits: newTraits,
-            inventory: newInventory,
-            scars: newScars,
+            ...forDB,
             updatedAt: new Date(),
         })
         .where(eq(protagonists.id, protagonist.id));

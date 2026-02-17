@@ -28,6 +28,15 @@ export function buildCodexExtractionPrompt(ctx: CodexExtractionContext): string 
         - Event: Significant happenings worth remembering
         - Lore: World-building details, history, customs
 
+
+        For each entity, also extract structured metadata as key-value pairs:
+        - Characters: role (Ally/Antagonist/Neutral), status (Alive/Missing/Deceased), affiliation
+        - Locations: region, dangerLevel (Safe/Moderate/High), type (City/Forest/Dungeon/etc)
+        - Items: rarity (Common/Rare/Unique), type (Weapon/Consumable/Key Item)
+        - Events/Lore: timeline (Past/Present/Future), impact (Major/Minor)
+        
+        Only include metadata fields that are clearly evident from the narration.
+
         For existing entries, note if the narration reveals NEW information about them.
 
         Only extract what's clearly present in the narration — don't invent.
