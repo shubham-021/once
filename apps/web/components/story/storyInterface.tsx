@@ -338,31 +338,35 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                     }
                 </motion.button>
 
-                {/* Protagonist Toggle — Desktop */}
-                <motion.button
-                    onClick={protagonistToggler}
-                    animate={{ right: toggleProtagonistSidebar ? 220 : 8 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="hidden lg:flex fixed top-14.5 text-neutral-400 items-center justify-center w-7 h-7 rounded-lg cursor-pointer z-50"
-                >
-                    {toggleProtagonistSidebar
-                        ? <ChevronsRight className="size-5" />
-                        : <ChevronsLeft className="size-5" />
-                    }
-                </motion.button>
+                { protagonist && (
+                    <>
+                        {/* Protagonist Toggle — Desktop */}
+                        <motion.button
+                            onClick={protagonistToggler}
+                            animate={{ right: toggleProtagonistSidebar ? 220 : 8 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="hidden lg:flex fixed top-14.5 text-neutral-400 items-center justify-center w-7 h-7 rounded-lg cursor-pointer z-50"
+                        >
+                            {toggleProtagonistSidebar
+                                ? <ChevronsRight className="size-5" />
+                                : <ChevronsLeft className="size-5" />
+                            }
+                        </motion.button>
 
-                {/* Protagonist Toggle — Mobile */}
-                <motion.button
-                    onClick={protagonistToggler}
-                    animate={{ right: toggleProtagonistSidebar ? 220 : 4 , top: toggleProtagonistSidebar ? 16:48 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-60"
-                >
-                    {toggleProtagonistSidebar
-                        ? <ChevronsRight className="size-5" />
-                        : <ChevronsLeft className="size-5" />
-                    }
-                </motion.button>
+                        {/* Protagonist Toggle — Mobile */}
+                        <motion.button
+                            onClick={protagonistToggler}
+                            animate={{ right: toggleProtagonistSidebar ? 220 : 4 , top: toggleProtagonistSidebar ? 16:48 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-60"
+                        >
+                            {toggleProtagonistSidebar
+                                ? <ChevronsRight className="size-5" />
+                                : <ChevronsLeft className="size-5" />
+                            }
+                        </motion.button>
+                    </>
+                )}
             </div>
         </div >
     );
