@@ -4,20 +4,56 @@ import { cn } from "@/lib/utils";
 import type { Story } from "@once/shared";
 import { storiesApi } from "@/lib/api";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
+import { optionsApi } from "@/lib/api/options";
+import { toast } from "sonner";
 
-export function StoryCard({ story, onDelete }: { story: Story, onDelete?: (id: number) => void }) {
+export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange }: { story: Story, onDelete: (id: number) => void, onVisibilityChange: (id:number, option:'public'|'private'|'unlisted')=>void, onStatusChange: (id:number, option:'active'|'completed'| 'abandoned')=>void}) {
 
     const [showConfirm, setShowConfirm] = useState(false);
+    const inProgress = useRef<boolean>(false);
 
     const handleDelete = async () => {
+        inProgress.current = true;
         const response = await storiesApi.delete(story.id.toString());
-        if (!response.error && onDelete) {
-            onDelete(story.id);
+        if (response.error) {
+            toast.error("Error while executing this req. Try again some times later");
+            inProgress.current = false;
+            return;
         }
 
+        onDelete(story.id);
+        inProgress.current = false;
         setShowConfirm(false);
+    }
+
+    const handleVisibility = async () => {
+        inProgress.current = true;
+        const option = (story.visibility === "public") ? "private" : "public";
+        const response = await optionsApi.visibility(story.id.toString(),option);
+        if(response.error){
+           toast.error("Error while executing this req. Try again some times later");
+           inProgress.current = false;
+           return; 
+        }
+
+        onVisibilityChange(story.id, option);
+        inProgress.current=false;
+    }
+
+    const handleStatus = async () => {
+        inProgress.current = true;
+        const option = (story.status === "active") ? "completed" : "active";
+        const response = await optionsApi.status(story.id.toString(),option);
+        if(response.error){
+           toast.error("Error while executing this req. Try again some times later");
+           inProgress.current = false;
+           return; 
+        }
+
+        onStatusChange(story.id,option);
+        inProgress.current = false;
     }
 
     return (
@@ -45,13 +81,25 @@ export function StoryCard({ story, onDelete }: { story: Story, onDelete?: (id: n
                         <DropdownMenuTrigger className="text-muted hover:text-foreground cursor-pointer focus:outline-none">
                             <MoreVertical className="size-4" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="space-y-2">
                             <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
                                 setShowConfirm(true)
                             }} className="text-danger group hover:text-white cursor-pointer">
                                 <Trash2 className="size-4 mr-2 text-danger group-hover:text-white" />
                                 Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                handleVisibility();
+                            }} className="cursor-pointer hover:text-white">
+                                {(story.visibility === "public") ? "Mark this private" : "Mark this public"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                handleStatus();
+                            }} className="cursor-pointer hover:text-white">
+                                {(story.status === "active") ? "Mark this complete" : "Mark this active"}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

@@ -1,9 +1,9 @@
 "use client"
 
 import { DraftAcceptResult, draftsApi } from "@/lib/api/drafts";
-import { useCreditStore } from "@/stores/credits-store";
 import { CreateStoryInput } from "@once/shared";
-import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface UseDraftOptions {
@@ -14,12 +14,19 @@ interface UseDraftOptions {
 
 export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
     const [draft, setDraft] = useState<{ id: number; narration: string } | null>(null);
+    const [creatingFirstDraft, setCreatingFirstDraft] = useState<boolean>(false);
+    const [loadingDraft, setLoadingDraft] = useState<boolean>(false);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isAccepting, setIsAccepting] = useState(false);
 
+    const firstChunk = useRef<boolean>(true);
+
+    const router = useRouter();
+
     const startCreate = useCallback(async (formData: CreateStoryInput, onStoryCreated: (storyId: number, storyTitle:string) => void) => {
+        setCreatingFirstDraft(true);
         setIsStreaming(true);
-        setDraft({ id: 0, narration: "" });
+        // setDraft({ id: 0, narration: "" });
 
         try {
             await draftsApi.createStreamingDraft(
@@ -27,60 +34,96 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
                 //onInit
                 (data) => onStoryCreated(data.storyId,data.storyTitle),
                 //onChunk
-                (chunk) => setDraft(prev => prev ? { ...prev, narration: prev.narration + chunk } : null),
+                (chunk) => {
+                    if(firstChunk.current){
+                        setCreatingFirstDraft(false);
+                        setDraft({id: 0, narration: ""});
+                        firstChunk.current = false;
+                    }
+                    setDraft(prev => prev ? { ...prev, narration: prev.narration + chunk } : null);
+                },
                 //onComplete
                 (data) => setDraft(prev => prev ? { ...prev, id: data.draftId } : null),
                 //onError
                 (error) => {
+                    setCreatingFirstDraft(false);
+                    router.push('/library');
                     toast.error(`Failed: ${error.code}`);
                     setDraft(null);
                 }
             )
         } catch {
+            setCreatingFirstDraft(false);
             setDraft(null);
         } finally {
             setIsStreaming(false);
+            firstChunk.current = true;
+            // setLoadingDraft(false);
         }
     }, [])
 
     const startContinue = useCallback(async (action: string) => {
+        setLoadingDraft(true);
         setIsStreaming(true);
-        setDraft({ id: 0, narration: "" });
+        // setDraft({ id: 0, narration: "" });
 
         try {
             await draftsApi.continueStream(
                 storyId,
                 action,
-                (chunk) => setDraft((prev) => prev ? { ...prev, narration: prev.narration + chunk } : null),
+                (chunk) => {
+                    if(firstChunk.current){
+                        setLoadingDraft(false);
+                        setDraft({id: 0, narration: ""});
+                        firstChunk.current = false;
+                    }
+                    setDraft((prev) => prev ? { ...prev, narration: prev.narration + chunk } : null);
+                },
                 (data) => setDraft((prev) => prev ? { ...prev, id: data.draftId } : null),
                 (error) => {
+                    setLoadingDraft(false);
                     toast.error(`Failed: ${error.code}`);
                     setDraft(null);
                 }
             )
         } catch {
+            setLoadingDraft(false);
             setDraft(null);
         } finally {
+            // setLoadingDraft(false);
             setIsStreaming(false);
+            firstChunk.current = true;
         }
     }, [storyId])
 
     const revise = useCallback(async (narration: string, comment: string) => {
         if (!draft) return;
         setIsStreaming(true);
-        setDraft({ ...draft, narration: "" });
+        // setDraft({ ...draft, narration: "" });
 
         try {
             await draftsApi.reviseStream(
                 draft.id,
                 narration,
                 comment,
-                (chunk) => setDraft((prev) => prev ? { ...prev, narration: prev.narration + chunk } : null),
+                (chunk) => {
+                    if(firstChunk.current){
+                        setLoadingDraft(false);
+                        setDraft({id: 0, narration: ""});
+                        firstChunk.current = false;
+                    }
+                    setDraft((prev) => prev ? { ...prev, narration: prev.narration + chunk } : null)
+                },
                 () => { },
-                (error) => toast.error(`Revision failed: ${error.code}`)
+                (error) => {
+                    setLoadingDraft(false);
+                    toast.error(`Revision failed: ${error.code}`)
+                }
             );
         } finally {
             setIsStreaming(false);
+            firstChunk.current = true;
+            setLoadingDraft(false);
         }
     }, [draft]);
 
@@ -122,11 +165,12 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
             toast.error(result.error.message);
             return;
         }
+
         setDraft(null);
         onDiscard?.();
     }, [draft, onDiscard]);
 
     const setNarration = (narration: string) => setDraft(prev => prev ? { ...prev, narration } : null)
 
-    return { draft, setDraft, isStreaming, isAccepting, startCreate, startContinue, revise, saveEdits, accept, discard, setNarration }
+    return { draft, setDraft, isStreaming, isAccepting, startCreate, startContinue, revise, saveEdits, accept, discard, setNarration, loadingDraft, creatingFirstDraft }
 }

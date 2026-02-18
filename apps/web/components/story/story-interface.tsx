@@ -1,6 +1,6 @@
 "use client";
 
-import { MouseEventHandler, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { draftsApi, storiesApi } from "@/lib/api";
 import type { CodexEntry, CreateStoryInput, Protagonist, Scene } from "@once/shared";
@@ -17,6 +17,7 @@ import { useCreditStore } from "@/stores/credits-store";
 import { SceneBlock } from "./scene-block";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { SimpleToggle } from "../simple-theme-toggler";
+import { TypingLoader } from "../DraftLoader";
 
 export function StoryInterface({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
@@ -73,7 +74,9 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
         saveEdits,
         accept,
         discard,
-        setNarration
+        setNarration,
+        loadingDraft,
+        creatingFirstDraft
     } = useDraft({
         storyId: storyId ? parseInt(storyId) : 0,
         onAccept: async (result) => {
@@ -161,7 +164,18 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
         }
     }, [draft?.narration, isStreaming]);
 
-    if (isLoading) {
+    if(creatingFirstDraft) {
+        return (
+            <div className="flex h-screen w-full flex-col items-center justify-center bg-background md:text-4xl sm:text-3xl text-xl">
+                {/* <h1 className="mb-12 font-serif text-2xl text-[#7A6F5F]">Step 1: Creating the best scene draft for this story.</h1> */}
+                {/* <div className="md:text-2xl text-lg w-full flex justify-center"> */}
+                    <TypingLoader />
+                {/* </div> */}
+            </div>
+        )
+    }
+
+    if (!creatingFirstDraft && isLoading) {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
                 <p className="text-muted">Loading story...</p>
@@ -234,6 +248,12 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                                     />
                             ))}
 
+                            {loadingDraft && !draft && (
+                                <div className="text-sm">
+                                    <TypingLoader/>
+                                </div>
+                            )}
+
                             {draft && (
                                 <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4">
                                     <textarea
@@ -247,7 +267,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                                 </div>    
                             )}
 
-                            {draft  && (
+                            {draft  && !isStreaming && (
                                 <DraftControls
                                     narration={draft.narration}
                                     isStreaming={isStreaming}

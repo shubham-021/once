@@ -8,6 +8,7 @@ import protagonistsRouter from "./protagonists";
 import social from "./social";
 import analyticsRouter from "./analytics";
 import draftsRouter from "./drafts";
+import options from "./options";
 
 const storiesRouter = new Hono();
 
@@ -20,5 +21,6 @@ storiesRouter.route("/", deferredRouter);
 storiesRouter.route("/", social);
 storiesRouter.route("/", protagonistsRouter);
 storiesRouter.route("/", draftsRouter);
+storiesRouter.route("/options", options);
 
 export default storiesRouter;

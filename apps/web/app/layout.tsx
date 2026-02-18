@@ -35,7 +35,7 @@ export default function RootLayout({
           {/* <LenisProvider> */}
           {/* <EmberCursor /> */}
           <CreditsProvider>
-            <ConstellationLoader />
+            {/* <ConstellationLoader /> */}
             <Toaster
               position="bottom-right"
               toastOptions={{

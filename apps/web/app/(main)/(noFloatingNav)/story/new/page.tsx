@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCreateStore } from "@/stores/create-store";
-import { StoryInterface } from "@/components/story/storyInterface";
+import { StoryInterface } from "@/components/story/story-interface";
 
 export default function NewStoryPage() {
   const router = useRouter();

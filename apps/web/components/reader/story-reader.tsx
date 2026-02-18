@@ -82,7 +82,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
                             <>
                                 <User className="size-3 shrink-0" />
                                 <span className="truncate">{formatAuthorName(story.user.name)}</span>
-                                <span className="opacity-40 hidden sm:inline">·</span>
+                                <span className="size-1 bg-accent rounded-full opacity-80 hidden sm:inline"/>
                             </>
                         }
                         <span className="hidden sm:inline">{story.genre}</span>
@@ -132,7 +132,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
             </header>
 
             <main className="flex-1 overflow-y-auto" data-lenis-prevent>
-                <div className="max-w-3xl mx-auto px-6 py-8">
+                <div className="max-w-4xl mx-auto px-6 py-8">
                     <div className="mb-8 p-4 border border-line bg-surface">
                         <p className="text-sm text-muted">Playing as</p>
                         <p className="text-lg text-foreground">{story.protagonist?.[0].name}</p>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StoryCard } from "./story-card";
 import { cn } from "@/lib/utils";
 import { NavHeader } from "../nav-header";
@@ -33,6 +33,24 @@ export function Library() {
     setStories((prev) => prev.filter((s) => s.id !== id));
     toast.success("Story Deleted");
   };
+
+  const handleVisibility = (id:number,option:"public"|"private"|"unlisted") => {
+    setStories((prev) => prev.map(s => {
+      if(s.id === id) return {...s,visibility:option};
+      else return s;
+    }));
+
+    toast.success("Visibility changed successfully");
+  }
+
+  const handleStatus = (id:number,option:"active"|"completed"|"abandoned") => {
+    setStories((prev) => prev.map(s => {
+      if(s.id === id) return {...s,status:option};
+      else return s;
+    }));
+
+    toast.success("Status changed successfully");
+  }
 
   const filteredStories = stories.filter((s) =>
     filter === "all" ? true : s.status === filter,
@@ -81,7 +99,7 @@ export function Library() {
         ) : (
           <div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
             {filteredStories.map((story) => (
-              <StoryCard key={story.id} story={story} onDelete={handleDelete} />
+              <StoryCard key={story.id} story={story} onDelete={handleDelete} onVisibilityChange={handleVisibility} onStatusChange={handleStatus}/>
             ))}
           </div>
         )}

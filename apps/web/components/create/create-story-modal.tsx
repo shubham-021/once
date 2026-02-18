@@ -143,7 +143,7 @@ export function CreateStoryModal() {
                     >
                         <DialogTitle className="sr-only">Create a New Story</DialogTitle>
 
-                        <div className="flex flex-col h-full overflow-hidden w-full md:w-[800px] md:h-[90vh] rounded-none md:rounded-lg bg-surface">
+                        <div className="flex flex-col h-full overflow-hidden w-full md:w-200 md:h-[90vh] rounded-none md:rounded-lg bg-surface">
                             <div className="flex items-center justify-between px-4 py-2 lg:px-6 border-b border-line">
                                 <div>
                                     <h2 className="text-lg text-foreground">{getStepTitle()}</h2>

@@ -87,4 +87,5 @@ social.post("/:id/notes", requireAuth, async (c) => {
 
     return success(c, note, 201);
 });
+
 export default social;
