@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -18,6 +19,9 @@ export default function SignupPage() {
     const [sendingOtp, setSendingOtp] = useState(false);
     const [showOtpfield, setShowOtpField] = useState(false);
     const [otp, setOtp] = useState("");
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -126,24 +130,43 @@ export default function SignupPage() {
                                 required
                             />
 
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                                required
-                                minLength={8}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={!showPassword ? "password" : "text"}
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                    required
+                                />
 
-                            <input
-                                type="password"
-                                placeholder="Confirm Password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                                required
-                            />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((p) => !p)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground cursor-pointer bg-surface"
+                                >
+                                    {!showPassword ? <EyeClosed className="size-4"/> : <Eye className="size-4"/>}
+                                </button>
+                            </div>
+
+                            <div className="relative">
+                                <input
+                                    type={!showConfirmPassword ? "password" : "text"}
+                                    placeholder="Confirm Password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                    required
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword((p) => !p)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground cursor-pointer bg-surface"
+                                >
+                                    {!showConfirmPassword ? <EyeClosed className="size-4"/> : <Eye className="size-4"/>}
+                                </button>
+                            </div>
 
                             <button
                                 type="submit"

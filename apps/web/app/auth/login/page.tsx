@@ -5,12 +5,15 @@ import { signIn } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const [passwordType, setPasswordType] = useState(true);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,14 +58,24 @@ export default function LoginPage() {
                         required
                     />
 
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
-                        required
-                    />
+                    <div className="relative">
+                        <input
+                            type={passwordType ? "password" : "text"}
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                            required
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() => setPasswordType((p) => !p)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground cursor-pointer bg-surface"
+                        >
+                            {passwordType ? <EyeClosed className="size-4"/> : <Eye className="size-4"/>}
+                        </button>
+                    </div>
 
                     <button
                         type="submit"
