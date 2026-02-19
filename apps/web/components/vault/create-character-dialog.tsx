@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createVaultCharacterSchema, suggestedTraits } from "@once/shared/schemas";
@@ -8,18 +8,39 @@ import { toast } from "sonner";
 import { vaultApi } from "@/lib/api";
 
 interface CreateCharacterDialogProps {
+    mode: "edit" | "create";
     open: boolean;
     onClose: () => void;
     onCreated?: () => void;
+    data: {
+        id: number;
+        name: string;
+        description: string;
+        traits: string[];
+        backstory: string;
+    } | null;
 }
 
-export function CreateCharacterDialog({ open, onClose, onCreated }: CreateCharacterDialogProps) {
-    const [name, setName] = React.useState("");
-    const [description, setDescription] = React.useState("");
-    const [selectedTraits, setSelectedTraits] = React.useState<string[]>([]);
-    const [backstory, setBackstory] = React.useState("");
+export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: CreateCharacterDialogProps) {
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
+    const [backstory, setBackstory] = useState("");
 
-    if (!open) return null;
+    useEffect(() => {
+        if (data) {
+            setName(data.name);
+            setDescription(data.description);
+            setSelectedTraits(data.traits);
+            setBackstory(data.backstory);
+        } else {
+            // reset for create mode
+            setName("");
+            setDescription("");
+            setSelectedTraits([]);
+            setBackstory("");
+        }
+    }, [data, open]);
 
     const toggleTrait = (trait: string) => {
         if (selectedTraits.includes(trait)) {
@@ -28,6 +49,32 @@ export function CreateCharacterDialog({ open, onClose, onCreated }: CreateCharac
             setSelectedTraits([...selectedTraits, trait]);
         }
     };
+
+    const handleEdit = async () => {
+        if(!data){
+            toast.error('Something went wrong. Please try after some time !');
+            return;
+        }
+
+        const payload = { name, description, traits: selectedTraits, backstory };
+
+        const result = createVaultCharacterSchema.safeParse(payload);
+
+        if (!result.success) {
+            toast.error(result.error.errors[0].message);
+            return;
+        }
+
+        const response = await vaultApi.update(data.id.toString() , result.data);
+
+        if (response.error) {
+            toast.error(response.error.message);
+        } else {
+            toast.success("Edited successfully");
+            onCreated?.();
+            onClose();
+        }
+    }
 
     const handleCreate = async () => {
         const payload = { name, description, traits: selectedTraits, backstory };
@@ -50,6 +97,8 @@ export function CreateCharacterDialog({ open, onClose, onCreated }: CreateCharac
         }
     };
 
+    if (!open) return null;
+
     return (
         <div className="fixed inset-0 z-60 flex items-center justify-center">
             <div className="absolute inset-0 bg-background/80" onClick={onClose} />
@@ -62,7 +111,7 @@ export function CreateCharacterDialog({ open, onClose, onCreated }: CreateCharac
                     <X className="size-4" />
                 </button>
 
-                <h2 className="text-lg text-foreground">Create Character</h2>
+                <h2 className="text-lg text-foreground">{mode === "create" ? "Create Character" : "Edit Character"}</h2>
                 <p className="mt-1 text-sm text-muted">Save a character to use across multiple stories</p>
 
                 <div className="mt-6 space-y-4">
@@ -120,7 +169,7 @@ export function CreateCharacterDialog({ open, onClose, onCreated }: CreateCharac
                 </div>
 
                 <button
-                    onClick={handleCreate}
+                    onClick={(mode === "create" ? handleCreate : handleEdit)}
                     disabled={!name.trim()}
                     className={cn(
                         "mt-6 w-full border border-line py-2 text-foreground transition-colors",
@@ -128,7 +177,7 @@ export function CreateCharacterDialog({ open, onClose, onCreated }: CreateCharac
                         "disabled:cursor-not-allowed disabled:opacity-40"
                     )}
                 >
-                    Create Character
+                    {(mode === "create" ? "Create Character" : "Save Edit")}
                 </button>
             </div>
         </div>

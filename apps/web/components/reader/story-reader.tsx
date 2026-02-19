@@ -25,6 +25,8 @@ export function StoryReader({ storyId }: { storyId: string }) {
     const [scenes, setScenes] = useState<Scene[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    const [forkInProgress, setForkInProgress] = useState<boolean>(false);
+
     const { hasUpvoted, upvoteCount, isUpvoting, toggleUpvote } = useUpvote({
         storyId: storyId,
         initialUpvotes: story?.upvotes ?? 0,
@@ -45,6 +47,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
     }, [storyId]);
 
     const handleFork = async (sceneNumber: number) => {
+        setForkInProgress(true);
         const scene = scenes.find(s => s.turnNumber === sceneNumber);
 
         if (!scene) return;
@@ -59,6 +62,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
         }
 
         setShowForkDialog(false);
+        setForkInProgress(false);
     };
 
     if (isLoading || !story) {
@@ -166,6 +170,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
                 onFork={handleFork}
                 scenes={scenes}
                 storyTitle={story.title}
+                inProgress={forkInProgress}
             />
         </div>
     );

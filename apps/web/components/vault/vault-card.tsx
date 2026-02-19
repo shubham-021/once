@@ -6,11 +6,19 @@ import { motion, AnimatePresence } from "motion/react";
 import { VaultCharacter } from "@once/shared";
 
 
-export function VaultCard({ character }: { character: VaultCharacter }) {
+export function VaultCard({ character, onDelete, onEdit }: { character: VaultCharacter, onDelete: (characterId: number) => void, onEdit: (characterId:number) => void }) {
     const [showMenu, setShowMenu] = React.useState(false);
 
+    const handleDelete = () => {
+        onDelete(character.id);
+    }
+
+    const handleEdit = () => {
+        onEdit(character.id);
+    }
+
     return (
-        <div className="border border-line bg-surface p-5 relative">
+        <div className="border border-line bg-surface p-5 relative rounded-lg">
             <div className="flex items-start justify-between">
                 <div>
                     <h2 className="text-lg text-foreground">{character.name}</h2>
@@ -28,7 +36,7 @@ export function VaultCard({ character }: { character: VaultCharacter }) {
 
             <div className="mt-4 flex flex-wrap gap-2">
                 {character.traits.map((trait) => (
-                    <span key={trait} className="text-xs border border-line px-2 py-0.5 text-muted">
+                    <span key={trait} className="text-xs border border-line px-2 py-0.5 text-muted rounded-sm">
                         {trait}
                     </span>
                 ))}
@@ -45,12 +53,18 @@ export function VaultCard({ character }: { character: VaultCharacter }) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -4 }}
                         transition={{ duration: 0.1 }}
-                        className="absolute right-4 top-12 border border-line bg-surface shadow-lg z-10">
-                        <button className="flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-foreground hover:bg-background w-full text-left cursor-pointer">
+                        className="absolute right-4 top-12 border border-line bg-surface shadow-lg z-10 rounded-lg space-y-2">
+                        <button 
+                            onClick={handleEdit}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-muted hover:text-foreground hover:bg-background w-full text-left cursor-pointer"
+                        >
                             <Edit3 className="size-3" />
                             Edit
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 text-sm text-danger hover:bg-background w-full text-left cursor-pointer">
+                        <button 
+                            onClick={handleDelete}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-danger hover:bg-background w-full text-left cursor-pointer"
+                        >
                             <Trash2 className="size-3" />
                             Delete
                         </button>

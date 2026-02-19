@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 import { X, GitFork } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
@@ -12,13 +12,16 @@ interface ForkDialogProps {
     onFork: (sceneNumber: number) => void;
     scenes: Scene[];
     storyTitle: string;
+    inProgress: boolean;
 }
 
-export function ForkDialog({ open, onClose, onFork, scenes, storyTitle }: ForkDialogProps) {
-    const [selectedScene, setSelectedScene] = React.useState<number | null>(null);
+export function ForkDialog({ open, onClose, onFork, scenes, storyTitle, inProgress }: ForkDialogProps) {
+    const [selectedScene, setSelectedScene] = useState<number | null>(null);
+    // const [loading, setLoading] = useState<boolean>(false);
 
     const handleFork = () => {
         if (selectedScene !== null) {
+            // setLoading(true);
             onFork(selectedScene);
         }
     };
@@ -71,7 +74,7 @@ export function ForkDialog({ open, onClose, onFork, scenes, storyTitle }: ForkDi
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-muted">Scene {scene.turnNumber}</span>
                                         {scene.userAction !== "[STORY_START]" && (
-                                            <span className="text-xs text-accent italic truncate max-w-[200px]">
+                                            <span className="text-xs text-accent italic truncate max-w-50">
                                                 "{scene.userAction}"
                                             </span>
                                         )}
@@ -85,7 +88,7 @@ export function ForkDialog({ open, onClose, onFork, scenes, storyTitle }: ForkDi
 
                         <button
                             onClick={handleFork}
-                            disabled={selectedScene === null}
+                            disabled={selectedScene === null || inProgress}
                             className={cn(
                                 "w-full border border-line py-2 text-foreground transition-colors",
                                 "hover:border-accent hover:bg-accent/10",

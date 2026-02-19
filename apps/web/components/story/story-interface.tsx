@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { draftsApi, storiesApi } from "@/lib/api";
-import type { CodexEntry, CreateStoryInput, Protagonist, Scene } from "@once/shared";
+import type { CodexEntry, CreateStoryInput, Protagonist, Scene, Story } from "@once/shared";
 import { useDraft } from "@/hooks/useDrafts";
 import { ActionInput } from "./action-input";
 import { toast } from "sonner";
@@ -28,6 +28,8 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
     const [isLoading, setIsLoading] = useState(false);
     const balance = useCreditStore(s => s.balance);
     const setBalance = useCreditStore(s => s.setBalance);
+
+    const [story, setStory] = useState<Story|null>(null);
 
     const [protagonist, setProtagonist] = useState<Protagonist | null>(null);
     const [codex, setCodex] = useState<CodexEntry[] | null>(null);
@@ -129,6 +131,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
 
                 if (storyRes.data) {
                     const storyData = storyRes.data;
+                    setStory(storyData);
                     if (storyData.protagonist) {
                         const protagonists = Array.isArray(storyData.protagonist) ? storyData.protagonist : [storyData.protagonist];
                         const active = protagonists.find(p => p.isActive);
@@ -186,7 +189,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
     return (
         <div className="flex h-screen flex-col bg-background relative">
             <header className="flex whitespace-nowrap items-center justify-between md:text-base text-sm dotted-border-b gap-2 md:gap-4 py-2 px-4">
-                <div><span>Writing: </span><span className="tracking-widest text-accent italic">{storyTitle}</span></div>
+                <div><span>{(story?.status==="active" ? "Writing: " : "")}</span><span className="tracking-widest text-accent italic">{storyTitle}</span>{(story?.status === "completed") && <span className="text-xs ml-2 italic">{"( Completed )"}</span>}</div>
                 <div className="flex  items-center gap-2 italic text-muted ml-4"><SimpleToggle/><span>Credits: </span><span className="text-accent">{balance}</span></div>
             </header>
 
@@ -282,8 +285,8 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                         </div>
                     </div>
 
-                    {!draft && (
-                        <ActionInput onSubmit={startContinue} disabled={isStreaming} />
+                    {(!draft && story?.status === "active") && (
+                        <ActionInput onSubmit={startContinue} disabled={isStreaming} className={cn(toggleCodexSidebar && !toggleProtagonistSidebar && '-translate-x-56', toggleProtagonistSidebar && !toggleCodexSidebar && '-translate-x-125')}/>
                     )}
                 </main>
 
@@ -301,7 +304,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             className={cn(
                                 "hidden lg:block overflow-hidden shrink-0",
-                                toggleProtagonistSidebar && "dotted-border-l"
+                                "dotted-border-l"
                             )}
                         >
                             <div className="w-64 p-4 h-full overflow-y-auto">
@@ -342,9 +345,9 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                     <>
                         <motion.button
                             onClick={codexToggler}
-                            animate={{ left: toggleCodexSidebar ? 220 : 8 }}
+                            animate={{ left: toggleCodexSidebar ? 240 : 8 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="hidden lg:flex fixed top-14.5 items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-50"
+                            className="hidden lg:flex fixed top-14.5 items-center justify-center w-7 h-7 text-neutral-400 rounded-full cursor-pointer z-50 bg-background"
                         >
                             {toggleCodexSidebar
                                 ? <ChevronsLeft className="size-5" />
@@ -357,7 +360,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                             onClick={codexToggler}
                             animate={{ left: toggleCodexSidebar ? 220 : 4 , top: toggleCodexSidebar ? 16 : 48 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-60"
+                            className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 cursor-pointer z-60"
                         >
                             {toggleCodexSidebar
                                 ? <ChevronsLeft className="size-5" />
@@ -372,9 +375,9 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                         {/* Protagonist Toggle — Desktop */}
                         <motion.button
                             onClick={protagonistToggler}
-                            animate={{ right: toggleProtagonistSidebar ? 220 : 8 }}
+                            animate={{ right: toggleProtagonistSidebar ? 240 : 8 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="hidden lg:flex fixed top-14.5 text-neutral-400 items-center justify-center w-7 h-7 rounded-lg cursor-pointer z-50"
+                            className="hidden lg:flex fixed top-14.5 text-neutral-400 items-center justify-center w-7 h-7 rounded-full bg-background cursor-pointer z-50"
                         >
                             {toggleProtagonistSidebar
                                 ? <ChevronsRight className="size-5" />
@@ -387,7 +390,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                             onClick={protagonistToggler}
                             animate={{ right: toggleProtagonistSidebar ? 220 : 4 , top: toggleProtagonistSidebar ? 16:48 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 rounded-lg cursor-pointer z-60"
+                            className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 cursor-pointer z-60"
                         >
                             {toggleProtagonistSidebar
                                 ? <ChevronsRight className="size-5" />

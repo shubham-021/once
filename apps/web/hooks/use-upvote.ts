@@ -17,6 +17,7 @@ export function useUpvote({ storyId, initialHasUpvoted, initialUpvotes }: UseUpv
 
 
     useEffect(() => {
+        // const has
         setUpvoteCount(initialUpvotes);
     }, [initialUpvotes]);
 

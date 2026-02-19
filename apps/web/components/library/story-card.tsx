@@ -75,8 +75,8 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange 
                 </AlertDialogContent>
             </AlertDialog>
 
-            <Link href={`/story/${story.id}`} className="group relative block h-full border border-line bg-surface p-5 transition-colors hover:border-foreground/30">
-                <div className="absolute top-3 right-3">
+            <Link href={`/story/${story.id}`} className="group relative block h-full rounded-xl border border-line bg-surface p-5 transition-colors hover:border-foreground/30">
+                <div className="absolute top-6 right-3">
                     <DropdownMenu>
                         <DropdownMenuTrigger className="text-muted hover:text-foreground cursor-pointer focus:outline-none">
                             <MoreVertical className="size-4" />

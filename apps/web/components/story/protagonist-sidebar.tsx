@@ -42,12 +42,12 @@ export function ProtagonistSidebar({ protagonist }: Props) {
 
                 <div>
                     <div className="flex items-center gap-2 text-sm mb-2">
-                        <Zap size={16} className="text-yellow-500" />
+                        <Zap size={16} className="text-sky-400" />
                         <span className="font-semibold">Energy</span>
                         <span className="font-mono text-xs text-muted italic">{protagonist.energy}/{100}</span>
                     </div>
-                    <div className="text-yellow-500">
-                        <SketchyBar value={protagonist.energy} max={100} width={200} height={16} textColor="text-yellow-500" />
+                    <div>
+                        <SketchyBar value={protagonist.energy} max={100} width={200} height={16} textColor="text-sky-400" />
                     </div>
                 </div>
             </div>

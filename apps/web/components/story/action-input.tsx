@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Wand, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 
 interface Props {
     onSubmit: (action: string) => void;
     disabled?: boolean;
+    className?: string;
 }
 
-export function ActionInput({ onSubmit, disabled }: Props) {
+export function ActionInput({ onSubmit, disabled, className }: Props) {
     const [value, setValue] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -25,7 +28,10 @@ export function ActionInput({ onSubmit, disabled }: Props) {
     };
 
     return (
-        <div className="fixed bottom-2 left-1/2 -translate-x-1/2 w-full max-w-2xl min-[1024]:max-w-lg min-[1226px]:max-w-2xl px-4 pb-6">
+        <motion.div 
+            // transition={{type:'spring', duration: 0.3}}
+            className={cn("fixed bottom-2 left-1/2 -translate-x-1/2 w-full max-w-2xl min-[1024]:max-w-lg min-[1226px]:max-w-2xl px-4 pb-6",className)}
+        >
             <div className="rounded-lg border border-line bg-surface p-3 flex gap-2">
                 <textarea
                     ref={textareaRef}
@@ -45,6 +51,6 @@ export function ActionInput({ onSubmit, disabled }: Props) {
                     {disabled ? <Loader2 className="size-4 animate-spin" /> : <Wand className="size-4" />}
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 }

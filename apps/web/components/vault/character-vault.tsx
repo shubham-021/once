@@ -7,10 +7,15 @@ import { VaultCard } from "./vault-card";
 import { CreateCharacterDialog } from "./create-character-dialog";
 import { vaultApi } from "@/lib/api";
 import type { VaultCharacter } from "@once/shared";
+import { toast } from "sonner";
+
+type EditData = {id:number; name: string; description: string; traits: string[]; backstory: string}
 
 export function CharacterVault() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [characters, setCharacters] = useState<VaultCharacter[]>([]);
+  const [editCharacter, setEditCharacter] = useState<EditData|null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +31,29 @@ export function CharacterVault() {
   const handleCharacterCreated = () => {
     vaultApi.list().then((res) => res.data && setCharacters(res.data));
   };
+
+  const handleDelete = async (characterId:number) => {
+    const response = await vaultApi.delete(characterId.toString());
+
+    if(response.error){
+      toast.error('Failed to delete')
+      return;
+    }
+
+    toast.success('Deleted successfully');
+    setCharacters(prev => prev.filter(c => c.id != characterId));
+  }
+
+  const handleEditData = (characterId:number) => {
+      setShowEditDialog(true);
+      const character = characters.find(c => c.id == characterId);
+      if(!character){
+        toast.error('No character exist with this Id');
+        return;
+      } 
+
+      setEditCharacter({id: character.id, name: character.name, description: character.description ?? "", traits: character.traits, backstory: character.backstory ?? ""});
+  }
 
   return (
     <>
@@ -60,7 +88,7 @@ export function CharacterVault() {
         ) : (
           <><div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
             {characters.map((character) => (
-              <VaultCard key={character.id} character={character} />
+              <VaultCard key={character.id} character={character} onDelete={handleDelete} onEdit={handleEditData}/>
             ))}
           </div>
           <div>
@@ -76,9 +104,19 @@ export function CharacterVault() {
       </div>
 
       <CreateCharacterDialog
+        mode="create"
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
         onCreated={handleCharacterCreated}
+        data={null}
+      />
+
+      <CreateCharacterDialog
+        mode="edit"
+        open={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        onCreated={handleCharacterCreated}
+        data={editCharacter}
       />
     </>
   );

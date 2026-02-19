@@ -83,6 +83,7 @@ export function UserMenu() {
     <div className="fixed top-8 right-8 z-50">
       <div className="relative">
         <button
+          onMouseEnter={() => setIsRadialOpen(true)}
           onClick={toggleRadialMenu}
           className={cn(
             "flex items-center justify-center w-12 h-12 rounded-full",
