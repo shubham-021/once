@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { db, eq, desc, and } from "@once/database";
+import { db, eq, desc, and, count } from "@once/database";
 import { stories } from "@once/database/schema";
 import { success, error, paginated } from "@/lib/response";
 import { createStorySchema, GenreFilter } from "@once/shared/schemas";
@@ -19,11 +19,11 @@ crudRouter.get("/", requireAuth, async (c) => {
 });
 
 crudRouter.get("/discover/stats", async (c) => {
-    const storiesCount = await db.select({ count: stories.id }).from(stories).where(eq(stories.visibility, "public"));
+    const storiesCount = await db.select({ count: count() }).from(stories).where(eq(stories.visibility, "public"));
     const writersCount = await db.selectDistinct({ userId: stories.userId }).from(stories).where(eq(stories.visibility, "public"));
     // wordsWrittenToday
 
-    return success(c, { storiesPublished: Number(storiesCount[0]?.count) || 0, activeWriters: writersCount.length })
+    return success(c, { storiesPublished: storiesCount[0].count, activeWriters: writersCount.length })
 })
 
 crudRouter.get("/discover", async (c) => {

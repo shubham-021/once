@@ -15,4 +15,4 @@ export const db = drizzle(pool, { schema: { ...schema, ...authSchema } });
 export type DBTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export * from "./schema"
 export * from "./auth-schema"
-export { eq, desc, asc, inArray, and } from "drizzle-orm";
+export { eq, desc, asc, inArray, and, count } from "drizzle-orm";
