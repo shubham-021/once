@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { optionsApi } from "@/lib/api/options";
 import { toast } from "sonner";
 
-export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange }: { story: Story, onDelete: (id: number) => void, onVisibilityChange: (id:number, option:'public'|'private'|'unlisted')=>void, onStatusChange: (id:number, option:'active'|'completed'| 'abandoned')=>void}) {
+export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange, onForkChange }: { story: Story, onDelete: (id: number) => void, onVisibilityChange: (id:number, option:'public'|'private'|'unlisted')=>void, onStatusChange: (id:number, option:'active'|'completed'| 'abandoned')=>void, onForkChange: (id:number) => void}) {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const inProgress = useRef<boolean>(false);
@@ -53,6 +53,21 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange 
         }
 
         onStatusChange(story.id,option);
+        inProgress.current = false;
+    }
+
+    const handleForking = async () => {
+        inProgress.current = true;
+        const option = !story.allowForking;
+        const response = await optionsApi.fork(story.id.toString(),option);
+        if(response.error){
+            console.log(response.error);
+            toast.error("Error while executing this req. Try again some times later");
+            inProgress.current = false;
+            return; 
+        }
+
+        onForkChange(story.id);
         inProgress.current = false;
     }
 
@@ -100,6 +115,12 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange 
                                 handleStatus();
                             }} className="cursor-pointer hover:text-white">
                                 {(story.status === "active") ? "Mark this complete" : "Mark this active"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                handleForking();
+                            }} className="cursor-pointer hover:text-white">
+                                {(story.allowForking === true) ? "Disallow Forking" : "Allow Forking"}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

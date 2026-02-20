@@ -136,13 +136,13 @@ export function StoryReader({ storyId }: { storyId: string }) {
             </header>
 
             <main className="flex-1 overflow-y-auto" data-lenis-prevent>
-                <div className="max-w-4xl mx-auto px-6 py-8">
-                    <div className="mb-8 p-4 border border-line bg-surface">
+                <div className="max-w-5xl mx-auto px-6 py-8">
+                    <div className="mb-8 p-4 border border-line bg-surface rounded-xl">
                         <p className="text-sm text-muted">Playing as</p>
                         <p className="text-lg text-foreground">{story.protagonist?.[0].name}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
                             {story.protagonist?.[0].currentTraits?.map((trait) => (
-                                <span key={trait} className="text-xs text-muted border border-line px-2 py-0.5">
+                                <span key={trait} className="text-xs text-muted border border-line px-2 py-0.5 rounded-lg">
                                     {trait}
                                 </span>
                             ))}
@@ -186,11 +186,11 @@ function Scene({
     return (
         <div>
             {/* User action (skip for first scene) */}
-            {!isFirst && scene.userAction !== "[STORY_START]" && (
+            {/* {!isFirst && scene.userAction !== "[STORY_START]" && (
                 <div className="mb-4 pl-4 border-l-2 border-accent">
                     <p className="text-sm text-accent italic">{scene.userAction}</p>
                 </div>
-            )}
+            )} */}
 
             <div className="text-foreground leading-relaxed whitespace-pre-line">
                 {scene.narration}

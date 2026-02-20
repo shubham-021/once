@@ -20,11 +20,13 @@ options.post("/:id", requireAuth, async (c) => {
 
     const visibility = c.req.query("visibility") as "public" | "private" | undefined
     const status = c.req.query("status") as "active" | "completed" | undefined
+    const allowForking = c.req.query("allowForking") as boolean | undefined;
 
-    const updateData: Partial<{ visibility: "public" | "private"; status: "active" | "completed" }> = {}
+    const updateData: Partial<{ visibility: "public" | "private"; status: "active" | "completed"; allowForking: boolean }> = {}
 
-    if (visibility) updateData.visibility = visibility
-    if (status) updateData.status = status
+    if (visibility) updateData.visibility = visibility;
+    if (status) updateData.status = status;
+    if (allowForking) updateData.allowForking = allowForking;
 
     if (Object.keys(updateData).length === 0) {
         return error(c,"MISSING_FIELD","Nothing to update");

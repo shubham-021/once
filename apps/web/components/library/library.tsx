@@ -52,6 +52,15 @@ export function Library() {
     toast.success("Status changed successfully");
   }
 
+  const handleForking = (id:number) => {
+    setStories((prev) => prev.map(s => {
+      if(s.id === id) return {...s,allowForking: !s.allowForking};
+      else return s;
+    }));
+
+    toast.success("Fork allowed");
+  }
+
   const filteredStories = stories.filter((s) =>
     filter === "all" ? true : s.status === filter,
   );
@@ -99,7 +108,7 @@ export function Library() {
         ) : (
           <div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
             {filteredStories.map((story) => (
-              <StoryCard key={story.id} story={story} onDelete={handleDelete} onVisibilityChange={handleVisibility} onStatusChange={handleStatus}/>
+              <StoryCard key={story.id} story={story} onDelete={handleDelete} onVisibilityChange={handleVisibility} onStatusChange={handleStatus} onForkChange={handleForking}/>
             ))}
           </div>
         )}

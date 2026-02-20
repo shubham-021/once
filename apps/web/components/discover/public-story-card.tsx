@@ -17,9 +17,9 @@ export function PublicStoryCard({ story }: { story: DiscoverResult }) {
     });
 
     return (
-        <div className="group h-full border border-line bg-surface p-5 flex flex-col">
+        <div className="group h-full border border-line bg-surface p-5 flex flex-col rounded-xl">
             <Link href={`/read/${story.id}`}>
-                <h2 className="text-lg text-foreground hover:underline cursor-pointer">
+                <h2 className="text-lg text-accent italic cursor-pointer">
                     {story.title}
                 </h2>
             </Link>
