@@ -15,9 +15,10 @@ import { CodexSidebar } from "./codex-sidebar";
 import { AnimatePresence, motion } from "motion/react";
 import { useCreditStore } from "@/stores/credits-store";
 import { SceneBlock } from "./scene-block";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, LinkIcon } from "lucide-react";
 import { SimpleToggle } from "../simple-theme-toggler";
 import { TypingLoader } from "../DraftLoader";
+import Link from "next/link";
 
 export function StoryInterface({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
@@ -189,7 +190,19 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
     return (
         <div className="flex h-screen flex-col bg-background relative">
             <header className="flex whitespace-nowrap items-center justify-between md:text-base text-sm dotted-border-b gap-2 md:gap-4 py-2 px-4">
-                <div><span>{(story?.status==="active" ? "Writing: " : "")}</span><span className="tracking-widest text-accent italic">{storyTitle}</span>{(story?.status === "completed") && <span className="text-xs ml-2 italic">{"( Completed )"}</span>}</div>
+                <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                        <span>{(story?.status==="active" ? "Writing: " : "")}</span>
+                        <span className="tracking-widest text-accent italic">{storyTitle}</span>
+                    </div>
+                    {(story && story.status === "completed") && <span className="text-xs italic">{"( Completed )"}</span>}
+                    {(story && story.forkedFromStoryId) && 
+                        <Link href={`/read/${story.forkedFromStoryId}`} className="text-xs flex gap-1 items-end relative group">
+                            <LinkIcon className="size-3"/>
+                            <span className="absolute top-2 left-5 bg-accent/60 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">Original Story</span>
+                        </Link>
+                    }
+                </div>
                 <div className="flex  items-center gap-2 italic text-muted ml-4"><SimpleToggle/><span>Credits: </span><span className="text-accent">{balance}</span></div>
             </header>
 
