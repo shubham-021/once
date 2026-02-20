@@ -61,7 +61,8 @@ export const codexExtractionSchema = z.object({
 
     updates: z.array(z.object({
         name: z.string().describe("Existing entry to update"),
-        newInfo: z.string().describe("New information learned about this entity"),
+        summary: z.string().describe("New information learned about this entity"),
+        metadata: z.record(z.string()).nullable().describe("New information learned about this entities' previous metadata. Structured key-value pairs. For characters: role, status, affiliation. For location: region, dangerLevel, type. For items: rarity, type. For events/lore: timeline, impact")
     })).nullable().describe("Updates to existing entries"),
 });
 

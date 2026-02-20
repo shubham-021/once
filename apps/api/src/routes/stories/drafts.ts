@@ -4,7 +4,7 @@ import { success, error } from "@/lib/response";
 import { streamSSE } from "hono/streaming";
 import { requireAuth } from "@/middleware/auth";
 import { checkCredits, evaluateDeferredCharacters, evaluateEchoes, extractCodexEntries, extractEntities, extractSceneData, generateOpeningNarration, InsufficientCreditsError, markCharacterIntroduced, plantEcho, resolveEchoes, storySceneMemory, streamNarrationOnly, streamOpeningRevision, streamOpeningScene, streamRevision, updateProtagonistState, UsageCollector } from "@once/core";
-import { createStorySchema } from "@once/shared";
+import { CodexEntry, createStorySchema } from "@once/shared";
 
 
 const draftsRouter = new Hono();
@@ -553,7 +553,7 @@ draftsRouter.put("/draft/:draftId/accept", requireAuth, async (c) => {
 
             const entities = await extractEntities(draft.narration, activeProtagonist?.name || "protagonist", usageCollector);
 
-            let codexResult: any[] = [];
+            let codexResult: CodexEntry[] = [];
 
             await Promise.all([
                 tx.update(stories).set({ turnCount: draft.turnNumber, updatedAt: new Date() }).where(eq(stories.id, draft.storyId)),
@@ -561,7 +561,7 @@ draftsRouter.put("/draft/:draftId/accept", requireAuth, async (c) => {
                 storySceneMemory(newScene.id.toString(), draft.narration, draft.storyId, draft.turnNumber, entities, undefined, usageCollector),
                 resolveEchoes(draft.triggeredEchoes.map((e) => e.id), newScene.id, tx),
                 extraction.echoPlanted ? plantEcho(draft.storyId, newScene.id, extraction.echoPlanted.description, extraction.echoPlanted.triggerCondition, tx) : Promise.resolve(),
-                extractCodexEntries(draft.storyId, draft.narration, tx, undefined, usageCollector).then(e => { codexResult = e }),
+                extractCodexEntries(draft.storyId, draft.narration, newScene.turnNumber, tx, undefined, usageCollector).then(e => { codexResult = e }),
             ]);
 
             if (usageCollector) {

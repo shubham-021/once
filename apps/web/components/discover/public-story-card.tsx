@@ -7,9 +7,16 @@ import Link from "next/link";
 // import { GitFork } from "lucide-react";
 import { useUpvote } from "@/hooks/use-upvote";
 import { DiscoverResult } from "@once/shared";
+import { useRouter } from "next/navigation";
 
 
 export function PublicStoryCard({ story }: { story: DiscoverResult }) {
+
+    const router = useRouter();
+
+    const handleClick = () => {
+        router.push(`/read/${story.id}`);
+    }
 
     const { hasUpvoted, upvoteCount, isUpvoting, toggleUpvote } = useUpvote({
         storyId: story.id,
@@ -17,12 +24,10 @@ export function PublicStoryCard({ story }: { story: DiscoverResult }) {
     });
 
     return (
-        <div className="group h-full border border-line bg-surface p-5 flex flex-col rounded-xl">
-            <Link href={`/read/${story.id}`}>
+        <div onClick={handleClick} className="group h-full border border-line bg-surface p-5 flex flex-col rounded-xl cursor-pointer">
                 <h2 className="text-lg text-accent italic cursor-pointer">
                     {story.title}
                 </h2>
-            </Link>
             <p className="mt-1 text-sm text-muted flex items-center gap-1">
                 <User className="size-3" />
                 {story.author}

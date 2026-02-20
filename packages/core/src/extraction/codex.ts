@@ -6,7 +6,7 @@ import { CodexExtractionResponse, codexExtractionSchema } from "@once/shared/sch
 import { DebugCollector } from "@/debug";
 import { UsageCollector } from "@/credits/collector";
 
-export async function extractCodexEntries(storyId: number, narration: string, tx: DBTransaction, collector?: DebugCollector, usageCollector?: UsageCollector): Promise<typeof codexEntries.$inferSelect[]> {
+export async function extractCodexEntries(storyId: number, narration: string, turnNumber:number, tx: DBTransaction, collector?: DebugCollector, usageCollector?: UsageCollector): Promise<typeof codexEntries.$inferSelect[]> {
     const existingEntries = await tx.query.codexEntries.findMany({
         where: eq(codexEntries.storyId, storyId)
     })
@@ -40,8 +40,11 @@ export async function extractCodexEntries(storyId: number, narration: string, tx
                 storyId,
                 entryType: entry.entryType,
                 name: entry.name,
-                summary: entry.summary,
-                metadata: entry.metadata ?? null
+                metadata: {
+                    [turnNumber]: {...entry.metadata, summary: entry.summary}
+                },
+                firstMentionedSceneId: turnNumber,
+                lastUpdatedSceneId: turnNumber
             }))
         )
 
@@ -57,13 +60,20 @@ export async function extractCodexEntries(storyId: number, narration: string, tx
             if (existing && !existing.userEdited) {
                 await tx.update(codexEntries)
                     .set({
-                        summary: `${existing.summary}\n\n${update.newInfo}`,
+                        metadata: {
+                            ...existing.metadata,
+                            [turnNumber] : {
+                                ...update.metadata,
+                                summary: update.summary
+                            }
+                        },
+                        lastUpdatedSceneId: turnNumber,
                         updatedAt: new Date(),
                     })
                     .where(eq(codexEntries.id, existing.id));
 
                 // debug collector
-                collector?.add('db', 'updateCodexEntries', { summary: `${existing.summary}\n\n${update.newInfo}` });
+                collector?.add('db', 'updateCodexEntries', { metadata: {...existing.metadata, [turnNumber]: {...update.metadata, summary: update.summary}} });
             }
         }
     }

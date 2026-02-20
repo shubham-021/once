@@ -18,19 +18,22 @@ forkRouter.post("/:id/fork", requireAuth, async (c) => {
         return error(c, "VALIDATION_ERROR", "sceneId is required");
     }
 
-    const originalStory = await db.query.stories.findFirst({
-        where: eq(stories.id, storyId)
+    const storyWithCodex = await db.query.stories.findFirst({
+        where: eq(stories.id, storyId),
+        with: { codexEntries: true }
     })
 
-    if (!originalStory) return error(c, "NOT_FOUND", "Story not found");
+    if (!storyWithCodex) return error(c, "NOT_FOUND", "Story not found");
 
     const user = c.get("user")!;
 
-    if (originalStory.userId !== user.id) {
-        if (originalStory.visibility !== "public" || !originalStory.allowForking) {
+    if (storyWithCodex.userId !== user.id) {
+        if (storyWithCodex.visibility !== "public" || !storyWithCodex.allowForking) {
             return error(c, "FORBIDDEN", "This story does not allow forking");
         }
     }
+
+    const {codexEntries, ...originalStory} = storyWithCodex;
 
     const forkScene = await db.query.scenes.findFirst({
         where: eq(scenes.id, sceneId)
@@ -41,16 +44,16 @@ forkRouter.post("/:id/fork", requireAuth, async (c) => {
     }
 
     try {
-
-        const { storyWithRelations } = await forkStory({
+        const {forkedStoryId } = await forkStory({
             originalStory,
             sceneId,
             storyId,
             user,
-            forkScene
+            forkScene,
+            originalCodexEntries: codexEntries
         })
 
-        return success(c, storyWithRelations, 201);
+        return success(c, {id: forkedStoryId}, 201);
 
     } catch (err) {
         console.error("Fork error:", err);

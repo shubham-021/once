@@ -195,6 +195,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                         <span>{(story?.status==="active" ? "Writing: " : "")}</span>
                         <span className="tracking-widest text-accent italic">{storyTitle}</span>
                     </div>
+                    {(story && story.forkedFromStoryId) && <span className="text-xs italic">{`( forked )`}</span>}
                     {(story && story.status === "completed") && <span className="text-xs italic">{"( Completed )"}</span>}
                     {(story && story.forkedFromStoryId) && 
                         <Link href={`/read/${story.forkedFromStoryId}`} className="text-xs flex gap-1 items-end relative group">

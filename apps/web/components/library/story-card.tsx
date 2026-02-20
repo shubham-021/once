@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Clock, MoreVertical, Trash2 } from "lucide-react";
+import { BookOpen, Clock, LinkIcon, MoreVertical, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Story } from "@once/shared";
 import { storiesApi } from "@/lib/api";
@@ -8,11 +8,17 @@ import { useRef, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { optionsApi } from "@/lib/api/options";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange, onForkChange }: { story: Story, onDelete: (id: number) => void, onVisibilityChange: (id:number, option:'public'|'private'|'unlisted')=>void, onStatusChange: (id:number, option:'active'|'completed'| 'abandoned')=>void, onForkChange: (id:number) => void}) {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const inProgress = useRef<boolean>(false);
+    const router = useRouter();
+
+    const handleClick = () => {
+        router.push(`/story/${story.id}`)
+    }
 
     const handleDelete = async () => {
         inProgress.current = true;
@@ -90,7 +96,7 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
                 </AlertDialogContent>
             </AlertDialog>
 
-            <Link href={`/story/${story.id}`} className="group relative block h-full rounded-xl border border-line bg-surface p-5 transition-colors hover:border-foreground/30">
+            <div onClick={handleClick} className="group relative block h-full rounded-xl border border-line bg-surface p-5 transition-colors hover:border-foreground/30 cursor-pointer">
                 <div className="absolute top-6 right-3">
                     <DropdownMenu>
                         <DropdownMenuTrigger className="text-muted hover:text-foreground cursor-pointer focus:outline-none">
@@ -126,9 +132,19 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
                     </DropdownMenu>
                 </div>
 
-                <h2 className="text-lg text-foreground">
-                    {story.title}
-                </h2>
+                <div className="flex gap-2 items-center text-lg text-foreground">
+                    <span>{story.title}</span>
+                    {(story.forkedFromStoryId && (
+                        <span className={cn("text-accent text-xs")}>
+                            {"(Fork)"}
+                        </span>
+                    ))}
+                    {(story.forkedFromStoryId) && 
+                        <Link href={`/read/${story.forkedFromStoryId}`} className="text-xs flex gap-1 items-end">
+                            <LinkIcon className="size-3"/>
+                        </Link>
+                    }
+                </div>
 
                 {story.protagonist?.[0]?.name && (
                     <p className="mt-1 text-sm text-muted">
@@ -152,7 +168,7 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
                         {story.status === "completed" ? "Completed" : "In progress"}
                     </span>
                 </div>
-            </Link>
+            </div>
         </>
     );
 }

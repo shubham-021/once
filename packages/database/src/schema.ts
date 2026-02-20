@@ -94,6 +94,7 @@ export const scenes = pgTable("scenes", {
     narration: text("narration").notNull(),
 
     protagonistSnapshot: json("protagonist_snapshot").$type<Record<string, unknown>>(),
+    // codexSnapshot: json("codex_snapshot").$type<Record<string,unknown>>(),
     mood: varchar("mood", { length: 50 }),
 
     // Which protagonist was active during this scene (for ensemble stories)
@@ -174,14 +175,14 @@ export const codexEntries = pgTable("codex_entries", {
 
     entryType: codexEntryTypeEnum("entry_type").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
-    summary: text("summary").notNull(),
-    metadata: json("metadata").$type<Record<string, string>>(),
+    // summary: text("summary").notNull(),
+    metadata: json("metadata").$type<Record<number, Record<string,string>>>(),
 
     // Relationships and context
 
     // without .$type<number[]>() , ts will infer its type as any or unknown , it's for ts so it can infer correct type
     relatedEntries: json("related_entries").$type<number[]>().default([]),
-    firstMentionedSceneId: integer("first_mentioned_scene_id"),
+    firstMentionedSceneId: integer("first_mentioned_scene_id").notNull(),
     lastUpdatedSceneId: integer("last_updated_scene_id"),
 
     // User can edit if LLM got something wrong

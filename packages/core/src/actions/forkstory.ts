@@ -1,6 +1,7 @@
 import { DebugCollector } from "@/debug";
-import { db, eq, protagonists, scenes, stories } from "@once/database";
+import { codexEntries, db, eq, protagonists, scenes, stories } from "@once/database";
 import { protagonistSchema, scenesSchema, storySchema } from "@once/database/types";
+import { CodexEntry } from "@once/shared";
 
 interface ForkStoryProps {
     originalStory: storySchema,
@@ -15,7 +16,8 @@ interface ForkStoryProps {
         name: string;
         image?: string | null | undefined;
     },
-    forkScene: scenesSchema
+    forkScene: scenesSchema,
+    originalCodexEntries: CodexEntry[]
 }
 
 interface ForkStoryResult {
@@ -25,78 +27,101 @@ interface ForkStoryResult {
     }
 }
 
-export async function forkStory(props: ForkStoryProps, collector?: DebugCollector): Promise<ForkStoryResult> {
+export async function forkStory(props: ForkStoryProps, collector?: DebugCollector): Promise<{forkedStoryId: number}>{
 
-    const { originalStory, sceneId, storyId, user, forkScene } = props;
+    const { originalStory, sceneId, storyId, user, forkScene, originalCodexEntries } = props;
 
     const protagonistSnapshot = forkScene.protagonistSnapshot as Record<string, unknown> | null;
 
-    const [forkedStory] = await db.insert(stories).values({
-        userId: user.id,
-        title: `${originalStory.title} (Fork)`,
-        description: originalStory.description,
-        genre: originalStory.genre,
-        narrativeStance: originalStory.narrativeStance,
-        storyMode: originalStory.storyMode,
-        forkedFromStoryId: storyId,
-        forkedAtSceneId: sceneId,
-        turnCount: forkScene.turnNumber
-    }).returning();
+    const forkedStoryId = await db.transaction(async (tx) => {
 
-    // debug collector
-    collector?.add('db', 'insert:stories', forkedStory);
-
-    let protagonistId: number | undefined;
-    if (protagonistSnapshot) {
-        const [newProtagonist] = await db.insert(protagonists).values({
-            storyId: forkedStory.id,
-            name: protagonistSnapshot.name as string,
-            description: protagonistSnapshot.description as string | null,
-            health: protagonistSnapshot.health as number,
-            energy: protagonistSnapshot.energy as number,
-            currentLocation: protagonistSnapshot.currentLocation as string,
-            baseTraits: protagonistSnapshot.baseTraits as string[],
-            currentTraits: protagonistSnapshot.currentTraits as string[],
-            inventory: protagonistSnapshot.inventory as string[],
-            scars: protagonistSnapshot.scars as string[],
-            isActive: true,
+        const [forkedStory] = await tx.insert(stories).values({
+            userId: user.id,
+            title: originalStory.title,
+            description: originalStory.description,
+            genre: originalStory.genre,
+            narrativeStance: originalStory.narrativeStance,
+            storyMode: originalStory.storyMode,
+            forkedFromStoryId: storyId,
+            forkedAtSceneId: sceneId,
+            turnCount: forkScene.turnNumber
         }).returning();
-        protagonistId = newProtagonist.id;
 
         // debug collector
-        collector?.add('db', 'insert:protagonists', newProtagonist);
-    }
+        collector?.add('db', 'insert:stories', forkedStory);
 
-    const scenesToCopy = await db.query.scenes.findMany({
-        where: eq(scenes.storyId, storyId),
-        orderBy: (scenes, { asc }) => [asc(scenes.turnNumber)],
-    });
+        let protagonistId: number | undefined;
+        if (protagonistSnapshot) {
+            const [newProtagonist] = await tx.insert(protagonists).values({
+                storyId: forkedStory.id,
+                name: protagonistSnapshot.name as string,
+                description: protagonistSnapshot.description as string | null,
+                health: protagonistSnapshot.health as number,
+                energy: protagonistSnapshot.energy as number,
+                currentLocation: protagonistSnapshot.currentLocation as string,
+                baseTraits: protagonistSnapshot.baseTraits as string[],
+                currentTraits: protagonistSnapshot.currentTraits as string[],
+                inventory: protagonistSnapshot.inventory as string[],
+                scars: protagonistSnapshot.scars as string[],
+                isActive: true,
+            }).returning();
+            protagonistId = newProtagonist.id;
 
-    const scenesUpToFork = scenesToCopy.filter(s => s.turnNumber <= forkScene.turnNumber);
+            // debug collector
+            collector?.add('db', 'insert:protagonists', newProtagonist);
+        }
 
-    for (const scene of scenesUpToFork) {
-        await db.insert(scenes).values({
-            storyId: forkedStory.id,
-            turnNumber: scene.turnNumber,
-            userAction: scene.userAction,
-            narration: scene.narration,
-            protagonistSnapshot: scene.protagonistSnapshot,
-            mood: scene.mood,
-            protagonistId,
+        const scenesToCopy = await tx.query.scenes.findMany({
+            where: eq(scenes.storyId, storyId),
+            orderBy: (scenes, { asc }) => [asc(scenes.turnNumber)],
         });
 
-        collector?.add('db', 'insert:scenes', { turnNumber: scene.turnNumber });
-    }
+        const scenesUpToFork = scenesToCopy.filter(s => s.turnNumber <= forkScene.turnNumber);
 
-    const storyWithRelations = await db.query.stories.findFirst({
-        where: eq(stories.id, forkedStory.id),
-        with: {
-            protagonist: true,
-            scenes: true,
-        },
-    });
+        const codexToBeCopied = originalCodexEntries.filter(codex => codex.firstMentionedSceneId <= forkScene.turnNumber).map(codex => {
+            let copiedMetadata: Record<number, Record<string, string>> = {};
 
-    if (!storyWithRelations) throw new Error("Failed to fetch story")
+            if(codex.metadata){
+                for (const [k,v] of Object.entries(codex.metadata)) {
+                    const turnNumber = Number(k);
+                    if(turnNumber <= forkScene.turnNumber){
+                        copiedMetadata = {...copiedMetadata, [turnNumber]: v}
+                    }
+                }
+            }
 
-    return { storyWithRelations };
+            return {
+                ...codex,
+                metadata: copiedMetadata
+            }
+        });
+
+        for (const scene of scenesUpToFork) {
+            await tx.insert(scenes).values({
+                storyId: forkedStory.id,
+                turnNumber: scene.turnNumber,
+                userAction: scene.userAction,
+                narration: scene.narration,
+                protagonistSnapshot: scene.protagonistSnapshot,
+                mood: scene.mood,
+                protagonistId,
+            });
+
+            collector?.add('db', 'insert:scenes', { turnNumber: scene.turnNumber });
+        }
+
+        for (const codex of codexToBeCopied) {
+            await tx.insert(codexEntries).values({
+                storyId: forkedStory.id,
+                name: codex.name,
+                entryType: codex.entryType,
+                firstMentionedSceneId: codex.firstMentionedSceneId,
+                metadata: codex.metadata,
+            })
+        }
+
+        return forkedStory.id;
+    })
+
+    return {forkedStoryId}
 }

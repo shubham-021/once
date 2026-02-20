@@ -44,7 +44,7 @@ export function DraftControls({
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Tell the AI how to revise this scene..."
-                    className="min-h-[80px] resize-none"
+                    className="min-h-20 resize-none"
                     disabled={disabled}
                 />
             )}

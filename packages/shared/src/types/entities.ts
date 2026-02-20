@@ -1,3 +1,4 @@
+import { codexEntriesSchema } from "@once/database/types";
 import type { NarrativeStance, StoryMode, StoryStatus, StoryVisibility } from "../schemas/common";
 
 export interface Protagonist {
@@ -70,15 +71,7 @@ export interface VaultCharacter {
     timesUsed: number;
 }
 
-export interface CodexEntry {
-    id: number;
-    storyId: number;
-    entryType: "character" | "location" | "item" | "event" | "faction" | "lore";
-    name: string;
-    summary: string;
-    metadata?: Record<string, string> | null;
-    firstMentionedSceneId?: number;
-}
+export type CodexEntry = codexEntriesSchema;
 
 export interface Analytics {
     totals: {
