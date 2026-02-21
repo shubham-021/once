@@ -210,6 +210,7 @@ crudRouter.delete("/undo/:id", requireAuth, async (c) => {
 
             await tx.delete(drafts).where(and(eq(drafts.storyId,storyId), gte(drafts.turnNumber, turnNumber)))
             await tx.delete(scenes).where(and(eq(scenes.storyId,storyId), gte(scenes.turnNumber, turnNumber)));
+            await tx.update(stories).set({turnCount: scene.turnNumber});
         });
 
         return success(c,{data: "Success"},200);

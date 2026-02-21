@@ -85,7 +85,8 @@ export const protagonists = pgTable("protagonists", {
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-type protagonistType = InferSelectModel<typeof protagonists>;
+type protagonistRow = InferSelectModel<typeof protagonists>;
+type protagonistType = Omit<protagonistRow,"createdAt" | "updatedAt">
 
 export const scenes = pgTable("scenes", {
     id: serial("id").primaryKey(),
@@ -269,18 +270,7 @@ export const drafts = pgTable("drafts", {
         description: string | null;
         role: string | null;
     }>>().default([]).notNull(),
-    protagonistSnapshot: json("protagonist_snapshot").$type<{
-        id: number;
-        name: string;
-        description: string | null;
-        health: number;
-        energy: number;
-        currentLocation: string;
-        baseTraits: string[];
-        currentTraits: string[];
-        inventory: string[];
-        scars: string[];
-    } | null>(),
+    protagonistSnapshot: json("protagonist_snapshot").$type<protagonistType>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })

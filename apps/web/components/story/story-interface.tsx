@@ -206,6 +206,8 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                 }
             }
 
+            if(draft) setDraft(null);
+
             toast.success('Undo successfull');
         } finally {
             setInProgress(false);

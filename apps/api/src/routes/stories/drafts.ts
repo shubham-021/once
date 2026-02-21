@@ -115,6 +115,8 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
                         currentTraits: initialData.newProtagonist.currentTraits,
                         inventory: initialData.newProtagonist.inventory,
                         scars: initialData.newProtagonist.scars,
+                        isActive: initialData.newProtagonist.isActive,
+                        storyId: initialData.newProtagonist.storyId
                     } : null,
                 }).returning();
 
@@ -333,6 +335,8 @@ draftsRouter.post("/draft/:storyId/continue", requireAuth, async (c) => {
                             currentTraits: activeProtagonist.currentTraits,
                             inventory: activeProtagonist.inventory,
                             scars: activeProtagonist.scars,
+                            isActive: activeProtagonist.isActive,
+                            storyId: activeProtagonist.storyId
                         }
                         : null,
                 }).returning();

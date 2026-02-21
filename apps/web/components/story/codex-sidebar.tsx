@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import type { CodexEntry } from "@once/shared";
 import { AnimatePresence, motion } from "motion/react";
@@ -87,7 +87,7 @@ export function CodexSidebar({ codex, protagonistName }: Props) {
                         <div className="ml-4 mt-2 text-[11px] text-muted-foreground py-2 space-y-3">
                           {entry.metadata && (
                             <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                              {Object.entries(entry.metadata).map(
+                              {Object.entries(entry.metadata).reverse().map(
                                 ([sceneId, metadata]) => (
                                   <div
                                     key={`SceneId:${sceneId}`}
