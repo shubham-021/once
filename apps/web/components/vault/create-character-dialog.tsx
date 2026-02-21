@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { createVaultCharacterSchema, suggestedTraits } from "@once/shared/schemas";
 import { toast } from "sonner";
 import { vaultApi } from "@/lib/api";
+import { getToastErrorMessage } from "@/lib/error-mapper";
 
 interface CreateCharacterDialogProps {
     mode: "edit" | "create";
@@ -68,7 +69,7 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
         const response = await vaultApi.update(data.id.toString() , result.data);
 
         if (response.error) {
-            toast.error(response.error.message);
+            toast.error(getToastErrorMessage(response.error, "vault-edit"));
         } else {
             toast.success("Edited successfully");
             onCreated?.();
@@ -89,7 +90,7 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
         const response = await vaultApi.create(result.data);
 
         if (response.error) {
-            toast.error(response.error.message);
+            toast.error(getToastErrorMessage(response.error,"vault-create"));
         } else {
             toast.success("Character created!");
             onCreated?.();

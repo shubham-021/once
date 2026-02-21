@@ -1,4 +1,4 @@
-import { CodexEntry, CreateStoryInput, Protagonist, Scene, StreamCompleteData } from "@once/shared";
+import { CodexEntry, CreateStoryInput, ErrorCode, Protagonist, Scene, StreamCompleteData } from "@once/shared";
 import { apiClient } from "./client";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -24,7 +24,7 @@ export const draftsApi = {
         onInit: (data: { storyId: number, storyTitle: string }) => void,
         onChunk: (text: string) => void,
         onComplete: (data: { draftId: number }) => void,
-        onError?: (error: { code: string }) => void
+        onError?: (error: { code: ErrorCode }) => void
     ) => {
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -98,7 +98,7 @@ export const draftsApi = {
         action: string,
         onChunk: (text: string) => void,
         onComplete: (data: { draftId: number }) => void,
-        onError?: (error: { code: string }) => void
+        onError?: (error: { code: ErrorCode }) => void
     ) => {
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -162,7 +162,7 @@ export const draftsApi = {
         comment: string,
         onChunk: (text: string) => void,
         onComplete: () => void,
-        onError?: (error: { code: string }) => void
+        onError?: (error: { code: ErrorCode }) => void
     ) => {
         return new Promise<void>(async (resolve, reject) => {
             try {

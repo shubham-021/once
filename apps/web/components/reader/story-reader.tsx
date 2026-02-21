@@ -13,6 +13,7 @@ import { storiesApi } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { Story, Scene } from "@once/shared"
+import { getToastErrorMessage } from "@/lib/error-mapper";
 
 export function StoryReader({ storyId }: { storyId: string }) {
 
@@ -46,6 +47,10 @@ export function StoryReader({ storyId }: { storyId: string }) {
         fetchData();
     }, [storyId]);
 
+    const handleBackClick = () => {
+        router.back();
+    }
+
     const handleFork = async (sceneNumber: number) => {
         setForkInProgress(true);
         const scene = scenes.find(s => s.turnNumber === sceneNumber);
@@ -55,7 +60,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
         const response = await storiesApi.fork(storyId, scene.id);
 
         if (response.error) {
-            toast.error(response.error.message);
+            toast.error(getToastErrorMessage(response.error, "fork"));
         } else if (response.data) {
             toast.success("Story forked!");
             router.push(`/story/${response.data.id}`);
@@ -76,9 +81,9 @@ export function StoryReader({ storyId }: { storyId: string }) {
     return (
         <div className="h-screen flex flex-col bg-background">
             <header className="dotted-border-b px-4 md:px-6 py-3 md:py-4 flex items-center gap-4">
-                <Link href="/discover" className="text-muted hover:text-foreground transition-colors shrink-0">
+                <div onClick={handleBackClick} className="text-muted hover:text-foreground transition-colors shrink-0 cursor-pointer">
                     <ArrowLeft className="size-5" />
-                </Link>
+                </div>
                 <div className="flex-1">
                     <h1 className="text-xs sm:text-base md:text-lg text-foreground">{story.title}</h1>
                     <p className="text-xs text-muted flex items-center gap-2">

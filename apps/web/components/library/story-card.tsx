@@ -140,7 +140,7 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
                         </span>
                     ))}
                     {(story.forkedFromStoryId) && 
-                        <Link href={`/read/${story.forkedFromStoryId}`} className="text-xs flex gap-1 items-end">
+                        <Link href={`/read/${story.forkedFromStoryId}`} onClick={(e) => e.stopPropagation()} className="text-xs flex gap-1 items-end">
                             <LinkIcon className="size-3"/>
                         </Link>
                     }

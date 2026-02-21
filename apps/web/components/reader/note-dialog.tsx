@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { noteSchema } from "@once/shared/schemas";
 import { storiesApi } from "@/lib/api";
+import { getToastErrorMessage } from "@/lib/error-mapper";
 
 interface NoteDialogProps {
     open: boolean;
@@ -32,7 +33,7 @@ export function NoteDialog({ open, onClose, storyId, storyTitle }: NoteDialogPro
         const response = await storiesApi.addNote(storyId, content)
 
         if (response.error) {
-            toast.error(response.error.message)
+            toast.error(getToastErrorMessage(response.error, "note"));
         } else {
             toast.success("Note sent to author");
             setContent("");

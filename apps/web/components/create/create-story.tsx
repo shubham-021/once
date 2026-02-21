@@ -12,6 +12,7 @@ import { NavHeader } from "../nav-header";
 import { toast } from "sonner";
 import { storiesApi } from "@/lib/api";
 import { ConstellationLoader } from "../ui/loader";
+import { getToastErrorMessage } from "@/lib/error-mapper";
 
 
 
@@ -66,7 +67,7 @@ export function CreateStory() {
         const response = await storiesApi.create(result.data);
 
         if (response.error) {
-            toast.error(response.error.message);
+            toast.error(getToastErrorMessage(response.error, "create-story"));
             setIsCreating(false);
             return;
         }

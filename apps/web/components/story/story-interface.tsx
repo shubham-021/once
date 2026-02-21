@@ -19,6 +19,7 @@ import { ChevronsLeft, ChevronsRight, LinkIcon } from "lucide-react";
 import { SimpleToggle } from "../simple-theme-toggler";
 import { TypingLoader } from "../DraftLoader";
 import Link from "next/link";
+import { getToastErrorMessage } from "@/lib/error-mapper";
 
 export function StoryInterface({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
@@ -179,7 +180,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
             const response = await storiesApi.undo(storyId, turnNumber);
 
             if(response.error){
-                toast.error('Undo failed');
+                toast.error(getToastErrorMessage(response.error, "undo-scene"));
                 return;
             }
 

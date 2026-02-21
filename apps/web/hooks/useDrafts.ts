@@ -1,6 +1,7 @@
 "use client"
 
 import { DraftAcceptResult, draftsApi } from "@/lib/api/drafts";
+import { getToastErrorMessage } from "@/lib/error-mapper";
 import { CreateStoryInput } from "@once/shared";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
@@ -48,7 +49,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
                 (error) => {
                     setCreatingFirstDraft(false);
                     router.push('/library');
-                    toast.error(`Failed: ${error.code}`);
+                    toast.error(getToastErrorMessage({code: error.code},"create-draft"));
                     setDraft(null);
                 }
             )
@@ -82,7 +83,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
                 (data) => setDraft((prev) => prev ? { ...prev, id: data.draftId } : null),
                 (error) => {
                     setLoadingDraft(false);
-                    toast.error(`Failed: ${error.code}`);
+                    toast.error(getToastErrorMessage({code: error.code}, "continue-draft"));
                     setDraft(null);
                 }
             )
@@ -117,7 +118,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
                 () => { },
                 (error) => {
                     setLoadingDraft(false);
-                    toast.error(`Revision failed: ${error.code}`)
+                    toast.error(getToastErrorMessage({code: error.code}, "revise-draft"));
                 }
             );
         } finally {
@@ -132,7 +133,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
         const result = await draftsApi.saveEdits(draft.id, narration);
 
         if (result.error) {
-            toast.error(result.error.message);
+            toast.error(getToastErrorMessage(result.error, "save-edits"));
             return;
         }
 
@@ -148,7 +149,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
         setIsAccepting(false);
 
         if (result.error) {
-            toast.error(result.error.message);
+            toast.error(getToastErrorMessage(result.error, "accept-draft"));
             return;
         }
 
@@ -162,7 +163,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
         const result = await draftsApi.discard(draft.id);
 
         if (result.error) {
-            toast.error(result.error.message);
+            toast.error(getToastErrorMessage(result.error, "discard-draft"));
             return;
         }
 

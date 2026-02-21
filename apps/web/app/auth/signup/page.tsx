@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Eye, EyeClosed } from "lucide-react";
+import { getToastErrorMessage } from "@/lib/error-mapper";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -75,7 +76,7 @@ export default function SignupPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                toast.error(errorData.message || "Invalid OTP");
+                toast.error(getToastErrorMessage({code: errorData.code}, "auth-otp"));
                 return;
             }
 
@@ -95,7 +96,7 @@ export default function SignupPage() {
 
             router.push("/library");
         } catch (error) {
-            toast.error((error as Error).message);
+            toast.error(getToastErrorMessage({code: "UNKNOWN"}, "auth-signup"));
         } finally {
             setLoading(false);
         }
