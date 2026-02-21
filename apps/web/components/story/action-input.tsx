@@ -30,7 +30,7 @@ export function ActionInput({ onSubmit, disabled, className }: Props) {
     return (
         <motion.div 
             // transition={{type:'spring', duration: 0.3}}
-            className={cn("fixed bottom-2 left-1/2 -translate-x-1/2 w-full max-w-2xl min-[1024]:max-w-lg min-[1226px]:max-w-2xl px-4 pb-6",className)}
+            className={cn("fixed bottom-2 left-1/2 -translate-x-1/2 w-full max-w-2xl min-[1024]:max-w-lg min-[1226px]:max-w-2xl px-4 pb-6 transition-all duration-300",className)}
         >
             <div className="rounded-lg border border-line bg-surface p-3 flex gap-2">
                 <textarea

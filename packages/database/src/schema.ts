@@ -85,6 +85,8 @@ export const protagonists = pgTable("protagonists", {
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+type protagonistType = InferSelectModel<typeof protagonists>;
+
 export const scenes = pgTable("scenes", {
     id: serial("id").primaryKey(),
     storyId: integer("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
@@ -93,7 +95,7 @@ export const scenes = pgTable("scenes", {
     userAction: text("user_action").notNull(),
     narration: text("narration").notNull(),
 
-    protagonistSnapshot: json("protagonist_snapshot").$type<Record<string, unknown>>(),
+    protagonistSnapshot: json("protagonist_snapshot").$type<protagonistType>(),
     // codexSnapshot: json("codex_snapshot").$type<Record<string,unknown>>(),
     mood: varchar("mood", { length: 50 }),
 

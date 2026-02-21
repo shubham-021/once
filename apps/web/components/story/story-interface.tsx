@@ -38,6 +38,8 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
     const [toggleProtagonistSidebar,setToggleProtagonistSidebar] = useState(false);
     const [toggleCodexSidebar,setToggleCodexSidebar] = useState(false);
 
+    const [inProgress, setInProgress] = useState<boolean>(false);
+
     useEffect(() => {
         if (window.innerWidth >= 1024) {
             setToggleCodexSidebar(true);
@@ -168,6 +170,48 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
         }
     }, [draft?.narration, isStreaming]);
 
+    const handleUndo = async (storyId:string, turnNumber:string) => {
+        console.log(`Undo clicked: ${inProgress}`);
+        if(inProgress) return;
+        setInProgress(true);
+        
+        try{
+            const response = await storiesApi.undo(storyId, turnNumber);
+
+            if(response.error){
+                toast.error('Undo failed');
+                return;
+            }
+
+            const [scenesRes, codexRes, storyRes] = await Promise.all([
+                storiesApi.getScenes(storyId),
+                storiesApi.getCodex(storyId),
+                storiesApi.get(storyId),
+            ]);
+
+            if (scenesRes.data) {
+                setScenes(scenesRes.data.storyScenes);
+                setStoryTitle(scenesRes.data.storyTitle);
+            }
+
+            if (codexRes.data) setCodex(codexRes.data);
+
+            if (storyRes.data) {
+                const storyData = storyRes.data;
+                setStory(storyData);
+                if (storyData.protagonist) {
+                    const protagonists = Array.isArray(storyData.protagonist) ? storyData.protagonist : [storyData.protagonist];
+                    const active = protagonists.find(p => p.isActive);
+                    if (active) setProtagonist(active);
+                }
+            }
+
+            toast.success('Undo successfull');
+        } finally {
+            setInProgress(false);
+        }
+    }
+
     if(creatingFirstDraft) {
         return (
             <div className="flex h-screen w-full flex-col items-center justify-center bg-background md:text-4xl sm:text-3xl text-xl">
@@ -192,10 +236,10 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
             <header className="flex whitespace-nowrap items-center justify-between md:text-base text-sm dotted-border-b gap-2 md:gap-4 py-2 px-4">
                 <div className="flex items-center gap-2">
                     <div className="flex gap-1">
-                        <span>{(story?.status==="active" ? "Writing: " : "")}</span>
+                        <span>{((story?.status==="active" || creationData) ? "Writing: " : "")}</span>
                         <span className="tracking-widest text-accent italic">{storyTitle}</span>
                     </div>
-                    {(story && story.forkedFromStoryId) && <span className="text-xs italic">{`( forked )`}</span>}
+                    {(story && story.forkedFromStoryId) && <span className="text-xs italic">{`(fork)`}</span>}
                     {(story && story.status === "completed") && <span className="text-xs italic">{"( Completed )"}</span>}
                     {(story && story.forkedFromStoryId) && 
                         <Link href={`/read/${story.forkedFromStoryId}`} className="text-xs flex gap-1 items-end relative group">
@@ -256,12 +300,16 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                 {/* Main Content */}
                 <main className="flex flex-1 flex-col overflow-hidden">
                     <div className="flex-1 overflow-y-auto px-8 py-6 pb-20">
-                        <div className="mx-auto max-w-4xl space-y-6">
+                        <div className="mx-auto max-w-4xl space-y-6 scrollbar scrollbar-w-1">
                             {scenes.map(scene => (
                                     <SceneBlock
                                         key={scene.id}
+                                        storyId={scene.storyId}
+                                        turnNumber={scene.turnNumber}
                                         narration={scene.narration}
                                         userAction={scene.userAction}
+                                        handleUndo={handleUndo}
+                                        inProgress={inProgress}
                                     />
                             ))}
 
@@ -279,7 +327,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                                         onChange={(e) => setNarration(e.target.value)}
                                         disabled={isStreaming || isAccepting}
                                         placeholder={isStreaming ? "" : "Edit your draft..."}
-                                        className="w-full min-h-30 resize-none bg-transparent text-foreground placeholder:text-muted placeholder:italic focus:outline-none disabled:cursor-default prose dark:prose-invert leading-relaxed"
+                                        className="w-full min-h-30 resize-none bg-transparent text-foreground placeholder:text-muted placeholder:italic focus:outline-none disabled:cursor-default prose dark:prose-invert leading-relaxed scrollbar scrollbar-thin"
                                     />
                                 </div>    
                             )}

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { db, eq, desc, and, count } from "@once/database";
-import { stories } from "@once/database/schema";
+import { db, eq, desc, and, count, gte } from "@once/database";
+import { codexEntries, drafts, protagonists, scenes, stories } from "@once/database/schema";
 import { success, error, paginated } from "@/lib/response";
 import { createStorySchema, GenreFilter } from "@once/shared/schemas";
 import { requireAuth, type AuthVariables } from "@/middleware/auth";
@@ -150,5 +150,77 @@ crudRouter.delete("/:id", requireAuth, async (c) => {
 
     return success(c, { message: "Story deleted" });
 });
+
+crudRouter.delete("/undo/:id", requireAuth, async (c) => {
+    const storyId = Number(c.req.param("id"));
+    if (isNaN(storyId)) {
+        return error(c, "INVALID_ID", "Invalid story ID");
+    }
+
+    const turnNumber = Number(c.req.query("turnNumber"));
+    if (isNaN(turnNumber)) {
+        return error(c, "NOT_FOUND", "Invalid turn number");
+    }
+
+    if(turnNumber === 1) return error(c,"FORBIDDEN","First scene cannot be undone");
+
+    try{
+        await db.transaction(async (tx) => {
+            const story = await tx.query.stories.findFirst({where: eq(stories.id, storyId),with: { codexEntries: true }});
+            if(!story) throw {type: "story"};
+
+            const scene = await tx.query.scenes.findFirst({where: and(eq(scenes.storyId, storyId), eq(scenes.turnNumber, turnNumber-1))});
+            if(!scene) throw {type: "scene"};
+
+            const protagonistSnapshot = scene.protagonistSnapshot;
+
+            if(protagonistSnapshot){
+                const {id, ...toBeUpdated} = protagonistSnapshot;
+                await tx.update(protagonists).set(toBeUpdated).where(eq(protagonists.storyId, storyId));
+            }
+
+            const codexEntriesFromTable = story.codexEntries;
+            const codexToBeUndone = codexEntriesFromTable.filter(c => c.firstMentionedSceneId < turnNumber).map(c => {
+                let metaData:Record<number,Record<string,string>> = {};
+                if(c.metadata){
+                    for (const [k,v] of Object.entries(c.metadata)){
+                        const localTurnNumber = Number(k);
+                        if(localTurnNumber < turnNumber) metaData[localTurnNumber] = v;
+                    }
+                }
+
+                return {
+                    ...c,
+                    metadata: metaData
+                }
+            })
+
+            if(codexToBeUndone.length > 0){
+                await tx.delete(codexEntries).where(and(eq(codexEntries.storyId, storyId), gte(codexEntries.firstMentionedSceneId, turnNumber)));
+                for (const codex of codexToBeUndone){
+                    if(codex){
+                        if(Object.keys(codex.metadata).length === 0) {
+                            await tx.delete(codexEntries).where(and(eq(codexEntries.storyId, storyId), eq(codexEntries.id, codex.id)));
+                        } else {
+                            await tx.update(codexEntries).set({metadata: codex.metadata}).where(and(eq(codexEntries.storyId, storyId), eq(codexEntries.id,codex.id)));
+                        }
+                    }
+                }
+            }
+
+            await tx.delete(drafts).where(and(eq(drafts.storyId,storyId), gte(drafts.turnNumber, turnNumber)))
+            await tx.delete(scenes).where(and(eq(scenes.storyId,storyId), gte(scenes.turnNumber, turnNumber)));
+        });
+
+        return success(c,{data: "Success"},200);
+    } catch (err:any) {
+        if(err.type){
+            if(err.type === "story") return error(c,"STORY_NOT_FOUND");
+            else if(err.type === "scene") return error(c,"SCENE_NOT_FOUND");
+        }
+
+        return error(c,"INTERNAL_ERROR", (err as Error).message);
+    }
+})
 
 export default crudRouter;

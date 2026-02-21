@@ -11,6 +11,7 @@ export const storiesApi = {
         method: "POST",
         body: JSON.stringify(data)
     }),
+    undo: (storyId: string, turnNumber: string) => apiClient<{data: string}>(`/api/stories/undo/${storyId}?turnNumber=${turnNumber}`,{ method: "DELETE", credentials: "include"}),
     discover: (params?: { genre?: string; sortBy?: string; page?: number }) => {
         const searchParams = new URLSearchParams();
         if (params?.genre) searchParams.set("genre", params.genre);
