@@ -101,7 +101,7 @@ export function UserMenu() {
   ];
 
   return (
-    <div className="fixed top-8 right-8 z-50">
+    <div className="fixed top-8 right-6 z-50">
       <div
         className="relative"
         onMouseEnter={handleMouseEnter}

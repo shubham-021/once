@@ -79,35 +79,35 @@ export function Library() {
     filter === "all" ? true : s.status === filter,
   );
 
+  // const filteredStories: Story[] = [];
+
   return (
     <>
       <div className="min-h-screen bg-background">
         {/* <ConstellationLoader/> */}
-        <header className="dotted-border-b px-4 py-6">
-          <div className="flex items-center justify-between pr-20">
+        <header className="dotted-border-b px-4 py-6 whitespace-nowrap">
             <h1 className="text-2xl text-foreground">Your Library</h1>
-          </div>
-          <p className="mt-1 text-sm text-muted">Stories you've begun</p>
+            <p className="mt-1 text-sm text-muted">Stories you've begun</p>
         </header>
 
-        <div className="flex justify-between items-center p-4 dotted-border-b relative">
-          <div className="flex gap-4">
+        <div className="flex gap-2 sm:gap-4 justify-between items-center p-4 dotted-border-b relative">
+          <div className="flex gap-2 sm:gap-4">
             {(["all", "active", "completed"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 className={cn(
-                  "text-sm capitalize transition-colors cursor-pointer",
+                  "text-xs sm:text-sm capitalize transition-colors cursor-pointer bg-foreground/10 border border-foreground/40 px-2 py-1 rounded-xl",
                   filter === f
-                    ? "text-foreground"
-                    : "text-muted hover:text-foreground",
+                    ? "bg-accent/20 border-accent/40 text-accent"
+                    : "text-muted/60 hover:text-muted/80",
                 )}
               >
                 {f}
               </button>
             ))}
           </div>
-          <Credit className="mr-4 bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl"/>
+          <Credit className="mr-2 bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl text-xs sm:text-sm"/>
         </div>
 
         {isLoading ? (
@@ -117,17 +117,17 @@ export function Library() {
             ))}
           </div>
         ) : filteredStories.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-full flex flex-col items-center justify-center pt-30">
             <p className="text-muted mb-4">No stories yet</p>
             <button
               onClick={() => setOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-accent text-white hover:bg-accent/90 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/20 border border-accent/40 text-white hover:bg-accent/40 transition-colors cursor-pointer"
             >
               Create now
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 p-4 md:py-8 md:grid-cols-2 lg:grid-cols-3">
             {filteredStories.map((story) => (
               <StoryCard
                 key={story.id}
