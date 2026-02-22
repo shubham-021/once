@@ -76,7 +76,7 @@ export function UserMenu() {
   const handleMouseLeave = () => {
     closeTimeoutRef.current = setTimeout(() => {
       setIsRadialOpen(false);
-    }, 150);
+    }, 500);
   };
 
   const toggleRadialMenu = () => {
