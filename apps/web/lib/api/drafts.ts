@@ -74,6 +74,7 @@ export const draftsApi = {
                                     onComplete(JSON.parse(rawData));
                                     break;
                                 case "error":
+                                    // console.log(`Raw Data: ${rawData}`);
                                     if (onError) onError(JSON.parse(rawData));
                                     return reject(new Error(rawData));
                             }

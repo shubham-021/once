@@ -20,6 +20,7 @@ import { SimpleToggle } from "../simple-theme-toggler";
 import { TypingLoader } from "../DraftLoader";
 import Link from "next/link";
 import { getToastErrorMessage } from "@/lib/error-mapper";
+import Credit from "@/components/ui/Credit";
 
 export function StoryInterface({ storyId: initialStoryId, creationData }: { storyId?: string; creationData?: CreateStoryInput }) {
     const router = useRouter();
@@ -63,6 +64,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
         setToggleCodexSidebar(prev => !prev);
     }
 
+    const isCreating = useCreateStore(s => s.isCreating);
     const setIsCreating = useCreateStore(s => s.setIsCreating);
     const setFormData = useCreateStore(s => s.setFormData);
 
@@ -251,7 +253,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                         </Link>
                     }
                 </div>
-                <div className="flex  items-center gap-2 italic text-muted ml-4"><SimpleToggle/><span>Credits: </span><span className="text-accent">{balance}</span></div>
+                <div className="flex  items-center gap-2 italic text-muted ml-4"><SimpleToggle/><Credit className="mr-4 bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl"/></div>
             </header>
 
             <div className="flex flex-1 overflow-hidden">

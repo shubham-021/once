@@ -26,8 +26,9 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
             if (err instanceof InsufficientCreditsError) {
                 console.log(err.message);
                 return error(c, "INSUFFICIENT_BALANCE", undefined, { balance: err.balance });
+            } else {
+                return error(c, "INTERNAL_ERROR");
             }
-            throw err;
         }
     }
 

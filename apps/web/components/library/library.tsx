@@ -7,10 +7,12 @@ import { NavHeader } from "../nav-header";
 import { storiesApi } from "@/lib/api";
 import type { Story } from "@once/shared";
 import { toast } from "sonner";
-import { Loader } from "lucide-react";
+import { Loader, Coins } from "lucide-react";
 import { ConstellationLoader } from "../ui/loader";
 import { useCreateStore } from "@/stores/create-store";
+import { useCreditStore } from "@/stores/credits-store";
 import { StoryCardSkeleton } from "./story-card-skeleton";
+import Credit from "@/components/ui/Credit";
 
 export function Library() {
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
@@ -34,32 +36,44 @@ export function Library() {
     toast.success("Story Deleted");
   };
 
-  const handleVisibility = (id:number,option:"public"|"private"|"unlisted") => {
-    setStories((prev) => prev.map(s => {
-      if(s.id === id) return {...s,visibility:option};
-      else return s;
-    }));
+  const handleVisibility = (
+    id: number,
+    option: "public" | "private" | "unlisted",
+  ) => {
+    setStories((prev) =>
+      prev.map((s) => {
+        if (s.id === id) return { ...s, visibility: option };
+        else return s;
+      }),
+    );
 
     toast.success("Visibility changed successfully");
-  }
+  };
 
-  const handleStatus = (id:number,option:"active"|"completed"|"abandoned") => {
-    setStories((prev) => prev.map(s => {
-      if(s.id === id) return {...s,status:option};
-      else return s;
-    }));
+  const handleStatus = (
+    id: number,
+    option: "active" | "completed" | "abandoned",
+  ) => {
+    setStories((prev) =>
+      prev.map((s) => {
+        if (s.id === id) return { ...s, status: option };
+        else return s;
+      }),
+    );
 
     toast.success("Status changed successfully");
-  }
+  };
 
-  const handleForking = (id:number) => {
-    setStories((prev) => prev.map(s => {
-      if(s.id === id) return {...s,allowForking: !s.allowForking};
-      else return s;
-    }));
+  const handleForking = (id: number) => {
+    setStories((prev) =>
+      prev.map((s) => {
+        if (s.id === id) return { ...s, allowForking: !s.allowForking };
+        else return s;
+      }),
+    );
 
     toast.success("Fork allowed");
-  }
+  };
 
   const filteredStories = stories.filter((s) =>
     filter === "all" ? true : s.status === filter,
@@ -70,30 +84,37 @@ export function Library() {
       <div className="min-h-screen bg-background">
         {/* <ConstellationLoader/> */}
         <header className="dotted-border-b px-4 py-6">
-          <h1 className="text-2xl text-foreground">Your Library</h1>
+          <div className="flex items-center justify-between pr-20">
+            <h1 className="text-2xl text-foreground">Your Library</h1>
+          </div>
           <p className="mt-1 text-sm text-muted">Stories you've begun</p>
         </header>
 
-        <div className="flex gap-4 px-4 py-4 dotted-border-b">
-          {(["all", "active", "completed"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "text-sm capitalize transition-colors cursor-pointer",
-                filter === f
-                  ? "text-foreground"
-                  : "text-muted hover:text-foreground",
-              )}
-            >
-              {f}
-            </button>
-          ))}
+        <div className="flex justify-between items-center p-4 dotted-border-b relative">
+          <div className="flex gap-4">
+            {(["all", "active", "completed"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={cn(
+                  "text-sm capitalize transition-colors cursor-pointer",
+                  filter === f
+                    ? "text-foreground"
+                    : "text-muted hover:text-foreground",
+                )}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          <Credit className="mr-4 bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl"/>
         </div>
 
         {isLoading ? (
           <div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => <StoryCardSkeleton key={i} />)}
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <StoryCardSkeleton key={i} />
+            ))}
           </div>
         ) : filteredStories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -108,7 +129,14 @@ export function Library() {
         ) : (
           <div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
             {filteredStories.map((story) => (
-              <StoryCard key={story.id} story={story} onDelete={handleDelete} onVisibilityChange={handleVisibility} onStatusChange={handleStatus} onForkChange={handleForking}/>
+              <StoryCard
+                key={story.id}
+                story={story}
+                onDelete={handleDelete}
+                onVisibilityChange={handleVisibility}
+                onStatusChange={handleStatus}
+                onForkChange={handleForking}
+              />
             ))}
           </div>
         )}

@@ -17,6 +17,7 @@ import { useCreateStore } from "@/stores/create-store";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createStorySchema } from "@once/shared";
+import { useCreditStore } from "@/stores/credits-store";
 
 export function CreateStoryModal() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export function CreateStoryModal() {
   const { open, setOpen } = useCreateStore();
   const setIsCreating = useCreateStore((s) => s.setIsCreating);
   const isCreating = useCreateStore((s) => s.isCreating);
+  const balance = useCreditStore(s => s.balance);
 
   const handleClose = () => {
     reset();
@@ -45,6 +47,13 @@ export function CreateStoryModal() {
   const setFormData = useCreateStore((s) => s.setFormData);
 
   const handleCreate = async () => {
+
+    if(balance === 0) {
+      setOpen(false);
+      toast.error("Insufficient credits");
+      return;
+    }
+
     const payload = {
       title: form.title,
       genre: form.genre,
@@ -214,7 +223,7 @@ export function CreateStoryModal() {
                   <button
                     onClick={handleCreate}
                     disabled={isCreating}
-                    className="px-2 py-1 bg-accent text-white hover:bg-accent/90 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-2 py-1 bg-accent/10 text-white text-sm hover:bg-accent/30 rounded-2xl border border-accent/40 transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {isCreating ? "Creating..." : "Begin Story"}
                   </button>

@@ -2,6 +2,7 @@
 
 import { DraftAcceptResult, draftsApi } from "@/lib/api/drafts";
 import { getToastErrorMessage } from "@/lib/error-mapper";
+import { useCreateStore } from "@/stores/create-store";
 import { CreateStoryInput } from "@once/shared";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
@@ -19,6 +20,8 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
     const [loadingDraft, setLoadingDraft] = useState<boolean>(false);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isAccepting, setIsAccepting] = useState(false);
+
+    const setIsCreating = useCreateStore(s => s.setIsCreating);
 
     const firstChunk = useRef<boolean>(true);
 
@@ -49,6 +52,8 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
                 (error) => {
                     setCreatingFirstDraft(false);
                     router.push('/library');
+                    setIsCreating(false);
+                    // console.log(error);
                     toast.error(getToastErrorMessage({code: error.code},"create-draft"));
                     setDraft(null);
                 }
