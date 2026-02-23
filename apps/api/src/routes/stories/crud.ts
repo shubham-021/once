@@ -10,12 +10,16 @@ const crudRouter = new Hono<{ Variables: AuthVariables }>();
 
 crudRouter.get("/", requireAuth, async (c) => {
     const user = c.get("user")!;
-    const userStories = await db.query.stories.findMany({
-        where: eq(stories.userId, user.id),
-        orderBy: desc(stories.updatedAt)
-    })
+    try{
+        const userStories = await db.query.stories.findMany({
+            where: eq(stories.userId, user.id),
+            orderBy: desc(stories.updatedAt)
+        })
 
-    return success(c, userStories);
+        return success(c, userStories);
+    } catch (err) {
+        return error(c,"INTERNAL_ERROR",(err as Error).message);
+    }
 });
 
 crudRouter.get("/discover/stats", async (c) => {
@@ -55,6 +59,7 @@ crudRouter.get("/discover", async (c) => {
         genre: story.genre,
         upvotes: story.upvotes,
         description: story.description ?? "",
+        publicDescription: story.publicDescription ?? "",
         turnCount: story.turnCount
     }))
 

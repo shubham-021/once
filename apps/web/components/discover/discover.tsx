@@ -73,14 +73,15 @@ export function Discover() {
                     </div>
                     <button
                         onClick={() => setShowFilters(true)}
-                        className="lg:hidden fixed bottom-24 group right-4 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-accent shadow-lg transition-colors cursor-pointer"
+                        className="min-[720]:hidden fixed bottom-10 group right-4 z-40 flex gap-2 items-center justify-center py-2 px-4 rounded-full bg-accent/10 border border-accent/40 shadow-lg transition-colors cursor-pointer"
                     >
-                        <Filter className="size-5 text-white group-hover:size-6 transition-all ease-in-out" />
+                        <Filter className="size-3.5 text-accent group-hover:size-6 transition-all ease-in-out" />
+                        <span>filter</span>
                     </button>
                 </header>
 
                 <div className="flex flex-1 overflow-hidden">
-                    <aside className="hidden lg:block w-56 shrink-0 dotted-border-r py-4 px-4 md:px-8 overflow-y-auto">
+                    <aside className="hidden min-[720]:block sm:w-48 md:w-56 shrink-0 dotted-border-r py-4 px-4 md:px-8 overflow-y-auto">
                         <SidebarSection title="Sort By">
                             <div className="space-y-1">
                                 <SortButton
@@ -101,7 +102,7 @@ export function Discover() {
 
                         <SidebarSection title="Genre">
                             <div className="space-y-1">
-                                {genres.map((genre) => (
+                                {genreOptions.map((genre) => (
                                     <button
                                         key={genre}
                                         onClick={() => setSelectedGenre(genre)}

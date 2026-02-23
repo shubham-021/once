@@ -253,7 +253,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                         </Link>
                     }
                 </div>
-                <div className="flex  items-center gap-2 italic text-muted ml-4"><SimpleToggle/><Credit className="mr-4 bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl"/></div>
+                <div className="flex items-center gap-2 italic text-muted"><SimpleToggle/><Credit className="bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl"/></div>
             </header>
 
             <div className="flex flex-1 overflow-hidden">

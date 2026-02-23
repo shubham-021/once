@@ -33,7 +33,7 @@ export default function MobileDrawer({
                         className={cn(
                             "fixed top-0 z-50 h-full w-64 bg-surface lg:hidden",
                             className,
-                            side === "left" ? "left-0 border-r border-line" : "right-0 border-l border-line"
+                            side === "left" ? "left-0 border-r border-dashed border-line" : "right-0 border-l border-dashed border-line"
                         )}
                     >
                         {children}

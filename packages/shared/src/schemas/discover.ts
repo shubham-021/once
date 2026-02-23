@@ -7,5 +7,6 @@ export type DiscoverResult = {
     genre: Genre;
     upvotes: number;
     description: string;
+    publicDescription: string;
     turnCount: number;
 }

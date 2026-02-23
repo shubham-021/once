@@ -32,7 +32,7 @@ export function PublicStoryCard({ story }: { story: DiscoverResult }) {
                 <User className="size-3" />
                 {story.author}
             </p>
-            <p className="mt-3 text-sm text-muted/80 line-clamp-2">{story.description}</p>
+            <p className="mt-3 text-sm text-muted/80 line-clamp-2">{story.publicDescription}</p>
             <div className="mt-auto pt-4 flex items-center justify-between text-xs text-muted">
                 <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">

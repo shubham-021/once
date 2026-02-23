@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, integer, boolean, timestamp, json, pgEnum, primaryKey, unique } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, integer, boolean, timestamp, json, pgEnum, unique } from "drizzle-orm/pg-core";
 import { relations, type InferSelectModel } from 'drizzle-orm';
 import { user } from "./auth-schema"
 
@@ -44,7 +44,8 @@ export const stories = pgTable("stories", {
     userId: text("user_id").notNull(), // References auth provider's user table
 
     title: varchar("title", { length: 255 }).notNull(),
-    description: text("description"),
+    description: text("description"), // story-plot/ idea,
+    publicDescription: text("public_description"),
     genre: genreEnum("genre").notNull(),
     narrativeStance: narrativeStanceEnum("narrative_stance").default("heroic").notNull(),
     storyMode: storyModeEnum("story_mode").default("protagonist").notNull(),

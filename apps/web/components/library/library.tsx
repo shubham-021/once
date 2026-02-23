@@ -3,21 +3,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import { StoryCard } from "./story-card";
 import { cn } from "@/lib/utils";
-import { NavHeader } from "../nav-header";
 import { storiesApi } from "@/lib/api";
 import type { Story } from "@once/shared";
 import { toast } from "sonner";
-import { Loader, Coins } from "lucide-react";
-import { ConstellationLoader } from "../ui/loader";
 import { useCreateStore } from "@/stores/create-store";
-import { useCreditStore } from "@/stores/credits-store";
 import { StoryCardSkeleton } from "./story-card-skeleton";
 import Credit from "@/components/ui/Credit";
+import Description from "./description";
+import { useLibraryStore } from "@/stores/library-store";
 
 export function Library() {
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
-  const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const stories = useLibraryStore(s => s.stories);
+  const setStories = useLibraryStore(s => s.setStories);
+  const openDescription = useLibraryStore(s => s.showPublicDescription);
+
+  // const inProgress = useRef<boolean>(false);
 
   const setOpen = useCreateStore((s) => s.setOpen);
 
@@ -32,7 +35,10 @@ export function Library() {
   }, []);
 
   const handleDelete = (id: number) => {
-    setStories((prev) => prev.filter((s) => s.id !== id));
+
+    const updatedStories = stories.filter(s => s.id !== id);
+
+    setStories(updatedStories);
     toast.success("Story Deleted");
   };
 
@@ -40,37 +46,50 @@ export function Library() {
     id: number,
     option: "public" | "private" | "unlisted",
   ) => {
-    setStories((prev) =>
-      prev.map((s) => {
-        if (s.id === id) return { ...s, visibility: option };
-        else return s;
-      }),
-    );
+
+    const updatedStories = stories.map(s => {
+      if (s.id === id) return {...s, visibility: option};
+      else return s;
+    })
+
+    setStories(updatedStories);
 
     toast.success("Visibility changed successfully");
   };
+
+  const handleDescriptionSubmit = (id:number, description: string) => {
+    const updatedStories = stories.map(s => {
+      if (s.id === id) return {...s, visibility: "public" as const, publicDescription: description};
+      else return s;
+    })
+
+    setStories(updatedStories);
+    // toast.success("Visibility changed successfully");
+  }
 
   const handleStatus = (
     id: number,
     option: "active" | "completed" | "abandoned",
   ) => {
-    setStories((prev) =>
-      prev.map((s) => {
-        if (s.id === id) return { ...s, status: option };
-        else return s;
-      }),
-    );
+
+    const updatedStories = stories.map(s => {
+      if (s.id === id) return {...s, status: option};
+      else return s;
+    })
+
+    setStories(updatedStories);
 
     toast.success("Status changed successfully");
   };
 
   const handleForking = (id: number) => {
-    setStories((prev) =>
-      prev.map((s) => {
-        if (s.id === id) return { ...s, allowForking: !s.allowForking };
-        else return s;
-      }),
-    );
+
+    const updatedStories = stories.map(s => {
+      if (s.id === id) return {...s, allowForking: !s.allowForking};
+      else return s;
+    })
+
+    setStories(updatedStories);
 
     toast.success("Fork allowed");
   };
@@ -83,8 +102,9 @@ export function Library() {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative">
         {/* <ConstellationLoader/> */}
+        {openDescription && <Description onSubmit={handleDescriptionSubmit}/>}
         <header className="dotted-border-b px-4 py-6 whitespace-nowrap">
             <h1 className="text-2xl text-foreground">Your Library</h1>
             <p className="mt-1 text-sm text-muted">Stories you've begun</p>
@@ -107,7 +127,7 @@ export function Library() {
               </button>
             ))}
           </div>
-          <Credit className="mr-2 bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl text-xs sm:text-sm"/>
+          <Credit className="bg-accent/10 border border-accent/20 py-1 px-2 rounded-xl text-xs sm:text-sm"/>
         </div>
 
         {isLoading ? (

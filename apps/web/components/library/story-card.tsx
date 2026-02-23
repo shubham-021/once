@@ -9,72 +9,81 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { optionsApi } from "@/lib/api/options";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useLibraryStore } from "@/stores/library-store";
 
 export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange, onForkChange }: { story: Story, onDelete: (id: number) => void, onVisibilityChange: (id:number, option:'public'|'private'|'unlisted')=>void, onStatusChange: (id:number, option:'active'|'completed'| 'abandoned')=>void, onForkChange: (id:number) => void}) {
 
     const [showConfirm, setShowConfirm] = useState(false);
-    const inProgress = useRef<boolean>(false);
     const router = useRouter();
+    const inProgress = useLibraryStore(s => s.inProgress);
+    const setInProgress = useLibraryStore(s => s.setInProgress)
+    const setShowPublicDescription = useLibraryStore(s => s.setShowPublicDescription);
+    const setInFocusStory = useLibraryStore(s => s.setInFocusStory);
 
     const handleClick = () => {
         router.push(`/story/${story.id}`)
     }
 
     const handleDelete = async () => {
-        inProgress.current = true;
+        setInProgress(true);
         const response = await storiesApi.delete(story.id.toString());
         if (response.error) {
             toast.error("Error while executing this req. Try again some times later");
-            inProgress.current = false;
+            setInProgress(false);
             return;
         }
 
         onDelete(story.id);
-        inProgress.current = false;
+        setInProgress(false);
         setShowConfirm(false);
     }
 
     const handleVisibility = async () => {
-        inProgress.current = true;
         const option = (story.visibility === "public") ? "private" : "public";
-        const response = await optionsApi.visibility(story.id.toString(),option);
-        if(response.error){
-           toast.error("Error while executing this req. Try again some times later");
-           inProgress.current = false;
-           return; 
-        }
+        if(option === "public" && !story.publicDescription){
+            setInFocusStory(story);
+            setShowPublicDescription(true)
+        }else{
+            setInProgress(true);
+            const response = await optionsApi.visibility(story.id.toString(),option);
+            if(response.error){
+            toast.error("Error while executing this req. Try again some times later");
+            setInProgress(false);
+            return; 
+            }
 
-        onVisibilityChange(story.id, option);
-        inProgress.current=false;
+            onVisibilityChange(story.id, option);
+            setInProgress(false);
+        }
     }
 
     const handleStatus = async () => {
-        inProgress.current = true;
+        setInProgress(true);
         const option = (story.status === "active") ? "completed" : "active";
         const response = await optionsApi.status(story.id.toString(),option);
         if(response.error){
            toast.error("Error while executing this req. Try again some times later");
-           inProgress.current = false;
+           setInProgress(false);
            return; 
         }
 
         onStatusChange(story.id,option);
-        inProgress.current = false;
+        setInProgress(false);
     }
 
     const handleForking = async () => {
-        inProgress.current = true;
+        setInProgress(true);
         const option = !story.allowForking;
         const response = await optionsApi.fork(story.id.toString(),option);
         if(response.error){
             console.log(response.error);
             toast.error("Error while executing this req. Try again some times later");
-            inProgress.current = false;
+            setInProgress(false);
             return; 
         }
 
         onForkChange(story.id);
-        inProgress.current = false;
+        setInProgress(false);
     }
 
     return (
@@ -96,7 +105,7 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
                 </AlertDialogContent>
             </AlertDialog>
 
-            <div onClick={handleClick} className="group relative block h-full rounded-xl border border-line bg-surface p-5 transition-colors hover:border-foreground/30 cursor-pointer">
+            <div onClick={handleClick} className="flex flex-col justify-between group relative h-full rounded-xl border border-line bg-surface p-5 transition-colors hover:border-foreground/30 cursor-pointer">
                 <div className="absolute top-6 right-3">
                     <DropdownMenu>
                         <DropdownMenuTrigger className="text-muted hover:text-foreground cursor-pointer focus:outline-none">
@@ -132,25 +141,33 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
                     </DropdownMenu>
                 </div>
 
-                <div className="flex gap-2 items-center text-lg text-foreground">
-                    <span>{story.title}</span>
-                    {(story.forkedFromStoryId && (
-                        <span className={cn("text-accent text-xs")}>
-                            {"(Fork)"}
-                        </span>
-                    ))}
-                    {(story.forkedFromStoryId) && 
-                        <Link href={`/read/${story.forkedFromStoryId}`} onClick={(e) => e.stopPropagation()} className="text-xs flex gap-1 items-end">
-                            <LinkIcon className="size-3"/>
-                        </Link>
-                    }
-                </div>
+                <div className="flex flex-col text-lg text-foreground">
+                    <div className="flex gap-2 items-center">
+                        <span>{story.title}</span>
+                        {(story.forkedFromStoryId && (
+                            <span className={cn("text-accent text-xs")}>
+                                {"(Fork)"}
+                            </span>
+                        ))}
+                        {(story.forkedFromStoryId) && 
+                            <Link href={`/read/${story.forkedFromStoryId}`} onClick={(e) => e.stopPropagation()} className="text-xs flex gap-1 items-end">
+                                <LinkIcon className="size-3"/>
+                            </Link>
+                        }
+                    </div>
 
-                {story.protagonist?.[0]?.name && (
-                    <p className="mt-1 text-sm text-muted">
-                        as <span className="text-foreground/80">{story.protagonist[0].name}</span>
-                    </p>
-                )}
+                    {story.protagonist?.[0]?.name && (
+                        <p className="mt-1 text-sm text-muted">
+                            as <span className="text-foreground/80">{story.protagonist[0].name}</span>
+                        </p>
+                    )}
+
+                    {story.publicDescription && (
+                        <p className="mt-1 text-sm text-muted">
+                            <span className="text-foreground/80">{story.publicDescription}</span>
+                        </p>
+                    )}
+                </div>
 
                 <div className="mt-4 flex items-center justify-between text-xs text-muted">
                     <div className="flex items-center gap-3">
