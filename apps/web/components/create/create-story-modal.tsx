@@ -97,11 +97,11 @@ export function CreateStoryModal() {
     setErrors({});
 
     setFormData(result.data);
+    
     setIsCreating(true);
+    router.push("/story/new");
     setOpen(false);
     reset();
-
-    router.push("/story/new");
 
     // try {
     //     const { data, error } = await draftsApi.createDraft(result.data);

@@ -113,13 +113,12 @@ export function UserMenu() {
             "flex items-center justify-center w-12 h-12 rounded-full",
             "bg-surface border border-line hover:border-accent",
             "transition-colors cursor-pointer focus:outline-none z-10",
-            isRadialOpen && "border-accent",
+            isRadialOpen && "border-accent/40",
           )}
         >
           <Origami
             className={cn(
-              "w-5 h-5",
-              isRadialOpen ? "text-accent" : "text-accent",
+              "w-5 h-5 text-accent"
             )}
           />
         </button>

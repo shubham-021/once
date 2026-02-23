@@ -230,8 +230,8 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
 
     if (!creatingFirstDraft && isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-background">
-                <p className="text-muted">Loading story...</p>
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <p className="text-muted">Loading...</p>
             </div>
         );
     }

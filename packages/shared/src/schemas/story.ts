@@ -15,7 +15,7 @@ export const createStorySchema = z.object({
     storyMode: storyModeSchema.default("protagonist"),
     storyIdea: z.string().min(20, "Story idea/ plot must be at least 20 characters"),
     worldDescription: z.string().max(2000).optional(),
-    promptForOnce: z.string().max(500).optional(),
+    promptForOnce: z.string().max(1000).optional(),
     startingScene: z.string().max(2000).optional(),
     cast: z.array(castMemberSchema).optional(),
     castMode: castModeSchema,
