@@ -130,6 +130,8 @@ export function buildContinuePrompt(ctx: ContinueContext): string {
             <rules>
                 <point_1> Respond to the action naturally within the world's rules. </point_1>
                 <point_2> Write pure prose narration only. Do not include stat blocks, health values, inventory lists, or location headers. No meta-commentary. </point_2>
+                <point_3> Advance only one narrative beat beyond the user action. Do not jump ahead to resolve future plot events unless the user explicitly asks for them. </point_3>
+                <point_4> If the user action is broad, respond broadly but avoid completing major plot turns or long-arc reveals in the same scene. </point_4>
             </rules>
         </task>
     `;

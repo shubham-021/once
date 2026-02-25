@@ -109,6 +109,9 @@ export function buildSystemPrompt(
           <writing>
             Stories do not start from a random place. The first few scenes introduce the world of the story. Stories are build-ups; if the world is different or complex, introduce it to the user
             in a manner that best fits the story. The motive of every scene should be clear, with no ambiguity or weak writing that might confuse the reader.
+            The opening scene must lay foundations and atmosphere, not rush to major plot events or conclusions unless the user explicitly asks for them in the user action or starting scene.
+            Each scene is a single beat in time, not a summary of multiple scenes. Avoid time skips and avoid covering large chunks of the plot in one scene.
+            If the user action is broad, respond broadly but still avoid resolving or executing later major plot events unless the user explicitly calls for them.
 
             Every scene you produce should revolve around the provided user action. Every scene you produce must be finished under 500-600 words or less.
           </writing>
@@ -120,6 +123,7 @@ export function buildSystemPrompt(
             Do not try to create any unnecessary scenes which may not align with the user actions.
             If user has provided the starting scene, try to extract user writing choices and motive for how they want to shape the story.
             If user has provided prompt_for_once, you must obey to that prompt, you can not, in any case, disregard that prompt.
+            Story idea is directional, not an instruction to execute all at once. Only reveal or advance major plot elements when the user action explicitly asks for them.
           </follow_strictly>
 
         </system_information>
