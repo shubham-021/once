@@ -8,37 +8,30 @@ interface CodexExtractionContext {
 
 export function buildCodexExtractionPrompt(ctx: CodexExtractionContext): string {
     const existingList = ctx.existingEntries.length > 0
-        ? ctx.existingEntries.map(e => `- ${e.name} (${e.entryType})`).join("\n")
-        : "None yet";
+        ? ctx.existingEntries.map(e => `
+            <codex_data>
+                name: ${e.name}
+                entryType: ${e.entryType}
+            </codex_data>
+        `).join("\n") : "None yet";
 
-    return `Extract notable entities from this scene narration.
+    return `
+        <Task>
+            Extract new entries from this narration following the provided schema, make sure to categorize new entries and updates in their respective fields.
 
-        ## Scene Narration
-        ${ctx.narration}
+            <current_scene_narration>
+                ${ctx.narration}
+            </current_scene_narration>
 
-        ## Existing Codex Entries
-        ${existingList}
-
-        ## Task
-        Identify NEW entities mentioned in this narration. For each:
-        - Character: Named individuals (not "a guard" but "Captain Vern")
-        - Location: Specific places with names
-        - Item: Notable objects with significance
-        - Faction: Groups, organizations, or allegiances
-        - Event: Significant happenings worth remembering
-        - Lore: World-building details, history, customs
-
-
-        For each entity, also extract structured metadata as key-value pairs:
-        - Characters: role (Ally/Antagonist/Neutral), status (Alive/Missing/Deceased), affiliation
-        - Locations: region, dangerLevel (Safe/Moderate/High), type (City/Forest/Dungeon/etc)
-        - Items: rarity (Common/Rare/Unique), type (Weapon/Consumable/Key Item)
-        - Events/Lore: timeline (Past/Present/Future), impact (Major/Minor)
-        
-        Only include metadata fields that are clearly evident from the narration.
-
-        For existing entries, note if the narration reveals NEW information about them.
-
-        Only extract what's clearly present in the narration — don't invent.
+            <existing_codex_entries>
+                ${existingList}
+            </existing_codex_entries>
+            
+            <rules>
+                <point_1> Only include metadata fields that are clearly evident from the narration. </point_1>
+                <point_2> For existing entries, note if the narration reveals NEW information about them. </point_2>
+                <point_3> Only extract what's clearly present in the narration, don't invent. </point_3>
+            </rules>
+        </Task>
     `;
 }

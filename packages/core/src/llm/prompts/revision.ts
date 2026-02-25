@@ -12,15 +12,18 @@ export function buildRevisionSystemPrompt(): string {
 
 export function buildRevisionPrompt(ctx: RevisionContext): string {
     return `
-        ## Author's Version
-        ${ctx.originalNarration}
+        <original_version>
+            ${ctx.originalNarration}
+        </original_version>
 
-        ## Author's Notes
-        ${ctx.userComment}
+        <author_note>
+            ${ctx.userComment}
+        <author_note>
 
-        ## Task
-        Revise the narration to address the author's notes. Preserve their edits — respect their word 
-        choices and dialogue. Only change what the notes indicate. Maintain the same length and tone.
+        <task>
+            Revise the narration to address the author's notes. Preserve their edits, respect their word 
+            choices and dialogue. Only change what the notes indicate. Maintain the same length and tone.
+        </task>
     `.trim();
 }
 
@@ -52,19 +55,24 @@ interface OpeningRevisionContext {
 export function buildOpeningRevisionPrompt(ctx: OpeningRevisionContext): string {
     return `You are revising the opening scene of a story.
 
-        STORY CONTEXT:
-        - Title: ${ctx.title}
-        - Genre: ${ctx.genre}
-        ${ctx.protagonist ? `- Protagonist: ${ctx.protagonist.name} — ${ctx.protagonist.description || 'No description'}` : ''}
-        ${ctx.worldDescription ? `- World: ${ctx.worldDescription}` : ''}
-        ${ctx.storyIdea ? `- Story Idea: ${ctx.storyIdea}` : ''}
+        <story_context>
+            title: ${ctx.title}
+            genre: ${ctx.genre}
+            ${ctx.protagonist ? `protagonist: ${ctx.protagonist.name} — ${ctx.protagonist.description || 'No description'}` : ''}
+            ${ctx.worldDescription ? `world: ${ctx.worldDescription}` : ''}
+            ${ctx.storyIdea ? `story Idea: ${ctx.storyIdea}` : ''}
+        <story_context>
 
-        ORIGINAL NARRATION:
-        ${ctx.originalNarration}
+        <original_narration>
+            ${ctx.originalNarration}
+        </original_narration>
 
-        USER'S FEEDBACK:
-        ${ctx.userComment}
+        <user_feedback>
+            ${ctx.userComment}
+        </user_feedback>
 
-        Revise the opening scene narration based on the user's feedback while maintaining the story's genre, tone, and established context. Output only the revised narration, no preamble.
+        <task>
+            Revise the opening scene narration based on the user's feedback while maintaining the story's genre, tone, and established context. Output only the revised narration, no preamble.
+        </task>
     `;
 }

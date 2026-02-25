@@ -17,7 +17,10 @@ interface DeferredCharEvalContext {
     protagonistLocation: string;
     protagonistState: string;
     userAction: string;
-    recentNarration: string;
+    recentScenes: Array<{
+        userAction: string;
+        narration: string;
+    }>;
 }
 
 export async function evaluateDeferredCharacters(ctx: DeferredCharEvalContext, usageCollector?: UsageCollector) {

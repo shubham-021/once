@@ -23,7 +23,7 @@ export const draftsApi = {
         data: CreateStoryInput,
         onInit: (data: { storyId: number, storyTitle: string }) => void,
         onChunk: (text: string) => void,
-        onComplete: (data: { draftId: number }) => void,
+        onComplete: (data: { draftId: number, credits: number }) => void,
         onError?: (error: { code: ErrorCode }) => void
     ) => {
         return new Promise<void>(async (resolve, reject) => {

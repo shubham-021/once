@@ -11,12 +11,14 @@ interface EchoEvalContext {
     pendingEchoes: Array<{
         id: number;
         description: string;
-        triggerCondition: string;
     }>;
     protagonistLocation: string;
     protagonistState: string;
     userAction: string;
-    recentNarration: string;
+    recentScenes: Array<{
+        userAction: string;
+        narration: string;
+    }>
 }
 
 export async function evaluateEchoes(ctx: EchoEvalContext, usageCollector?: UsageCollector): Promise<typeof ctx.pendingEchoes> {
@@ -27,7 +29,7 @@ export async function evaluateEchoes(ctx: EchoEvalContext, usageCollector?: Usag
         protagonistLocation: ctx.protagonistLocation,
         protagonistState: ctx.protagonistState,
         userAction: ctx.userAction,
-        recentNarration: ctx.recentNarration
+        recentScenes: ctx.recentScenes
     })
 
     if (!prompt) return [];
@@ -47,14 +49,12 @@ export async function plantEcho(
     storyId: number,
     sourceSceneId: number,
     description: string,
-    triggerCondition: string,
     tx: DBTransaction
 ) {
     await tx.insert(echoes).values({
         storyId,
         sourceSceneId,
         description,
-        triggerCondition,
         status: "pending"
     })
 }

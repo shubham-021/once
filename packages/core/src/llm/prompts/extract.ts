@@ -44,9 +44,13 @@ export function buildExtractionPrompt(narration: string, protagonistName: string
 
     return `
         Extract all narrative entities from this scene.
-        PROTAGONIST: ${protagonistName}
+
+        <protagonist>
+            ${protagonistName}
+        </protagonist>
         
-        SCENE:
-        ${narration}
+        <scene>
+            ${narration}
+        </scene>
     `;
 }

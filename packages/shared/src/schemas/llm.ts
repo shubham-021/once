@@ -32,7 +32,6 @@ export const sceneResponseSchema = z.object({
     }).nullable(),
     echoPlanted: z.object({
         description: z.string().describe("What happened that will echo later"),
-        triggerCondition: z.string().describe("When this should resolve, e.g. 'when protagonist visits a market'"),
     }).nullable().describe("A consequence planted for future resolution"),
 });
 
