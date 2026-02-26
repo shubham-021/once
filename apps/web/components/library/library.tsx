@@ -11,6 +11,7 @@ import { StoryCardSkeleton } from "./story-card-skeleton";
 import Credit from "@/components/ui/Credit";
 import Description from "./description";
 import { useLibraryStore } from "@/stores/library-store";
+import { SimpleToggle } from "../simple-theme-toggler";
 
 export function Library() {
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
@@ -48,7 +49,7 @@ export function Library() {
   ) => {
 
     const updatedStories = stories.map(s => {
-      if (s.id === id) return {...s, visibility: option};
+      if (s.id === id) return { ...s, visibility: option };
       else return s;
     })
 
@@ -57,9 +58,9 @@ export function Library() {
     toast.success("Visibility changed successfully");
   };
 
-  const handleDescriptionSubmit = (id:number, description: string) => {
+  const handleDescriptionSubmit = (id: number, description: string) => {
     const updatedStories = stories.map(s => {
-      if (s.id === id) return {...s, visibility: "public" as const, publicDescription: description};
+      if (s.id === id) return { ...s, visibility: "public" as const, publicDescription: description };
       else return s;
     })
 
@@ -73,7 +74,7 @@ export function Library() {
   ) => {
 
     const updatedStories = stories.map(s => {
-      if (s.id === id) return {...s, status: option};
+      if (s.id === id) return { ...s, status: option };
       else return s;
     })
 
@@ -85,7 +86,7 @@ export function Library() {
   const handleForking = (id: number) => {
 
     const updatedStories = stories.map(s => {
-      if (s.id === id) return {...s, allowForking: !s.allowForking};
+      if (s.id === id) return { ...s, allowForking: !s.allowForking };
       else return s;
     })
 
@@ -104,10 +105,10 @@ export function Library() {
     <>
       <div className="min-h-screen bg-background relative">
         {/* <ConstellationLoader/> */}
-        {openDescription && <Description onSubmit={handleDescriptionSubmit}/>}
+        {openDescription && <Description onSubmit={handleDescriptionSubmit} />}
         <header className="dotted-border-b px-4 py-6 whitespace-nowrap">
-            <h1 className="text-2xl text-foreground">Your Library</h1>
-            <p className="mt-1 text-sm text-muted">Stories you've begun</p>
+          <h1 className="text-2xl text-foreground">Your Library</h1>
+          <p className="mt-1 text-sm text-muted">Stories you've begun</p>
         </header>
 
         <div className="flex gap-2 sm:gap-4 justify-between items-center p-4 dotted-border-b relative">
@@ -127,7 +128,10 @@ export function Library() {
               </button>
             ))}
           </div>
-          <Credit className="bg-accent/10 border border-accent/20 py-1 px-2 rounded-xl text-xs sm:text-sm"/>
+          <div className="flex gap-4 items-center justify-center ml-4">
+            <span className="md:hidden"><SimpleToggle className="flex items-center justify-center cursor-pointer py-1" /></span>
+            <Credit className="bg-accent/10 border border-accent/20 py-1 px-2 rounded-xl text-xs sm:text-sm" />
+          </div>
         </div>
 
         {isLoading ? (

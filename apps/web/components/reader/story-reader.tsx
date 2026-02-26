@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import type { Story, Scene } from "@once/shared"
 import { getToastErrorMessage } from "@/lib/error-mapper";
 import { useUpvotesStore } from "@/stores/upvotes-store";
+import { SimpleToggle } from "../simple-theme-toggler";
 
 export function StoryReader({ storyId }: { storyId: string }) {
 
@@ -104,45 +105,48 @@ export function StoryReader({ storyId }: { storyId: string }) {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                    <button
-                        onClick={toggleUpvote}
-                        disabled={isUpvoting}
-                        className={cn(
-                            "flex items-center border rounded-lg overflow-hidden transition-colors cursor-pointer",
-                            hasUpvoted ? "border-accent" : "border-line hover:border-foreground/50"
-                        )}
-                    >
-                        <span className={cn(
-                            "px-2 py-1 transition-colors",
-                            hasUpvoted ? "text-accent" : "text-muted hover:text-foreground"
-                        )}>
-                            <ArrowBigUp className={cn("size-4", hasUpvoted && "fill-accent")} />
-                        </span>
-                        <span className={cn(
-                            "px-2 py-1 text-xs border-l hidden sm:inline transition-colors",
-                            hasUpvoted ? "border-accent text-accent" : "border-line text-muted"
-                        )}>
-                            {upvoteCount}
-                        </span>
-                    </button>
-
-                    <button
-                        onClick={() => setShowNoteDialog(true)}
-                        className="flex items-center gap-1 px-2 py-1 border border-line rounded-lg text-muted hover:text-foreground hover:border-foreground/50 transition-colors cursor-pointer"
-                    >
-                        <Mail className="size-4" />
-                        <span className="text-xs hidden sm:inline">Note</span>
-                    </button>
-
-                    {story.allowForking && (
+                <div className="flex items-center gap-4 shrink-0">
+                    <span className="md:hidden"><SimpleToggle className="flex items-center justify-center cursor-pointer" /></span>
+                    <div className="flex items-center gap-2 shrink-0">
                         <button
-                            onClick={() => setShowForkDialog(true)}
+                            onClick={toggleUpvote}
+                            disabled={isUpvoting}
+                            className={cn(
+                                "flex items-center border rounded-lg overflow-hidden transition-colors cursor-pointer",
+                                hasUpvoted ? "border-accent" : "border-line hover:border-foreground/50"
+                            )}
+                        >
+                            <span className={cn(
+                                "px-2 py-1 transition-colors",
+                                hasUpvoted ? "text-accent" : "text-muted hover:text-foreground"
+                            )}>
+                                <ArrowBigUp className={cn("size-4", hasUpvoted && "fill-accent")} />
+                            </span>
+                            <span className={cn(
+                                "px-2 py-1 text-xs border-l hidden sm:inline transition-colors",
+                                hasUpvoted ? "border-accent text-accent" : "border-line text-muted"
+                            )}>
+                                {upvoteCount}
+                            </span>
+                        </button>
+
+                        <button
+                            onClick={() => setShowNoteDialog(true)}
                             className="flex items-center gap-1 px-2 py-1 border border-line rounded-lg text-muted hover:text-foreground hover:border-foreground/50 transition-colors cursor-pointer"
                         >
-                            <GitFork className="size-4" />
+                            <Mail className="size-4" />
+                            <span className="text-xs hidden sm:inline">Note</span>
                         </button>
-                    )}
+
+                        {story.allowForking && (
+                            <button
+                                onClick={() => setShowForkDialog(true)}
+                                className="flex items-center gap-1 px-2 py-1 border border-line rounded-lg text-muted hover:text-foreground hover:border-foreground/50 transition-colors cursor-pointer"
+                            >
+                                <GitFork className="size-4" />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -150,9 +154,9 @@ export function StoryReader({ storyId }: { storyId: string }) {
                 <div className="max-w-5xl mx-auto px-6 py-8">
                     <div className="mb-8 p-4 border border-line bg-surface rounded-xl">
                         <p className="text-sm text-muted">Playing as</p>
-                        <p className="text-lg text-foreground">{story.protagonist?.[0].name}</p>
+                        <p className="text-lg text-foreground">{story.protagonist?.[0]?.name}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                            {story.protagonist?.[0].currentTraits?.map((trait) => (
+                            {story.protagonist?.[0]?.currentTraits?.map((trait) => (
                                 <span key={trait} className="text-xs text-muted border border-line px-2 py-0.5 rounded-lg">
                                     {trait}
                                 </span>

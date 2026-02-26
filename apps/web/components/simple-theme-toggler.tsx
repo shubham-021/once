@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
-export function SimpleToggle() {
+export function SimpleToggle({ className }: { className: string }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -22,7 +23,7 @@ export function SimpleToggle() {
   return (
     <motion.button
       onClick={toggleTheme}
-      className="z-50 cursor-pointer block md:hidden"
+      className={cn(className)}
       whileTap={{ scale: 0.95 }}
       aria-label="Toggle theme"
     >

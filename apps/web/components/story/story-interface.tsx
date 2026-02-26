@@ -32,13 +32,13 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
     const balance = useCreditStore(s => s.balance);
     const setBalance = useCreditStore(s => s.setBalance);
 
-    const [story, setStory] = useState<Story|null>(null);
+    const [story, setStory] = useState<Story | null>(null);
 
     const [protagonist, setProtagonist] = useState<Protagonist | null>(null);
     const [codex, setCodex] = useState<CodexEntry[] | null>(null);
 
-    const [toggleProtagonistSidebar,setToggleProtagonistSidebar] = useState(false);
-    const [toggleCodexSidebar,setToggleCodexSidebar] = useState(false);
+    const [toggleProtagonistSidebar, setToggleProtagonistSidebar] = useState(false);
+    const [toggleCodexSidebar, setToggleCodexSidebar] = useState(false);
 
     const [inProgress, setInProgress] = useState<boolean>(false);
 
@@ -55,12 +55,12 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
     }, [protagonist]);
 
     const protagonistToggler = () => {
-        if(window.innerWidth<1024 && toggleCodexSidebar) setToggleCodexSidebar(false);
+        if (window.innerWidth < 1024 && toggleCodexSidebar) setToggleCodexSidebar(false);
         setToggleProtagonistSidebar(prev => !prev);
     }
 
     const codexToggler = () => {
-        if(window.innerWidth<1024 && toggleProtagonistSidebar) setToggleProtagonistSidebar(false);
+        if (window.innerWidth < 1024 && toggleProtagonistSidebar) setToggleProtagonistSidebar(false);
         setToggleCodexSidebar(prev => !prev);
     }
 
@@ -91,8 +91,8 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
             setScenes(prev => [...prev, result.scene]);
             if (result.protagonist) setProtagonist(result.protagonist);
             if (result.codex) setCodex(result.codex);
-            if(result.creditsUsed){
-                const newBalance = balance-result.creditsUsed;
+            if (result.creditsUsed) {
+                const newBalance = balance - result.creditsUsed;
                 setBalance(newBalance);
             }
         }
@@ -106,7 +106,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
             if (started.current) return;
             started.current = true;
 
-            startCreate(creationData, (newStoryId,newStoryTitle) => {
+            startCreate(creationData, (newStoryId, newStoryTitle) => {
                 setStoryId(newStoryId.toString());
                 setStoryTitle(newStoryTitle);
                 setIsCreating(false);
@@ -169,19 +169,19 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
 
     useEffect(() => {
         if (isStreaming && bottomRef.current) {
-            bottomRef.current.scrollIntoView({behavior: 'smooth', block: 'end'});
+            bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
     }, [draft?.narration, isStreaming]);
 
-    const handleUndo = async (storyId:string, turnNumber:string) => {
+    const handleUndo = async (storyId: string, turnNumber: string) => {
         console.log(`Undo clicked: ${inProgress}`);
-        if(inProgress) return;
+        if (inProgress) return;
         setInProgress(true);
-        
-        try{
+
+        try {
             const response = await storiesApi.undo(storyId, turnNumber);
 
-            if(response.error){
+            if (response.error) {
                 toast.error(getToastErrorMessage(response.error, "undo-scene"));
                 return;
             }
@@ -209,7 +209,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                 }
             }
 
-            if(draft) setDraft(null);
+            if (draft) setDraft(null);
 
             toast.success('Undo successfull');
         } finally {
@@ -217,12 +217,12 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
         }
     }
 
-    if(creatingFirstDraft) {
+    if (creatingFirstDraft) {
         return (
             <div className="flex h-screen w-full flex-col items-center justify-center bg-background md:text-4xl sm:text-3xl text-xl">
                 {/* <h1 className="mb-12 font-serif text-2xl text-[#7A6F5F]">Step 1: Creating the best scene draft for this story.</h1> */}
                 {/* <div className="md:text-2xl text-lg w-full flex justify-center"> */}
-                    <TypingLoader />
+                <TypingLoader />
                 {/* </div> */}
             </div>
         )
@@ -241,19 +241,22 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
             <header className="flex whitespace-nowrap items-center justify-between md:text-base text-sm dotted-border-b gap-2 md:gap-4 py-2 px-4">
                 <div className="flex items-center gap-2">
                     <div className="flex gap-1">
-                        <span>{((story?.status==="active" || creationData) ? "Writing: " : "")}</span>
+                        <span>{((story?.status === "active" || creationData) ? "Writing: " : "")}</span>
                         <span className="tracking-widest text-accent italic">{storyTitle}</span>
                     </div>
                     {(story && story.forkedFromStoryId) && <span className="text-xs italic">{`(fork)`}</span>}
                     {(story && story.status === "completed") && <span className="text-xs italic">{"( Completed )"}</span>}
-                    {(story && story.forkedFromStoryId) && 
+                    {(story && story.forkedFromStoryId) &&
                         <Link href={`/read/${story.forkedFromStoryId}`} className="text-xs flex gap-1 items-end relative group">
-                            <LinkIcon className="size-3"/>
+                            <LinkIcon className="size-3" />
                             <span className="absolute top-2 left-5 bg-accent/60 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">Original Story</span>
                         </Link>
                     }
                 </div>
-                <div className="flex items-center gap-2 italic text-muted"><SimpleToggle/><Credit className="bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl"/></div>
+                <div className="flex items-center gap-2 italic text-muted">
+                    <span className="md:hidden"><SimpleToggle className="flex items-center justify-center mx-2" /></span>
+                    <Credit className="bg-accent/10 border border-accent/20 py-1 px-2 rounded-2xl" />
+                </div>
             </header>
 
             <div className="flex flex-1 overflow-hidden">
@@ -261,18 +264,18 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                 {codex && (
                     <>
                         <motion.aside
-                        animate={{ width: toggleCodexSidebar ? 256 : 0 }}
-                        initial={false}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className={cn(
-                            "hidden lg:block overflow-hidden shrink-0",
-                            toggleCodexSidebar && "dotted-border-r"
-                        )}
-                    >
-                        <div className="w-64 p-4 h-full overflow-y-auto">
-                            <CodexSidebar codex={codex} protagonistName={protagonist?.name} />
-                        </div>
-                    </motion.aside>
+                            animate={{ width: toggleCodexSidebar ? 256 : 0 }}
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className={cn(
+                                "hidden lg:block overflow-hidden shrink-0",
+                                toggleCodexSidebar && "dotted-border-r"
+                            )}
+                        >
+                            <div className="w-64 p-4 h-full overflow-y-auto">
+                                <CodexSidebar codex={codex} protagonistName={protagonist?.name} />
+                            </div>
+                        </motion.aside>
                     </>
                 )}
 
@@ -307,20 +310,20 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                     <div className="flex-1 overflow-y-auto px-8 py-6 pb-20">
                         <div className="mx-auto max-w-4xl space-y-6 scrollbar scrollbar-w-1">
                             {scenes.map(scene => (
-                                    <SceneBlock
-                                        key={scene.id}
-                                        storyId={scene.storyId}
-                                        turnNumber={scene.turnNumber}
-                                        narration={scene.narration}
-                                        userAction={scene.userAction}
-                                        handleUndo={handleUndo}
-                                        inProgress={inProgress}
-                                    />
+                                <SceneBlock
+                                    key={scene.id}
+                                    storyId={scene.storyId}
+                                    turnNumber={scene.turnNumber}
+                                    narration={scene.narration}
+                                    userAction={scene.userAction}
+                                    handleUndo={handleUndo}
+                                    inProgress={inProgress}
+                                />
                             ))}
 
                             {loadingDraft && !draft && (
                                 <div className="text-sm">
-                                    <TypingLoader/>
+                                    <TypingLoader />
                                 </div>
                             )}
 
@@ -334,10 +337,10 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                                         placeholder={isStreaming ? "" : "Edit your draft..."}
                                         className="w-full min-h-30 resize-none bg-transparent text-foreground placeholder:text-muted placeholder:italic focus:outline-none disabled:cursor-default prose dark:prose-invert leading-relaxed scrollbar scrollbar-thin"
                                     />
-                                </div>    
+                                </div>
                             )}
 
-                            {draft  && !isStreaming && (
+                            {draft && !isStreaming && (
                                 <DraftControls
                                     narration={draft.narration}
                                     isStreaming={isStreaming}
@@ -353,7 +356,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                     </div>
 
                     {(!draft && story?.status === "active") && (
-                        <ActionInput onSubmit={startContinue} disabled={isStreaming} className={cn(toggleCodexSidebar && !toggleProtagonistSidebar && '-translate-x-56', toggleProtagonistSidebar && !toggleCodexSidebar && '-translate-x-125')}/>
+                        <ActionInput onSubmit={startContinue} disabled={isStreaming} className={cn(toggleCodexSidebar && !toggleProtagonistSidebar && '-translate-x-56', toggleProtagonistSidebar && !toggleCodexSidebar && '-translate-x-125')} />
                     )}
                 </main>
 
@@ -425,7 +428,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                         {/* Codex Toggle — Mobile */}
                         <motion.button
                             onClick={codexToggler}
-                            animate={{ left: toggleCodexSidebar ? 220 : 4 , top: toggleCodexSidebar ? 16 : 48 }}
+                            animate={{ left: toggleCodexSidebar ? 220 : 4, top: toggleCodexSidebar ? 16 : 48 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 cursor-pointer z-60"
                         >
@@ -437,7 +440,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                     </>
                 )}
 
-                { protagonist && (
+                {protagonist && (
                     <>
                         {/* Protagonist Toggle — Desktop */}
                         <motion.button
@@ -455,7 +458,7 @@ export function StoryInterface({ storyId: initialStoryId, creationData }: { stor
                         {/* Protagonist Toggle — Mobile */}
                         <motion.button
                             onClick={protagonistToggler}
-                            animate={{ right: toggleProtagonistSidebar ? 220 : 4 , top: toggleProtagonistSidebar ? 16:48 }}
+                            animate={{ right: toggleProtagonistSidebar ? 220 : 4, top: toggleProtagonistSidebar ? 16 : 48 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             className="lg:hidden fixed flex items-center justify-center w-7 h-7 text-neutral-400 cursor-pointer z-60"
                         >
