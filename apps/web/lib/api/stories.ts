@@ -19,7 +19,7 @@ export const storiesApi = {
         if (params?.page) searchParams.set("page", String(params.page));
 
         const query = searchParams.toString();
-        return apiClient<DiscoverResult[]>(`/api/stories/discover${query ? `?${query}` : ""}`)
+        return apiClient<DiscoverResult>(`/api/stories/discover${query ? `?${query}` : ""}`)
     },
     discoverStats: () => apiClient<{ storiesPublished: number; activeWriters: number }>("/api/stories/discover/stats"),
     upvote: (id: string) => apiClient<{ upvoted: boolean; upvotes: number }>(`/api/stories/${id}/upvote`, {

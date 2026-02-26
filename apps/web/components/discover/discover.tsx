@@ -10,25 +10,20 @@ import { DiscoverResult, genres, Story } from "@once/shared";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
 import { PublicStoryCardSkeleton } from "./public-story-card-skeleton";
 import { Skeleton } from "../ui/skeleton";
+import { useUpvotesStore } from "@/stores/upvotes-store";
 
 const trendingTags = ["grimdark", "time-loop", "redemption", "betrayal", "survival"];
 const genreOptions = ["All", ...genres] as const;
-
-// const mockStories: DiscoverResult[] = [
-//     { id: "1", title: "The Hollow King", author: "Marcus Webb", genre: "Fantasy", upvotes: 234, description: "A tale of a fallen monarch seeking redemption in a world that has forgotten him.", turnCount: 47 },
-//     { id: "2", title: "Signal in the Static", author: "Elena Cross", genre: "Science Fiction", upvotes: 189, description: "When the last radio station on Earth picks up a message from the void, everything changes.", turnCount: 23 },
-//     { id: "3", title: "Blood & Clockwork", author: "James Chen", genre: "Science Fantasy", upvotes: 156, description: "Victorian London meets eldritch horror in this steampunk thriller.", turnCount: 65 },
-//     { id: "4", title: "The Last Detective", author: "Sarah Mills", genre: "Crime and Mystery", upvotes: 112, description: "In a city where crime has been eradicated, one last murder changes everything.", turnCount: 31 },
-//     { id: "5", title: "Hearts of Iron", author: "Alex Rivera", genre: "Romance", upvotes: 98, description: "Two rival knights discover love on the battlefield.", turnCount: 19 },
-// ];
 
 export function Discover() {
 
     const [sortBy, setSortBy] = useState<"hot" | "new" | "top">("hot");
     const [selectedGenre, setSelectedGenre] = useState("All");
     const [showFilters, setShowFilters] = useState(false);
-    const [stories, setStories] = useState<DiscoverResult[]>([]);
+    const [stories, setStories] = useState<DiscoverResult["stories"]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const initialise = useUpvotesStore(s => s.initialise);
 
     const [page, setPage] = useState(1);
     const [totalPages, setTotalpages] = useState(1);
@@ -43,7 +38,10 @@ export function Discover() {
                 page
             });
 
-            if (response.data) setStories(response.data);
+            if (response.data) {
+                setStories(response.data.stories);
+                initialise(response.data.userUpvotedStoryIds, response.data.stories);
+            };
             if (response.meta?.total && response.meta?.pageSize) setTotalpages(Math.ceil(response.meta.total / response.meta.pageSize));
 
             setIsLoading(false);

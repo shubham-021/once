@@ -26,6 +26,6 @@ export function error(c: Context, code: ErrorCode, customMessage?: string, data?
     return c.json({ error: { message, code, data } } as ApiResponse<never>, status);
 }
 
-export function paginated<T>(c: Context, data: T[], meta: { page: number; pageSize: number; total: number }) {
-    return c.json({ data, meta } as ApiResponse<T[]>, 200);
+export function paginated<T>(c: Context, data: T, meta: { page: number; pageSize: number; total: number }) {
+    return c.json({ data, meta } as ApiResponse<T>, 200);
 }

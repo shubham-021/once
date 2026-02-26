@@ -1,9 +1,9 @@
 import { Hono } from "hono";
-import { db, eq, desc, and, count, gte } from "@once/database";
-import { codexEntries, drafts, protagonists, scenes, stories } from "@once/database/schema";
+import { db, eq, desc, and, count, gte, inArray } from "@once/database";
+import { codexEntries, drafts, protagonists, scenes, stories, storyUpvotes } from "@once/database/schema";
 import { success, error, paginated } from "@/lib/response";
 import { createStorySchema, GenreFilter } from "@once/shared/schemas";
-import { requireAuth, type AuthVariables } from "@/middleware/auth";
+import { authMiddleware, requireAuth, type AuthVariables } from "@/middleware/auth";
 import { checkCredits, createStory, InsufficientCreditsError } from "@once/core";
 
 const crudRouter = new Hono<{ Variables: AuthVariables }>();
@@ -30,7 +30,7 @@ crudRouter.get("/discover/stats", async (c) => {
     return success(c, { storiesPublished: storiesCount[0].count, activeWriters: writersCount.length })
 })
 
-crudRouter.get("/discover", async (c) => {
+crudRouter.get("/discover", authMiddleware, async (c) => {
     const page = Number(c.req.query("page") || "1");
     const limit = Number(c.req.query("limit") || "20");
     const offset = (page - 1) * limit;
@@ -52,22 +52,37 @@ crudRouter.get("/discover", async (c) => {
         with: { user: true },
     });
 
-    const formattedStories = publicStories.map(story => ({
-        id: String(story.id),
-        title: story.title,
-        author: story.user.name,
-        genre: story.genre,
-        upvotes: story.upvotes,
-        description: story.description ?? "",
-        publicDescription: story.publicDescription ?? "",
-        turnCount: story.turnCount
-    }))
+    const postIds: Array<number> = [];
+
+    const formattedStories = publicStories.map(story => {
+        postIds.push(story.id);
+
+        return {
+            id: String(story.id),
+            title: story.title,
+            author: story.user.name,
+            genre: story.genre,
+            upvotes: story.upvotes,
+            description: story.description ?? "",
+            publicDescription: story.publicDescription ?? "",
+            turnCount: story.turnCount
+        }
+    })
+
+    let userUpvotedStoryIds: Array<number> = [];
+    const user = c.get("user");
+    if(user && postIds.length > 0){
+        const upvotes = await db.query.storyUpvotes.findMany({where: and(eq(storyUpvotes.userId, user.id), inArray(storyUpvotes.storyId, postIds))});
+        userUpvotedStoryIds = upvotes.map(u => u.storyId);
+    }
 
     const total = await db.select({ count: stories.id })
         .from(stories)
         .where(and(...conditions));
 
-    return paginated(c, formattedStories, { page, pageSize: limit, total: total[0]?.count || 0 });
+    const response = { stories: formattedStories, userUpvotedStoryIds}
+
+    return paginated(c, response, { page, pageSize: limit, total: total[0]?.count || 0 });
 });
 
 crudRouter.get("/:id", async (c) => {

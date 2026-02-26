@@ -1,52 +1,33 @@
-"use client"
-
 import { storiesApi } from "@/lib/api";
-import { useState, useEffect } from "react"
+import { useUpvotesStore } from "@/stores/upvotes-store";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-interface UseUpvoteOptions {
-    storyId: string;
-    initialUpvotes: number;
-    initialHasUpvoted?: boolean;
-}
+export function useUpvote(storyId: string) {
+    const id = Number(storyId);
 
-export function useUpvote({ storyId, initialHasUpvoted, initialUpvotes }: UseUpvoteOptions) {
-    const [hasUpvoted, setHasUpvoted] = useState(initialHasUpvoted);
-    const [upvoteCount, setUpvoteCount] = useState(initialUpvotes);
     const [isUpvoting, setIsUpvoting] = useState(false);
+    const hasUpvoted = useUpvotesStore(s => s.upvotedIds.has(id));
+    const upvoteCount = useUpvotesStore(s => s.counts[id] ?? 0);
+    const toggle = useUpvotesStore(s => s.toggle);
 
 
-    useEffect(() => {
-        // const has
-        setUpvoteCount(initialUpvotes);
-    }, [initialUpvotes]);
+    const toggleUpvote = useCallback(async () => {
+        try {
+            setIsUpvoting(true);
+            const countBeforeToggle = upvoteCount;
+            toggle(id, countBeforeToggle);
 
-    const toggleUpvote = async () => {
-        if (isUpvoting) return;
+            const result = await storiesApi.upvote(storyId);
 
-        const wasUpvoted = hasUpvoted;
-        const previousCount = upvoteCount;
-
-        setHasUpvoted(!wasUpvoted)
-        setUpvoteCount(wasUpvoted ? previousCount - 1 : previousCount + 1);
-
-        setIsUpvoting(true);
-
-        const result = await storiesApi.upvote(storyId);
-
-        if (result.error) {
-            setHasUpvoted(wasUpvoted);
-            setUpvoteCount(previousCount);
-            toast.error(result.error.message);
+            if (result.error) {
+                toggle(id, hasUpvoted ? countBeforeToggle - 1 : countBeforeToggle + 1);
+                toast.error(result.error.message);
+            }
+        } finally {
+            setIsUpvoting(false);
         }
+    }, [id, storyId, upvoteCount, toggle]);
 
-        setIsUpvoting(false);
-    }
-
-    return {
-        hasUpvoted,
-        upvoteCount,
-        isUpvoting,
-        toggleUpvote,
-    };
+    return { hasUpvoted, upvoteCount, toggleUpvote, isUpvoting };
 }

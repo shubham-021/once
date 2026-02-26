@@ -53,6 +53,23 @@ social.post("/:id/upvote", requireAuth, async (c) => {
     }
 });
 
+social.get("/:id/upvote", requireAuth, async (c) => {
+    const storyId = parseInt(c.req.param("id"))
+    const user = c.get("user");
+
+    if (!user) return error(c, "UNAUTHORIZED");
+
+    const story = await db.query.stories.findFirst({
+        where: eq(stories.id, storyId)
+    });
+
+    if (!story) return error(c, "NOT_FOUND", "Story not found");
+
+    if (story.visibility !== "public" && story.userId !== user.id) {
+        return error(c, "FORBIDDEN", "Cannot see upvote of private stories");
+    }
+});
+
 social.post("/:id/notes", requireAuth, async (c) => {
     const storyId = parseInt(c.req.param("id"));
     const user = c.get("user");

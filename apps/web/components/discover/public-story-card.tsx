@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowBigUp, Layers, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { DiscoverResult } from "@once/shared";
 import { useRouter } from "next/navigation";
 
 
-export function PublicStoryCard({ story }: { story: DiscoverResult }) {
+export function PublicStoryCard({ story }: { story: DiscoverResult["stories"][number] }) {
 
     const router = useRouter();
 
@@ -18,16 +18,13 @@ export function PublicStoryCard({ story }: { story: DiscoverResult }) {
         router.push(`/read/${story.id}`);
     }
 
-    const { hasUpvoted, upvoteCount, isUpvoting, toggleUpvote } = useUpvote({
-        storyId: story.id,
-        initialUpvotes: story.upvotes,
-    });
+    const { hasUpvoted, upvoteCount, toggleUpvote, isUpvoting } = useUpvote(story.id);
 
     return (
         <div onClick={handleClick} className="group h-full border border-line bg-surface p-5 flex flex-col rounded-xl cursor-pointer">
-                <h2 className="text-lg text-accent italic cursor-pointer">
-                    {story.title}
-                </h2>
+            <h2 className="text-lg text-accent italic cursor-pointer">
+                {story.title}
+            </h2>
             <p className="mt-1 text-sm text-muted flex items-center gap-1">
                 <User className="size-3" />
                 {story.author}
@@ -42,7 +39,10 @@ export function PublicStoryCard({ story }: { story: DiscoverResult }) {
                     <span>{story.genre}</span>
                 </div>
                 <button
-                    onClick={toggleUpvote}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleUpvote();
+                    }}
                     disabled={isUpvoting}
                     className={cn(
                         "flex items-center border rounded-lg overflow-hidden transition-colors cursor-pointer",

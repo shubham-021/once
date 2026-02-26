@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { ArrowBigUp, ArrowLeft, User } from "lucide-react";
-import Link from "next/link";
 import { ForkDialog } from "./fork-dialog";
 import { GitFork } from "lucide-react";
 import { cn, formatAuthorName } from "@/lib/utils";
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { Story, Scene } from "@once/shared"
 import { getToastErrorMessage } from "@/lib/error-mapper";
+import { useUpvotesStore } from "@/stores/upvotes-store";
 
 export function StoryReader({ storyId }: { storyId: string }) {
 
@@ -28,10 +28,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
 
     const [forkInProgress, setForkInProgress] = useState<boolean>(false);
 
-    const { hasUpvoted, upvoteCount, isUpvoting, toggleUpvote } = useUpvote({
-        storyId: storyId,
-        initialUpvotes: story?.upvotes ?? 0,
-    });
+    const { hasUpvoted, upvoteCount, isUpvoting, toggleUpvote } = useUpvote(storyId);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -40,7 +37,16 @@ export function StoryReader({ storyId }: { storyId: string }) {
                 storiesApi.getScenes(storyId),
             ]);
 
-            if (storyRes.data) setStory(storyRes.data);
+            if (storyRes.data) {
+                setStory(storyRes.data);
+                const storeState = useUpvotesStore.getState();
+                if (storeState.counts[Number(storyId)] === undefined) {
+                    storeState.initialise(
+                        storeState.upvotedIds.size > 0 ? Array.from(storeState.upvotedIds) : [],
+                        [{ id: storyId, upvotes: storyRes.data.upvotes }]
+                    );
+                }
+            }
             if (scenesRes.data) setScenes(scenesRes.data.storyScenes);
             setIsLoading(false);
         };
@@ -91,7 +97,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
                             <>
                                 <User className="size-3 shrink-0" />
                                 <span className="truncate">{formatAuthorName(story.user.name)}</span>
-                                <span className="size-1 bg-accent rounded-full opacity-80 hidden sm:inline"/>
+                                <span className="size-1 bg-accent rounded-full opacity-80 hidden sm:inline" />
                             </>
                         }
                         <span className="hidden sm:inline">{story.genre}</span>
