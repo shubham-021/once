@@ -152,17 +152,19 @@ export function StoryReader({ storyId }: { storyId: string }) {
 
             <main className="flex-1 overflow-y-auto" data-lenis-prevent>
                 <div className="max-w-5xl mx-auto px-6 py-8">
-                    <div className="mb-8 p-4 border border-line bg-surface rounded-xl">
-                        <p className="text-sm text-muted">Playing as</p>
-                        <p className="text-lg text-foreground">{story.protagonist?.[0]?.name}</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {story.protagonist?.[0]?.currentTraits?.map((trait) => (
-                                <span key={trait} className="text-xs text-muted border border-line px-2 py-0.5 rounded-lg">
-                                    {trait}
-                                </span>
-                            ))}
+                    {(story.storyMode === "protagonist") && (
+                        <div className="mb-8 p-4 border border-line bg-surface rounded-xl">
+                            <p className="text-sm text-muted">Playing as</p>
+                            <p className="text-lg text-foreground">{story.protagonist?.[0]?.name}</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {story.protagonist?.[0]?.currentTraits?.map((trait) => (
+                                    <span key={trait} className="text-xs text-muted border border-line px-2 py-0.5 rounded-lg">
+                                        {trait}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="space-y-8">
                         {scenes.map((scene, index) => (
