@@ -10,7 +10,7 @@ const crudRouter = new Hono<{ Variables: AuthVariables }>();
 
 crudRouter.get("/", requireAuth, async (c) => {
     const user = c.get("user")!;
-    try{
+    try {
         const userStories = await db.query.stories.findMany({
             where: eq(stories.userId, user.id),
             orderBy: desc(stories.updatedAt)
@@ -18,7 +18,7 @@ crudRouter.get("/", requireAuth, async (c) => {
 
         return success(c, userStories);
     } catch (err) {
-        return error(c,"INTERNAL_ERROR",(err as Error).message);
+        return error(c, "INTERNAL_ERROR", (err as Error).message);
     }
 });
 
@@ -71,16 +71,18 @@ crudRouter.get("/discover", authMiddleware, async (c) => {
 
     let userUpvotedStoryIds: Array<number> = [];
     const user = c.get("user");
-    if(user && postIds.length > 0){
-        const upvotes = await db.query.storyUpvotes.findMany({where: and(eq(storyUpvotes.userId, user.id), inArray(storyUpvotes.storyId, postIds))});
+    if (user && postIds.length > 0) {
+        const upvotes = await db.query.storyUpvotes.findMany({ where: and(eq(storyUpvotes.userId, user.id), inArray(storyUpvotes.storyId, postIds)) });
         userUpvotedStoryIds = upvotes.map(u => u.storyId);
     }
 
-    const total = await db.select({ count: stories.id })
-        .from(stories)
-        .where(and(...conditions));
+    const total = await db.select({ count: count(stories.id) }).from(stories).where(and(...conditions));
 
-    const response = { stories: formattedStories, userUpvotedStoryIds}
+    const response = { stories: formattedStories, userUpvotedStoryIds }
+
+    // console.log('[DEBUG] Page: ', page);
+    // console.log('[DEBUG] pageSize: ', limit);
+    // console.log('[DEBUG] total: ', JSON.stringify(total));
 
     return paginated(c, response, { page, pageSize: limit, total: total[0]?.count || 0 });
 });
@@ -182,30 +184,30 @@ crudRouter.delete("/undo/:id", requireAuth, async (c) => {
         return error(c, "NOT_FOUND", "Invalid turn number");
     }
 
-    if(turnNumber === 1) return error(c,"FORBIDDEN","First scene cannot be undone");
+    if (turnNumber === 1) return error(c, "FORBIDDEN", "First scene cannot be undone");
 
-    try{
+    try {
         await db.transaction(async (tx) => {
-            const story = await tx.query.stories.findFirst({where: eq(stories.id, storyId),with: { codexEntries: true }});
-            if(!story) throw {type: "story"};
+            const story = await tx.query.stories.findFirst({ where: eq(stories.id, storyId), with: { codexEntries: true } });
+            if (!story) throw { type: "story" };
 
-            const scene = await tx.query.scenes.findFirst({where: and(eq(scenes.storyId, storyId), eq(scenes.turnNumber, turnNumber-1))});
-            if(!scene) throw {type: "scene"};
+            const scene = await tx.query.scenes.findFirst({ where: and(eq(scenes.storyId, storyId), eq(scenes.turnNumber, turnNumber - 1)) });
+            if (!scene) throw { type: "scene" };
 
             const protagonistSnapshot = scene.protagonistSnapshot;
 
-            if(protagonistSnapshot){
-                const {id, ...toBeUpdated} = protagonistSnapshot;
+            if (protagonistSnapshot) {
+                const { id, ...toBeUpdated } = protagonistSnapshot;
                 await tx.update(protagonists).set(toBeUpdated).where(eq(protagonists.storyId, storyId));
             }
 
             const codexEntriesFromTable = story.codexEntries;
             const codexToBeUndone = codexEntriesFromTable.filter(c => c.firstMentionedSceneId < turnNumber).map(c => {
-                let metaData:Record<number,Record<string,string>> = {};
-                if(c.metadata){
-                    for (const [k,v] of Object.entries(c.metadata)){
+                let metaData: Record<number, Record<string, string>> = {};
+                if (c.metadata) {
+                    for (const [k, v] of Object.entries(c.metadata)) {
                         const localTurnNumber = Number(k);
-                        if(localTurnNumber < turnNumber) metaData[localTurnNumber] = v;
+                        if (localTurnNumber < turnNumber) metaData[localTurnNumber] = v;
                     }
                 }
 
@@ -215,32 +217,32 @@ crudRouter.delete("/undo/:id", requireAuth, async (c) => {
                 }
             })
 
-            if(codexToBeUndone.length > 0){
+            if (codexToBeUndone.length > 0) {
                 await tx.delete(codexEntries).where(and(eq(codexEntries.storyId, storyId), gte(codexEntries.firstMentionedSceneId, turnNumber)));
-                for (const codex of codexToBeUndone){
-                    if(codex){
-                        if(Object.keys(codex.metadata).length === 0) {
+                for (const codex of codexToBeUndone) {
+                    if (codex) {
+                        if (Object.keys(codex.metadata).length === 0) {
                             await tx.delete(codexEntries).where(and(eq(codexEntries.storyId, storyId), eq(codexEntries.id, codex.id)));
                         } else {
-                            await tx.update(codexEntries).set({metadata: codex.metadata}).where(and(eq(codexEntries.storyId, storyId), eq(codexEntries.id,codex.id)));
+                            await tx.update(codexEntries).set({ metadata: codex.metadata }).where(and(eq(codexEntries.storyId, storyId), eq(codexEntries.id, codex.id)));
                         }
                     }
                 }
             }
 
-            await tx.delete(drafts).where(and(eq(drafts.storyId,storyId), gte(drafts.turnNumber, turnNumber)))
-            await tx.delete(scenes).where(and(eq(scenes.storyId,storyId), gte(scenes.turnNumber, turnNumber)));
-            await tx.update(stories).set({turnCount: scene.turnNumber});
+            await tx.delete(drafts).where(and(eq(drafts.storyId, storyId), gte(drafts.turnNumber, turnNumber)))
+            await tx.delete(scenes).where(and(eq(scenes.storyId, storyId), gte(scenes.turnNumber, turnNumber)));
+            await tx.update(stories).set({ turnCount: scene.turnNumber });
         });
 
-        return success(c,{data: "Success"},200);
-    } catch (err:any) {
-        if(err.type){
-            if(err.type === "story") return error(c,"STORY_NOT_FOUND");
-            else if(err.type === "scene") return error(c,"SCENE_NOT_FOUND");
+        return success(c, { data: "Success" }, 200);
+    } catch (err: any) {
+        if (err.type) {
+            if (err.type === "story") return error(c, "STORY_NOT_FOUND");
+            else if (err.type === "scene") return error(c, "SCENE_NOT_FOUND");
         }
 
-        return error(c,"INTERNAL_ERROR", (err as Error).message);
+        return error(c, "INTERNAL_ERROR", (err as Error).message);
     }
 })
 

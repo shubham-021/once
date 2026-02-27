@@ -29,8 +29,8 @@ export function Discover() {
     const [totalPages, setTotalpages] = useState(1);
     const [stats, setStats] = useState<{ storiesPublished: number; activeWriters: number } | null>(null);
 
-    console.log('[DEBUG] Discover page: ', JSON.stringify(page));
-    console.log('[DEBUG] Discover totalPages: ', JSON.stringify(totalPages));
+    // console.log('[DEBUG] Discover page: ', JSON.stringify(page));
+    // console.log('[DEBUG] Discover totalPages: ', JSON.stringify(totalPages));
 
     useEffect(() => {
         const fetchStories = async () => {
@@ -45,7 +45,7 @@ export function Discover() {
                 setStories(response.data.stories);
                 initialise(response.data.userUpvotedStoryIds, response.data.stories);
             };
-            console.log('[DEBUG] Discover page response: ', JSON.stringify(response));
+            // console.log('[DEBUG] Discover page response: ', JSON.stringify(response));
             if (response.meta?.total && response.meta?.pageSize) setTotalpages(Math.ceil(response.meta.total / response.meta.pageSize));
 
             setIsLoading(false);
