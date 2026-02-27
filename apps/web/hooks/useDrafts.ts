@@ -3,6 +3,7 @@
 import { DraftAcceptResult, draftsApi } from "@/lib/api/drafts";
 import { getToastErrorMessage } from "@/lib/error-mapper";
 import { useCreateStore } from "@/stores/create-store";
+import { useCreditStore } from "@/stores/credits-store";
 import { CreateStoryInput } from "@once/shared";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
@@ -22,6 +23,7 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
     const [isAccepting, setIsAccepting] = useState(false);
 
     const setIsCreating = useCreateStore(s => s.setIsCreating);
+    const setBalance = useCreditStore(s => s.setBalance);
 
     const firstChunk = useRef<boolean>(true);
 
@@ -47,7 +49,10 @@ export function useDraft({ storyId, onAccept, onDiscard }: UseDraftOptions) {
                     setDraft(prev => prev ? { ...prev, narration: prev.narration + chunk } : null);
                 },
                 //onComplete
-                (data) => setDraft(prev => prev ? { ...prev, id: data.draftId } : null),
+                (data) => {
+                    setDraft(prev => prev ? { ...prev, id: data.draftId } : null);
+                    setBalance(data.credits);
+                },
                 //onError
                 (error) => {
                     setCreatingFirstDraft(false);

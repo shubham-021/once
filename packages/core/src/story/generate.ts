@@ -55,7 +55,25 @@ interface OpeningContext {
     title: string;
     genre: string;
     storyIdea?: string;
-    worldDescription?: string;
+    worldDescription?: string | null;
+    promptForOnce?: string;
+    startingScene?: string;
+    cast?: Array<{ name: string; description: string }>;
+    castMode?: 'strict' | 'flexible';
+    protagonist?: {
+        name: string;
+        description?: string;
+        traits: string[];
+    };
+}
+
+interface systemPromptContext {
+    narrativeStance: NarrativeStance;
+    storyMode: StoryMode;
+    title: string;
+    genre: string;
+    storyIdea?: string;
+    worldDescription?: string | null;
     promptForOnce?: string;
     startingScene?: string;
     cast?: Array<{ name: string; description: string }>;
@@ -92,15 +110,9 @@ interface OpeningRevisionContext {
     storyIdea?: string | null;
 }
 
-export async function generateOpeningScene(ctx: InitializeContext, usageCollector?: UsageCollector) {
+export async function generateOpeningScene(ctx: systemPromptContext, usageCollector?: UsageCollector) {
     const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode);
-    const initPrompt = buildInitializePrompt({
-        title: ctx.title,
-        genre: ctx.genre,
-        stance: ctx.narrativeStance,
-        mode: ctx.storyMode,
-        protagonist: ctx.protagonist,
-    });
+    const initPrompt = buildInitializePrompt({startingScene: ctx.startingScene});
 
     return generateStructuredWithTracking(
         systemPrompt,
@@ -111,19 +123,9 @@ export async function generateOpeningScene(ctx: InitializeContext, usageCollecto
     );
 }
 
-export async function* streamOpeningScene(ctx: OpeningContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
-    const initPrompt = buildInitializePrompt({
-        title: ctx.title,
-        genre: ctx.genre,
-        stance: ctx.narrativeStance,
-        mode: ctx.storyMode,
-        plot: ctx.storyIdea,
-        startingScene: ctx.startingScene,
-        cast: ctx.cast,
-        castMode: ctx.castMode,
-        protagonist: ctx.protagonist,
-    });
+export async function* streamOpeningScene(ctx: systemPromptContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
+    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.title, ctx.genre, ctx.storyIdea, ctx.protagonist ,ctx.worldDescription, ctx.promptForOnce, ctx.cast, ctx.castMode);
+    const initPrompt = buildInitializePrompt({ startingScene: ctx.startingScene });
 
     yield* streamNarrationWithTracking(systemPrompt, initPrompt, usageCollector);
 }
@@ -136,34 +138,24 @@ export async function* streamOpeningRevision(ctx: OpeningRevisionContext, usageC
 }
 
 export async function generateOpeningNarration(ctx: OpeningContext, usageCollector?: UsageCollector): Promise<string> {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
-    const initPrompt = buildInitializePrompt({
-        title: ctx.title,
-        genre: ctx.genre,
-        stance: ctx.narrativeStance,
-        mode: ctx.storyMode,
-        plot: ctx.storyIdea,
-        startingScene: ctx.startingScene,
-        cast: ctx.cast,
-        castMode: ctx.castMode,
-        protagonist: ctx.protagonist,
-    });
+    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.title, ctx.genre, ctx.storyIdea, ctx.protagonist ,ctx.worldDescription, ctx.promptForOnce, ctx.cast, ctx.castMode);
+    const initPrompt = buildInitializePrompt({ startingScene: ctx.startingScene });
 
     return generateResponseWithTracking(systemPrompt, initPrompt, usageCollector);
 }
 
-export async function generateContinuation(ctx: ContinueContext, usageCollector?: UsageCollector) {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
+export async function generateContinuation(syst: systemPromptContext, cont: ContinueContext, usageCollector?: UsageCollector) {
+    const systemPrompt = buildSystemPrompt(syst.narrativeStance, syst.storyMode, syst.title, syst.genre, syst.storyIdea, syst.protagonist ,syst.worldDescription, syst.promptForOnce, syst.cast, syst.castMode);
 
     const continuePrompt = buildContinuePrompt({
-        stance: ctx.narrativeStance,
-        mode: ctx.storyMode,
-        protagonist: ctx.protagonist,
-        recentScenes: ctx.recentScenes,
-        userAction: ctx.userAction,
-        triggeredEchoes: ctx.triggeredEchoes,
-        factualKnowledge: ctx.factualKnowledge,
-        introducedCharacters: ctx.introducedCharacters
+        stance: cont.narrativeStance,
+        mode: cont.storyMode,
+        protagonist: cont.protagonist,
+        recentScenes: cont.recentScenes,
+        userAction: cont.userAction,
+        triggeredEchoes: cont.triggeredEchoes,
+        factualKnowledge: cont.factualKnowledge,
+        introducedCharacters: cont.introducedCharacters
     });
 
     return generateStructuredWithTracking(
@@ -175,17 +167,17 @@ export async function generateContinuation(ctx: ContinueContext, usageCollector?
     );
 }
 
-export async function* streamNarrationOnly(ctx: ContinueContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.worldDescription, ctx.promptForOnce);
+export async function* streamNarrationOnly(syst: systemPromptContext, cont: ContinueContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
+    const systemPrompt = buildSystemPrompt(syst.narrativeStance, syst.storyMode, syst.title, syst.genre, syst.storyIdea, syst.protagonist ,syst.worldDescription, syst.promptForOnce, syst.cast, syst.castMode);
     const continuePrompt = buildContinuePrompt({
-        stance: ctx.narrativeStance,
-        mode: ctx.storyMode,
-        protagonist: ctx.protagonist,
-        recentScenes: ctx.recentScenes,
-        userAction: ctx.userAction,
-        triggeredEchoes: ctx.triggeredEchoes,
-        factualKnowledge: ctx.factualKnowledge,
-        introducedCharacters: ctx.introducedCharacters
+        stance: cont.narrativeStance,
+        mode: cont.storyMode,
+        protagonist: cont.protagonist,
+        recentScenes: cont.recentScenes,
+        userAction: cont.userAction,
+        triggeredEchoes: cont.triggeredEchoes,
+        factualKnowledge: cont.factualKnowledge,
+        introducedCharacters: cont.introducedCharacters
     });
 
     yield* streamNarrationWithTracking(systemPrompt, continuePrompt, usageCollector);

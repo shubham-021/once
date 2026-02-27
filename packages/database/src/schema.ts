@@ -39,6 +39,11 @@ export const genreEnum = pgEnum("genre", [
     "Crime and Mystery"
 ]);
 
+export const castModeEnum = pgEnum("castMode", [
+    "flexible",
+    "strict"
+]);
+
 export const stories = pgTable("stories", {
     id: serial("id").primaryKey(),
     userId: text("user_id").notNull(), // References auth provider's user table
@@ -50,6 +55,8 @@ export const stories = pgTable("stories", {
     narrativeStance: narrativeStanceEnum("narrative_stance").default("heroic").notNull(),
     storyMode: storyModeEnum("story_mode").default("protagonist").notNull(),
     worldDescription: text("world_description"),
+    castMode: castModeEnum("cast_mode").default("flexible"),
+    castList: json("cast_list").$type<Array<{name: string, description: string}>>(),
     promptForOnce: text("prompt_for_once"),
     startingScene: text("starting_scene"),
     status: storyStatusEnum("status").default("active").notNull(),
@@ -120,7 +127,6 @@ export const echoes = pgTable("echoes", {
 
     sourceSceneId: integer("source_scene_id").notNull(),
     description: text("description").notNull(),
-    triggerCondition: text("trigger_condition").notNull(),
     status: echoStatusEnum("status").default("pending").notNull(),
     resolvedAtSceneId: integer("resolved_at_scene_id"),
 

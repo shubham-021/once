@@ -9,29 +9,58 @@ interface DeferredCharContext {
     protagonistLocation: string;
     protagonistState: string;
     userAction: string;
-    recentNarration: string;
+    recentScenes: Array<{
+        userAction: string;
+        narration: string;
+    }>;
 }
 
 export function buildDeferredCharPrompt(ctx: DeferredCharContext): string {
     const characterList = ctx.pendingCharacters.map(c =>
-        `- ID ${c.id}: "${c.name}" (${c.role || "unknown role"})
-         Trigger: "${c.triggerCondition}"`
+        `
+            <character_${c.id}>
+                name: ${c.name}
+                role: ${c.role || "unknown role"}
+                description: ${c.description || "no description available"}
+                trigger: ${c.triggerCondition}
+            </character_${c.id}>
+        `
     ).join("\n");
 
-    return `Evaluate which deferred characters should be introduced in the next scene.
+    const scenes = `
+        <recent_scenes>
+            ${ctx.recentScenes.map((s, i) =>
+                `<scene_${i + 1}>\n
+                    <user_action>
+                        ${s.userAction}
+                    </user_action>
+                    <narration>
+                        ${s.narration}
+                    </narration>
+                <scene_${i + 1}>`
+            ).join("\n\n")}
+        </recent_scenes>
+    `
 
-        ## Pending Characters
-        ${characterList}
+    return `Based on the provided characters list, current context and user action, evaluate which character need to appear in the next scene.
 
-        ## Current Context
-        - Location: ${ctx.protagonistLocation}
-        - Protagonist State: ${ctx.protagonistState}
-        - Player Action: "${ctx.userAction}"
-        - Recent Scene: ${ctx.recentNarration.slice(0, 500)}...
+        <pending_characters>
+            ${characterList}
+        </pending_characters>
 
-        ## Task
-        Return the IDs of characters whose trigger conditions are NOW met.
-        Only trigger if the condition is clearly satisfied.
-        Empty array if none should trigger.
+        <current_context>
+            location: ${ctx.protagonistLocation}
+            protagonist State: ${ctx.protagonistState}
+        </current_context>
+
+        <recent_scenes>
+            ${scenes}
+        </recent_scenes>
+
+        <rules>
+            Return the IDs of characters whose trigger conditions are NOW met.
+            Only trigger if the condition is clearly satisfied.
+            Empty array if none should trigger.
+        <rules>
     `;
 }

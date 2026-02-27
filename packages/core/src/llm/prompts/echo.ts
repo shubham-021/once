@@ -2,12 +2,14 @@ interface EchoEvalContext {
     pendingEchoes: Array<{
         id: number;
         description: string;
-        triggerCondition: string;
     }>;
     protagonistLocation: string;
     protagonistState: string;
     userAction: string;
-    recentNarration: string;
+    recentScenes: Array<{
+        userAction: string;
+        narration: string;
+    }>;
 }
 
 export function buildEchoEvalPrompt(ctx: EchoEvalContext): string {
@@ -15,31 +17,56 @@ export function buildEchoEvalPrompt(ctx: EchoEvalContext): string {
         return "";
     }
 
+    const recentContext = `
+        <recent_scenes>
+            ${ctx.recentScenes.map((s, i) =>
+                `<scene_${i + 1}>\n
+                    <user_action>
+                        ${s.userAction}
+                    </user_action>
+                    <narration>
+                        ${s.narration}
+                    </narration>
+                <scene_${i + 1}>`
+            ).join("\n\n")}
+        </recent_scenes>
+    `
+
     const echoList = ctx.pendingEchoes.map(e =>
-        `- Echo #${e.id}: "${e.description}" — Triggers: "${e.triggerCondition}"`
+        `
+        <echo_${e.id}>
+            ${e.description}
+        </echo_${e.id}>
+        `
     ).join("\n");
 
-    return `You are evaluating which story echoes should trigger.
+    return `Based on the echo description, user action and current contexts provided decide which echo should be resolved now.
 
-        ## Current Context
-        - Location: ${ctx.protagonistLocation}
-        - Protagonist State: ${ctx.protagonistState}
-        - Recent events: ${ctx.recentNarration}
+        <current_context>
+            location: ${ctx.protagonistLocation}
+            protagonist state: ${ctx.protagonistState}
+            ${recentContext}
+        </current_context>
 
-        ## Player's Current Action
-        "${ctx.userAction}"
+        <current_user_action>
+            ${ctx.userAction}
+        </current_user_action>
 
-        ## Pending Echoes
-        ${echoList}
+        <pending_echoes>
+            ${echoList}
+        </pending_echoes>
 
-        ## Task
-        For each echo, decide if its trigger condition is now met based on the current context and action.
-        An echo should trigger if:
-        1. The trigger condition matches the current situation
-        2. The timing feels narratively appropriate
-        3. It would enhance the story (not disrupt it)
+        <rule>
+            An echo should trigger if:
+            <point_1>
+                The timing feels narratively appropriate
+            </point_1>
+            <point_2>
+                It would enhance the story (not disrupt it)
+            </point_2>    
+        </rule>
 
-        Be selective — not every echo needs to trigger. Surprise is better than predictability.
+        Be selective, not every echo needs to trigger. Surprise is better than predictability.
         Return ONLY the IDs of echoes that should trigger now.
     `;
 }

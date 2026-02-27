@@ -121,16 +121,19 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
                     } : null,
                 }).returning();
 
+                const userCredit = await tx.query.userCredits.findFirst({
+                    where: eq(userCredits.userId, user.id),
+                });
+
+                if (!userCredit) throw new Error(`No credit record for user ${user.id}`);
+
+                let newBalance: number = userCredit.balance;
+
                 if (usageCollector) {
                     const creditsUsed = usageCollector.getCredits();
                     const usage = usageCollector.getUsage();
-                    const userCredit = await tx.query.userCredits.findFirst({
-                        where: eq(userCredits.userId, user.id),
-                    });
 
-                    if (!userCredit) throw new Error(`No credit record for user ${user.id}`);
-
-                    const newBalance = userCredit.balance - creditsUsed;
+                    newBalance = userCredit.balance - creditsUsed;
 
                     await tx.update(userCredits).set({
                         balance: newBalance,
@@ -153,12 +156,12 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
                         embeddingTokens: usage.embedding,
                     });
                 }
-                return { draft };
+                return { draft, newBalance };
             });
 
             await stream.writeSSE({
                 event: 'complete',
-                data: JSON.stringify({ draftId: result.draft.id })
+                data: JSON.stringify({ draftId: result.draft.id, credits: result.newBalance })
             })
 
             // return success(c, { storyId: initialData.newStory.id, draftId: result.draft.id });
@@ -236,15 +239,18 @@ draftsRouter.post("/draft/:storyId/continue", requireAuth, async (c) => {
             storyId,
             pendingEchoes: pendingEchoes.map((e) => ({
                 id: e.id,
-                description: e.description,
-                triggerCondition: e.triggerCondition,
+                description: e.description
             })),
             protagonistLocation: activeProtagonist?.currentLocation || "",
             protagonistState: activeProtagonist
                 ? `Health: ${activeProtagonist.health}, Energy: ${activeProtagonist.energy}`
                 : "",
             userAction,
-            recentNarration: lastScene?.narration || "",
+            // recentNarration: lastScene?.narration || "",
+            recentScenes: story.scenes.slice().reverse().map((s) => ({
+                userAction: s.userAction,
+                narration: s.narration,
+            }))
         }
     );
 
@@ -263,7 +269,10 @@ draftsRouter.post("/draft/:storyId/continue", requireAuth, async (c) => {
                 ? `Health: ${activeProtagonist.health}, Energy: ${activeProtagonist.energy}`
                 : "",
             userAction,
-            recentNarration: lastScene?.narration || "",
+            recentScenes: story.scenes.slice().reverse().map((s) => ({
+                userAction: s.userAction,
+                narration: s.narration,
+            }))
         }
     );
 
@@ -275,6 +284,20 @@ draftsRouter.post("/draft/:storyId/continue", requireAuth, async (c) => {
 
         try {
             const narrationStream = streamNarrationOnly({
+                narrativeStance: story.narrativeStance,
+                storyMode: story.storyMode,
+                title: story.title,
+                genre: story.genre,
+                storyIdea: story.description ?? "",
+                worldDescription: story.worldDescription,
+                castMode: story.castMode ?? 'flexible',
+                cast: story.castList ?? [],
+                protagonist: {
+                    name: story.protagonist[0].name,
+                    description: story.protagonist[0].description ?? "",
+                    traits: story.protagonist[0].baseTraits
+                }
+            },{
                 promptForOnce: story.promptForOnce,
                 worldDescription: story.worldDescription,
                 narrativeStance: story.narrativeStance,
@@ -565,7 +588,7 @@ draftsRouter.put("/draft/:draftId/accept", requireAuth, async (c) => {
                 ...draft.triggeredCharacters.map((c) => markCharacterIntroduced(c.id, newScene.id, tx)),
                 storySceneMemory(newScene.id.toString(), draft.narration, draft.storyId, draft.turnNumber, entities, undefined, usageCollector),
                 resolveEchoes(draft.triggeredEchoes.map((e) => e.id), newScene.id, tx),
-                extraction.echoPlanted ? plantEcho(draft.storyId, newScene.id, extraction.echoPlanted.description, extraction.echoPlanted.triggerCondition, tx) : Promise.resolve(),
+                extraction.echoPlanted ? plantEcho(draft.storyId, newScene.id, extraction.echoPlanted.description, tx) : Promise.resolve(),
                 extractCodexEntries(draft.storyId, draft.narration, newScene.turnNumber, tx, undefined, usageCollector).then(e => { codexResult = e }),
             ]);
 

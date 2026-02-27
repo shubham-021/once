@@ -11,14 +11,21 @@ export function buildSceneExtractionPrompt(narration: string, protagonist: {
     inventory: string[];
 }): string {
     return `
-        ## Protagonist: ${protagonist.name}
-        ${protagonist.description ? `Description: ${protagonist.description}` : ""}
-        Health: ${protagonist.health}/100, Energy: ${protagonist.energy}/100
-        Location: ${protagonist.location}
-        Traits: ${protagonist.traits.join(", ") || "None"}
-        Inventory: ${protagonist.inventory.join(", ") || "Empty"}
-        ## Narration
-        ${narration}
-        Extract state changes and planted echoes.
+        <task>
+            Extract state changes and planted echoes.
+
+            <current_protagonist_state>
+                name: ${protagonist.name}
+                ${protagonist.description ? `description: ${protagonist.description}` : ""}
+                health: ${protagonist.health}/100, energy: ${protagonist.energy}/100
+                location: ${protagonist.location}
+                traits: ${protagonist.traits.join(", ") || "None"}
+                inventory: ${protagonist.inventory.join(", ") || "Empty"}
+            </current_protagonist_state>
+            
+            <current_narration>
+                ${narration}
+            </current_narration>
+        </task>
     `.trim();
 }
