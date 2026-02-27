@@ -9,13 +9,13 @@ import { vaultApi } from "@/lib/api";
 import type { VaultCharacter } from "@once/shared";
 import { toast } from "sonner";
 
-type EditData = {id:number; name: string; description: string; traits: string[]; backstory: string}
+type EditData = { id: number; name: string; description: string; traits: string[]; backstory: string }
 
 export function CharacterVault() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [characters, setCharacters] = useState<VaultCharacter[]>([]);
-  const [editCharacter, setEditCharacter] = useState<EditData|null>(null);
+  const [editCharacter, setEditCharacter] = useState<EditData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,10 +32,10 @@ export function CharacterVault() {
     vaultApi.list().then((res) => res.data && setCharacters(res.data));
   };
 
-  const handleDelete = async (characterId:number) => {
+  const handleDelete = async (characterId: number) => {
     const response = await vaultApi.delete(characterId.toString());
 
-    if(response.error){
+    if (response.error) {
       toast.error('Failed to delete')
       return;
     }
@@ -44,15 +44,15 @@ export function CharacterVault() {
     setCharacters(prev => prev.filter(c => c.id != characterId));
   }
 
-  const handleEditData = (characterId:number) => {
-      setShowEditDialog(true);
-      const character = characters.find(c => c.id == characterId);
-      if(!character){
-        toast.error('No character exist with this Id');
-        return;
-      } 
+  const handleEditData = (characterId: number) => {
+    setShowEditDialog(true);
+    const character = characters.find(c => c.id == characterId);
+    if (!character) {
+      toast.error('No character exist with this Id');
+      return;
+    }
 
-      setEditCharacter({id: character.id, name: character.name, description: character.description ?? "", traits: character.traits, backstory: character.backstory ?? ""});
+    setEditCharacter({ id: character.id, name: character.name, description: character.description ?? "", traits: character.traits, backstory: character.backstory ?? "" });
   }
 
   return (
@@ -80,7 +80,7 @@ export function CharacterVault() {
             </p>
             <button
               onClick={() => setShowCreateDialog(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-accent text-white hover:bg-accent/90 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/20 border border-accent/40 text-accent/80 hover:text-accent transition-colors cursor-pointer"
             >
               Create now
             </button>
@@ -88,17 +88,17 @@ export function CharacterVault() {
         ) : (
           <><div className="grid grid-cols-1 gap-4 p-4 md:p-8 md:grid-cols-2 lg:grid-cols-3">
             {characters.map((character) => (
-              <VaultCard key={character.id} character={character} onDelete={handleDelete} onEdit={handleEditData}/>
+              <VaultCard key={character.id} character={character} onDelete={handleDelete} onEdit={handleEditData} />
             ))}
           </div>
-          <div>
-           <button
-            onClick={() => setShowCreateDialog(true)}
-            className=" h-12 w-12 flex justify-center items-center fixed right-10 bottom-25 rounded-full bg-accent text-white hover:bg-accent/90 transition-colors cursor-pointer"
-          >
-            <Pen className="size-5" />
-          </button>  
-          </div>
+            <div>
+              <button
+                onClick={() => setShowCreateDialog(true)}
+                className=" h-12 w-12 flex justify-center items-center fixed right-10 bottom-25 rounded-full bg-accent text-white hover:bg-accent/90 transition-colors cursor-pointer"
+              >
+                <Pen className="size-5" />
+              </button>
+            </div>
           </>
         )}
       </div>

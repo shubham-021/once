@@ -2,14 +2,6 @@ import { pgTable, serial, text, varchar, integer, boolean, timestamp, json, pgEn
 import { relations, type InferSelectModel } from 'drizzle-orm';
 import { user } from "./auth-schema"
 
-export const narrativeStanceEnum = pgEnum("narrative_stance", [
-    "grimdark",
-    "heroic",
-    "grounded",
-    "mythic",
-    "noir"
-]);
-
 export const storyVisibilityEnum = pgEnum("story_visibility", [
     "private",
     "public",
@@ -52,11 +44,10 @@ export const stories = pgTable("stories", {
     description: text("description"), // story-plot/ idea,
     publicDescription: text("public_description"),
     genre: genreEnum("genre").notNull(),
-    narrativeStance: narrativeStanceEnum("narrative_stance").default("heroic").notNull(),
     storyMode: storyModeEnum("story_mode").default("protagonist").notNull(),
     worldDescription: text("world_description"),
     castMode: castModeEnum("cast_mode").default("flexible"),
-    castList: json("cast_list").$type<Array<{name: string, description: string}>>(),
+    castList: json("cast_list").$type<Array<{ name: string, description: string }>>(),
     promptForOnce: text("prompt_for_once"),
     startingScene: text("starting_scene"),
     status: storyStatusEnum("status").default("active").notNull(),
@@ -94,7 +85,7 @@ export const protagonists = pgTable("protagonists", {
 });
 
 type protagonistRow = InferSelectModel<typeof protagonists>;
-type protagonistType = Omit<protagonistRow,"createdAt" | "updatedAt">
+type protagonistType = Omit<protagonistRow, "createdAt" | "updatedAt">
 
 export const scenes = pgTable("scenes", {
     id: serial("id").primaryKey(),
@@ -186,7 +177,7 @@ export const codexEntries = pgTable("codex_entries", {
     entryType: codexEntryTypeEnum("entry_type").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     // summary: text("summary").notNull(),
-    metadata: json("metadata").$type<Record<number, Record<string,string>>>(),
+    metadata: json("metadata").$type<Record<number, Record<string, string>>>(),
 
     // Relationships and context
 

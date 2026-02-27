@@ -48,7 +48,7 @@ export function CreateStoryModal() {
 
   const handleCreate = async () => {
 
-    if(balance === 0) {
+    if (balance === 0) {
       setOpen(false);
       toast.error("Insufficient credits");
       return;
@@ -57,7 +57,6 @@ export function CreateStoryModal() {
     const payload = {
       title: form.title,
       genre: form.genre,
-      narrativeStance: form.narrativeStance,
       storyMode: form.storyMode,
       storyIdea: form.storyIdea,
       worldDescription: form.worldDescription,
@@ -70,13 +69,13 @@ export function CreateStoryModal() {
       })),
       ...(form.storyMode === "protagonist" &&
         form.protagonist && {
-          protagonist: {
-            name: form.protagonist.name,
-            description: form.protagonist.description,
-            // location: protagonistLocation,
-            traits: form.protagonist.traits || [],
-          },
-        }),
+        protagonist: {
+          name: form.protagonist.name,
+          description: form.protagonist.description,
+          // location: protagonistLocation,
+          traits: form.protagonist.traits || [],
+        },
+      }),
     };
 
     const result = createStorySchema.safeParse(payload);
@@ -97,7 +96,7 @@ export function CreateStoryModal() {
     setErrors({});
 
     setFormData(result.data);
-    
+
     setIsCreating(true);
     router.push("/story/new");
     setOpen(false);
@@ -189,7 +188,7 @@ export function CreateStoryModal() {
           >
             <DialogTitle className="sr-only">Create a New Story</DialogTitle>
 
-            <div className="flex flex-col h-full overflow-hidden w-full md:w-200 md:h-[90vh] rounded-none md:rounded-lg bg-surface">
+            <div className="flex flex-col h-full overflow-hidden w-full md:w-200 md:h-[75vh] rounded-none md:rounded-lg bg-surface">
               <div className="flex items-center justify-between px-4 py-2 lg:px-6 border-b border-line">
                 <div>
                   <h2 className="text-lg text-foreground">{getStepTitle()}</h2>

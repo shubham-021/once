@@ -16,7 +16,7 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
     if (!parsed.success) {
         return error(c, "VALIDATION_ERROR", parsed.error.errors[0].message);
     }
-    const { title, genre, narrativeStance, storyMode, storyIdea, worldDescription, promptForOnce, startingScene, cast, castMode, protagonist } = parsed.data;
+    const { title, genre, storyMode, storyIdea, worldDescription, promptForOnce, startingScene, cast, castMode, protagonist } = parsed.data;
     const user = c.get("user")!;
 
     if (process.env.DEV_MODE !== "true") {
@@ -44,7 +44,6 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
                     title,
                     genre,
                     description: storyIdea,
-                    narrativeStance,
                     storyMode,
                     worldDescription,
                     promptForOnce,
@@ -74,7 +73,6 @@ draftsRouter.post("/draft", requireAuth, async (c) => {
             })
 
             const narrationStream = streamOpeningScene({
-                narrativeStance,
                 storyMode,
                 title,
                 genre,
@@ -284,7 +282,6 @@ draftsRouter.post("/draft/:storyId/continue", requireAuth, async (c) => {
 
         try {
             const narrationStream = streamNarrationOnly({
-                narrativeStance: story.narrativeStance,
                 storyMode: story.storyMode,
                 title: story.title,
                 genre: story.genre,
@@ -297,10 +294,9 @@ draftsRouter.post("/draft/:storyId/continue", requireAuth, async (c) => {
                     description: story.protagonist[0].description ?? "",
                     traits: story.protagonist[0].baseTraits
                 }
-            },{
+            }, {
                 promptForOnce: story.promptForOnce,
                 worldDescription: story.worldDescription,
-                narrativeStance: story.narrativeStance,
                 storyMode: story.storyMode,
                 protagonist: activeProtagonist
                     ? {

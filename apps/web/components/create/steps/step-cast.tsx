@@ -88,7 +88,7 @@ export function StepCast({ form, updateForm, errors }: StepProps) {
         <div className="flex items-center justify-between py-3 border-b border-line mb-4">
           <div>
             <p className="text-sm text-foreground">Cast Mode</p>
-            <p className="text-xs text-muted">
+            <p className="text-xs pt-1 text-accent">
               {form.castMode === "strict"
                 ? "Only use characters from your list"
                 : "LLM can introduce its own characters"}
@@ -141,7 +141,7 @@ export function StepCast({ form, updateForm, errors }: StepProps) {
                 )}
               />
               {member.vaultCharacterId && (
-                <span className="text-[10px] text-muted border border-line px-1.5 py-0.5 whitespace-nowrap">
+                <span className="text-[11px] rounded-md bg-accent/20 text-muted border border-accent/40 px-1.5 py-1 whitespace-nowrap">
                   vault
                 </span>
               )}
@@ -166,7 +166,7 @@ export function StepCast({ form, updateForm, errors }: StepProps) {
               placeholder="Who are they? Their role, personality..."
               rows={2}
               className={cn(
-                "w-full border bg-transparent p-3 text-sm text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
+                "w-full border bg-transparent p-3 rounded-md text-sm text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
                 errors[`cast.${index}.description`]
                   ? "border-red-500 focus:border-red-500"
                   : "border-line focus:border-foreground",
@@ -201,7 +201,7 @@ export function StepCast({ form, updateForm, errors }: StepProps) {
           </button>
 
           {showVaultDropdown && (
-            <div className="absolute left-0 bottom-full mb-2 w-72 max-h-60 overflow-y-auto border border-line bg-surface shadow-lg z-20">
+            <div className="absolute left-0 bottom-full mb-2 w-72 max-h-60 rounded-md overflow-y-auto border border-line bg-surface shadow-lg z-20">
               {vaultLoading ? (
                 <p className="px-4 py-3 text-xs text-muted">Loading...</p>
               ) : vaultCharacters.length === 0 ? (

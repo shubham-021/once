@@ -46,14 +46,14 @@ export function StepBasics({ form, updateForm, errors }: StepProps) {
 
       <div className="space-y-2">
         <label className="text-sm text-muted">Genre</label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-1">
           {genres.map((genre) => (
             <button
               key={genre}
               type="button"
               onClick={() => updateForm("genre", genre)}
               className={cn(
-                "px-3 py-1 text-sm border transition-colors cursor-pointer",
+                "px-3 py-1 text-sm border rounded-md transition-colors cursor-pointer",
                 form.genre === genre
                   ? "border-accent bg-accent/10 text-accent"
                   : "border-line text-muted hover:border-foreground/50",
@@ -65,35 +65,13 @@ export function StepBasics({ form, updateForm, errors }: StepProps) {
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-sm text-muted">Narrative Stance</label>
-        <div className="flex flex-wrap gap-2">
-          {(["heroic", "grimdark", "grounded", "mythic", "noir"] as const).map(
-            (stance) => (
-              <button
-                key={stance}
-                type="button"
-                onClick={() => updateForm("narrativeStance", stance)}
-                className={cn(
-                  "px-3 py-1 text-sm capitalize border transition-colors cursor-pointer",
-                  form.narrativeStance === stance
-                    ? "border-accent bg-accent/10 text-accent"
-                    : "border-line text-muted hover:border-foreground/50",
-                )}
-              >
-                {stance}
-              </button>
-            ),
-          )}
-        </div>
-      </div>
-      <div className="space-y-2">
         <label className="text-sm text-muted">Story Mode</label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 pt-1">
           <button
             type="button"
             onClick={() => updateForm("storyMode", "protagonist")}
             className={cn(
-              "flex flex-col items-start gap-2 border p-3 text-left transition-colors cursor-pointer",
+              "flex items-center gap-2 border rounded-md p-2 text-left transition-colors cursor-pointer",
               isProtagonistMode
                 ? "border-accent bg-accent/10"
                 : "border-line hover:border-foreground/50",
@@ -111,7 +89,7 @@ export function StepBasics({ form, updateForm, errors }: StepProps) {
             type="button"
             onClick={() => updateForm("storyMode", "narrator")}
             className={cn(
-              "flex flex-col items-start gap-2 border p-3 text-left transition-colors cursor-pointer",
+              "flex items-center gap-2 border rounded-md p-2 text-left transition-colors cursor-pointer",
               !isProtagonistMode
                 ? "border-accent bg-accent/10"
                 : "border-line hover:border-foreground/50",
@@ -159,14 +137,14 @@ export function StepBasics({ form, updateForm, errors }: StepProps) {
             <label className="text-sm text-muted">
               Traits ({form.protagonist?.traits?.length || 0}/5)
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 pt-1">
               {suggestedTraits.map((trait) => (
                 <button
                   key={trait}
                   type="button"
                   onClick={() => toggleTrait(trait)}
                   className={cn(
-                    "px-2 py-1 text-xs border transition-colors cursor-pointer",
+                    "px-2 py-1 text-xs border transition-colors cursor-pointer rounded-md",
                     form.protagonist?.traits?.includes(trait)
                       ? "border-accent bg-accent/10 text-accent"
                       : "border-line text-muted hover:border-foreground/50",

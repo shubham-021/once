@@ -1,7 +1,6 @@
 import type { NarrativeStance, StoryMode } from "@once/shared/schemas";
 
 interface ContinueContext {
-    stance: NarrativeStance;
     mode: StoryMode;
     protagonist?: {
         name: string;
@@ -49,7 +48,7 @@ export function buildContinuePrompt(ctx: ContinueContext): string {
     const recentContext = `
         <recent_scenes>
             ${ctx.recentScenes.map((s, i) =>
-                `<scene_${i + 1}>\n
+        `<scene_${i + 1}>\n
                     <user_action>
                         ${s.userAction}
                     </user_action>
@@ -57,7 +56,7 @@ export function buildContinuePrompt(ctx: ContinueContext): string {
                         ${s.narration}
                     </narration>
                 <scene_${i + 1}>`
-            ).join("\n\n")}
+    ).join("\n\n")}
         </recent_scenes>
     `
 

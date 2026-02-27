@@ -1,34 +1,33 @@
 import type { NarrativeStance, StoryMode } from "@once/shared/schemas";
 
 const stanceGuides: Record<NarrativeStance, string> = {
-  grimdark:
-    "The world is hostile. Death is permanent. Mercy is often punished. There are no heroes, only survivors. Consequences are harsh.",
-  heroic:
-    "The protagonist is exceptional. Luck favors the bold. Unlikely victories are possible. The world rewards courage.",
-  grounded:
-    "Realism governs. Injuries take time. Resources are finite. Success requires planning and compromise.",
-  mythic:
-    "The scale is epic. Gods walk among mortals. Prophecies shape destinies. The protagonist is part of something larger.",
-  noir: "Morality is gray. Everyone has secrets. Trust is a liability. Victories are pyrrhic.",
+    grimdark:
+        "The world is hostile. Death is permanent. Mercy is often punished. There are no heroes, only survivors. Consequences are harsh.",
+    heroic:
+        "The protagonist is exceptional. Luck favors the bold. Unlikely victories are possible. The world rewards courage.",
+    grounded:
+        "Realism governs. Injuries take time. Resources are finite. Success requires planning and compromise.",
+    mythic:
+        "The scale is epic. Gods walk among mortals. Prophecies shape destinies. The protagonist is part of something larger.",
+    noir: "Morality is gray. Everyone has secrets. Trust is a liability. Victories are pyrrhic.",
 };
 
 export function buildSystemPrompt(
-  stance: NarrativeStance,
-  mode: StoryMode,
-  storyTitle?: string,
-  storyGenre?: string,
-  storyIdea?: string,
-  protagonist?: {
-    name: string;
-    description?: string;
-    traits: string[];
-  },
-  worldDescription?: string | null,
-  promptForOnce?: string | null,
-  cast?: Array<{ name: string; description: string }>,
-  castMode?: "strict" | "flexible"
+    mode: StoryMode,
+    storyTitle?: string,
+    storyGenre?: string,
+    storyIdea?: string,
+    protagonist?: {
+        name: string;
+        description?: string;
+        traits: string[];
+    },
+    worldDescription?: string | null,
+    promptForOnce?: string | null,
+    cast?: Array<{ name: string; description: string }>,
+    castMode?: "strict" | "flexible"
 ): string {
-  return `
+    return `
         <system_information>
         
           <about_once>
@@ -137,7 +136,7 @@ export function buildSystemPrompt(
             name: ${protagonist?.name}
             about: ${protagonist?.description}
             traits: ${protagonist?.traits.join(', ')
-          }
+        }
           world_description: ${worldDescription}
           prompt_for_once: ${promptForOnce}
           cast_mode: ${castMode}

@@ -17,7 +17,7 @@ export function StepStory({ form, updateForm, errors }: StepProps) {
           placeholder="If you have a specific opening scene in mind, describe it here. Otherwise, Once will craft the beginning..."
           rows={5}
           className={cn(
-            "w-full border bg-transparent p-3 text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
+            "w-full border bg-transparent p-3 mt-1 rounded-md text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
             errors.startingScene
               ? "border-red-500 focus:border-red-500"
               : "border-line focus:border-foreground",
@@ -38,7 +38,7 @@ export function StepStory({ form, updateForm, errors }: StepProps) {
             placeholder="A disgraced knight seeks redemption in a land where the gods have fallen silent..."
             rows={5}
             className={cn(
-              "w-full border bg-transparent p-3 text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
+              "w-full border bg-transparent p-3 mt-1 rounded-md text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
               errors.storyIdea
                 ? "border-red-500 focus:border-red-500"
                 : "border-line focus:border-foreground",

@@ -8,7 +8,6 @@ import { UsageCollector } from "@/credits/collector";
 import { buildOpeningRevisionPrompt, buildRevisionPrompt, buildRevisionSystemPrompt } from "@/llm/prompts/revision";
 
 interface InitializeContext {
-    narrativeStance: NarrativeStance;
     storyMode: StoryMode;
     title: string;
     genre: string;
@@ -21,7 +20,6 @@ interface InitializeContext {
 }
 
 interface ContinueContext {
-    narrativeStance: NarrativeStance;
     storyMode: StoryMode;
     promptForOnce?: string | null;
     worldDescription?: string | null;
@@ -50,7 +48,6 @@ interface ContinueContext {
 }
 
 interface OpeningContext {
-    narrativeStance: NarrativeStance;
     storyMode: StoryMode;
     title: string;
     genre: string;
@@ -68,7 +65,6 @@ interface OpeningContext {
 }
 
 interface systemPromptContext {
-    narrativeStance: NarrativeStance;
     storyMode: StoryMode;
     title: string;
     genre: string;
@@ -111,8 +107,8 @@ interface OpeningRevisionContext {
 }
 
 export async function generateOpeningScene(ctx: systemPromptContext, usageCollector?: UsageCollector) {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode);
-    const initPrompt = buildInitializePrompt({startingScene: ctx.startingScene});
+    const systemPrompt = buildSystemPrompt(ctx.storyMode);
+    const initPrompt = buildInitializePrompt({ startingScene: ctx.startingScene });
 
     return generateStructuredWithTracking(
         systemPrompt,
@@ -124,7 +120,7 @@ export async function generateOpeningScene(ctx: systemPromptContext, usageCollec
 }
 
 export async function* streamOpeningScene(ctx: systemPromptContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.title, ctx.genre, ctx.storyIdea, ctx.protagonist ,ctx.worldDescription, ctx.promptForOnce, ctx.cast, ctx.castMode);
+    const systemPrompt = buildSystemPrompt(ctx.storyMode, ctx.title, ctx.genre, ctx.storyIdea, ctx.protagonist, ctx.worldDescription, ctx.promptForOnce, ctx.cast, ctx.castMode);
     const initPrompt = buildInitializePrompt({ startingScene: ctx.startingScene });
 
     yield* streamNarrationWithTracking(systemPrompt, initPrompt, usageCollector);
@@ -138,17 +134,16 @@ export async function* streamOpeningRevision(ctx: OpeningRevisionContext, usageC
 }
 
 export async function generateOpeningNarration(ctx: OpeningContext, usageCollector?: UsageCollector): Promise<string> {
-    const systemPrompt = buildSystemPrompt(ctx.narrativeStance, ctx.storyMode, ctx.title, ctx.genre, ctx.storyIdea, ctx.protagonist ,ctx.worldDescription, ctx.promptForOnce, ctx.cast, ctx.castMode);
+    const systemPrompt = buildSystemPrompt(ctx.storyMode, ctx.title, ctx.genre, ctx.storyIdea, ctx.protagonist, ctx.worldDescription, ctx.promptForOnce, ctx.cast, ctx.castMode);
     const initPrompt = buildInitializePrompt({ startingScene: ctx.startingScene });
 
     return generateResponseWithTracking(systemPrompt, initPrompt, usageCollector);
 }
 
 export async function generateContinuation(syst: systemPromptContext, cont: ContinueContext, usageCollector?: UsageCollector) {
-    const systemPrompt = buildSystemPrompt(syst.narrativeStance, syst.storyMode, syst.title, syst.genre, syst.storyIdea, syst.protagonist ,syst.worldDescription, syst.promptForOnce, syst.cast, syst.castMode);
+    const systemPrompt = buildSystemPrompt(syst.storyMode, syst.title, syst.genre, syst.storyIdea, syst.protagonist, syst.worldDescription, syst.promptForOnce, syst.cast, syst.castMode);
 
     const continuePrompt = buildContinuePrompt({
-        stance: cont.narrativeStance,
         mode: cont.storyMode,
         protagonist: cont.protagonist,
         recentScenes: cont.recentScenes,
@@ -168,9 +163,8 @@ export async function generateContinuation(syst: systemPromptContext, cont: Cont
 }
 
 export async function* streamNarrationOnly(syst: systemPromptContext, cont: ContinueContext, usageCollector?: UsageCollector): AsyncGenerator<string> {
-    const systemPrompt = buildSystemPrompt(syst.narrativeStance, syst.storyMode, syst.title, syst.genre, syst.storyIdea, syst.protagonist ,syst.worldDescription, syst.promptForOnce, syst.cast, syst.castMode);
+    const systemPrompt = buildSystemPrompt(syst.storyMode, syst.title, syst.genre, syst.storyIdea, syst.protagonist, syst.worldDescription, syst.promptForOnce, syst.cast, syst.castMode);
     const continuePrompt = buildContinuePrompt({
-        stance: cont.narrativeStance,
         mode: cont.storyMode,
         protagonist: cont.protagonist,
         recentScenes: cont.recentScenes,

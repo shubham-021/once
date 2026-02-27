@@ -23,7 +23,7 @@ export function StepWorld({ form, updateForm, errors }: StepProps) {
             placeholder="Who is your protagonist? Describe their personality, background, motivations, fears..."
             rows={4}
             className={cn(
-              "w-full border bg-transparent p-3 text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
+              "w-full border bg-transparent p-3 mt-1 rounded-md text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
               errors["protagonist.description"]
                 ? "border-red-500 focus:border-red-500"
                 : "border-line focus:border-foreground",
@@ -48,7 +48,7 @@ export function StepWorld({ form, updateForm, errors }: StepProps) {
           placeholder="Describe the world: its rules, atmosphere, conflicts, what makes it unique..."
           rows={4}
           className={cn(
-            "w-full border bg-transparent p-3 text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
+            "w-full border bg-transparent p-3 mt-1 rounded-md text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
             errors.worldDescription
               ? "border-red-500 focus:border-red-500"
               : "border-line focus:border-foreground",
@@ -70,7 +70,7 @@ export function StepWorld({ form, updateForm, errors }: StepProps) {
           placeholder="Any specific instructions? E.g., 'Keep the tone dark', 'No romance subplots'..."
           rows={3}
           className={cn(
-            "w-full border bg-transparent p-3 text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
+            "w-full border bg-transparent p-3 mt-1 rounded-md text-foreground placeholder:text-muted/50 focus:outline-none resize-none",
             errors.promptForOnce
               ? "border-red-500 focus:border-red-500"
               : "border-line focus:border-foreground",

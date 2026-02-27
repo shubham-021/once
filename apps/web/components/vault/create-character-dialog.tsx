@@ -52,7 +52,7 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
     };
 
     const handleEdit = async () => {
-        if(!data){
+        if (!data) {
             toast.error('Something went wrong. Please try after some time !');
             return;
         }
@@ -66,7 +66,7 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
             return;
         }
 
-        const response = await vaultApi.update(data.id.toString() , result.data);
+        const response = await vaultApi.update(data.id.toString(), result.data);
 
         if (response.error) {
             toast.error(getToastErrorMessage(response.error, "vault-edit"));
@@ -90,7 +90,7 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
         const response = await vaultApi.create(result.data);
 
         if (response.error) {
-            toast.error(getToastErrorMessage(response.error,"vault-create"));
+            toast.error(getToastErrorMessage(response.error, "vault-create"));
         } else {
             toast.success("Character created!");
             onCreated?.();
@@ -104,7 +104,7 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
         <div className="fixed inset-0 z-60 flex items-center justify-center">
             <div className="absolute inset-0 bg-background/80" onClick={onClose} />
 
-            <div className="relative z-10 w-full max-w-lg border border-line bg-surface p-6 max-h-[90vh] overflow-y-auto">
+            <div className="relative z-10 w-full max-w-lg rounded-xl border border-line bg-surface p-6 max-h-[90vh] overflow-y-auto">
                 <button
                     onClick={onClose}
                     className="absolute right-4 top-4 text-muted hover:text-foreground cursor-pointer"
@@ -146,7 +146,7 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
                                     key={trait}
                                     onClick={() => toggleTrait(trait)}
                                     className={cn(
-                                        "px-2 py-1 text-xs border transition-colors cursor-pointer",
+                                        "px-2 py-1 text-xs border transition-colors cursor-pointer rounded-md",
                                         selectedTraits.includes(trait)
                                             ? "border-accent bg-accent/10 text-accent"
                                             : "border-line text-muted hover:border-foreground/50"
@@ -164,18 +164,17 @@ export function CreateCharacterDialog({ mode, open, onClose, onCreated, data }: 
                             value={backstory}
                             onChange={(e) => setBackstory(e.target.value)}
                             placeholder="What shaped this character..."
-                            className="mt-1 w-full h-24 border border-line bg-transparent p-2 text-foreground placeholder:text-muted/50 focus:border-foreground focus:outline-none resize-none"
+                            className="mt-1 w-full h-24 border border-line bg-transparent p-2 rounded-md text-foreground placeholder:text-muted/50 focus:border-foreground focus:outline-none resize-none"
                         />
                     </div>
                 </div>
 
                 <button
                     onClick={(mode === "create" ? handleCreate : handleEdit)}
-                    disabled={!name.trim()}
+                    disabled={!name.trim() || !description.trim()}
                     className={cn(
-                        "mt-6 w-full border border-line py-2 text-foreground transition-colors",
-                        "hover:border-foreground hover:bg-surface",
-                        "disabled:cursor-not-allowed disabled:opacity-40"
+                        "mt-6 w-full bg-accent/20 border border-accent/40 py-2 text-accent/80 hover:text-accent transition-colors cursor-pointer",
+                        "rounded-md disabled:cursor-not-allowed disabled:opacity-50"
                     )}
                 >
                     {(mode === "create" ? "Create Character" : "Save Edit")}
