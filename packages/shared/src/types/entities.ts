@@ -1,5 +1,5 @@
 import type { codexEntriesSchema } from "@once/database/types";
-import type { NarrativeStance, StoryMode, StoryStatus, StoryVisibility } from "../schemas/common";
+import type { StoryMode, StoryStatus, StoryVisibility } from "../schemas/common";
 
 export interface Protagonist {
     id: number;
@@ -42,9 +42,8 @@ export interface Story {
     user?: User;
     title: string;
     description?: string;
-    publicDescription?:string;
+    publicDescription?: string;
     genre: string;
-    narrativeStance: NarrativeStance;
     storyMode: StoryMode;
     status: StoryStatus;
     visibility: StoryVisibility;

@@ -5,7 +5,6 @@ import { genres } from "@once/shared";
 const initialState: CreateStoryFormState = {
   title: "",
   genre: genres[0],
-  narrativeStance: "heroic",
   storyMode: "protagonist",
   storyIdea: "",
   worldDescription: "",

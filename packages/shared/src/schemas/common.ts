@@ -1,13 +1,5 @@
 import { z } from "zod";
 
-export const narrativeStanceSchema = z.enum([
-    "grimdark",
-    "heroic",
-    "grounded",
-    "mythic",
-    "noir"
-]);
-
 export const storyModeSchema = z.enum([
     "protagonist",
     "narrator"
@@ -67,7 +59,6 @@ export const traitSchema = z.string().min(1, "Trait cannot be empty").max(100);
 export const traitsArraySchema = z.array(traitSchema).max(5, "Maximum 5 traits allowed");
 
 
-export type NarrativeStance = z.infer<typeof narrativeStanceSchema>;
 export type StoryMode = z.infer<typeof storyModeSchema>;
 export type StoryStatus = z.infer<typeof storyStatusSchema>;
 export type StoryVisibility = z.infer<typeof storyVisibilitySchema>;

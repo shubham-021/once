@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { genres, narrativeStanceSchema, storyModeSchema, traitsArraySchema } from "./common"
+import { genres, storyModeSchema, traitsArraySchema } from "./common"
 
 export const castModeSchema = z.enum(["strict", "flexible"]).default("flexible");
 
