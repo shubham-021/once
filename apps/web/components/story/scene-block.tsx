@@ -19,7 +19,7 @@ export function SceneBlock({ storyId,turnNumber,narration,userAction,handleUndo,
     const [showConfirm, setShowConfirm] = useState(false);
 
     const handleClick = () => {
-        console.log(inProgress);
+        // console.log(inProgress);
         if(inProgress){
             toast.info('Another undo req is in progress.')
             return;

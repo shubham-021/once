@@ -54,7 +54,7 @@ export default function LoginPage() {
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                        className="w-full px-4 py-3 bg-surface border border-line rounded-md text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
                         required
                     />
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                            className="w-full px-4 py-3 bg-surface border border-line rounded-md text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
                             required
                         />
 
@@ -73,14 +73,14 @@ export default function LoginPage() {
                             onClick={() => setPasswordType((p) => !p)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground cursor-pointer bg-surface"
                         >
-                            {passwordType ? <EyeClosed className="size-4"/> : <Eye className="size-4"/>}
+                            {passwordType ? <EyeClosed className="size-4" /> : <Eye className="size-4" />}
                         </button>
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                        className="w-full py-3 bg-accent/20 border border-accent/40 hover:bg-accent/40 text-white font-medium rounded-md disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? "Signing in..." : "Sign In"}
                     </button>

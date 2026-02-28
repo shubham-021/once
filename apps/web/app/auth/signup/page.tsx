@@ -1,7 +1,7 @@
 "use client";
 
-import React, { ButtonHTMLAttributes, useState } from "react";
-import { emailOtp, signUp } from "@/lib/auth-client";
+import React, { ButtonHTMLAttributes, useEffect, useState } from "react";
+import { emailOtp, signUp, useSession } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -24,6 +24,12 @@ export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    const {data: session, refetch} = useSession();
+
+    useEffect(() => {
+        if(session) router.push('/library');
+    },[session]);
+
     const handleOtp = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
 
@@ -42,17 +48,27 @@ export default function SignupPage() {
 
         setSendingOtp(true);
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/sendOtp`, {
-            method: "POST",
-            body: JSON.stringify({ email })
-        })
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/sendOtp`, {
+                method: "POST",
+                body: JSON.stringify({ email })
+            })
 
-        if (!response.ok) {
-            toast.error("Failed to send otp , try again later !!");
-            return;
-        } else {
+            const resData = await response.json();
+
+            if (!response.ok) throw { status: response.status };
+
             toast.success("Otp sent to your email");
             setShowOtpField(true);
+        } catch (err: any) {
+            if (err.status === 403) {
+                toast.error('Email already exists.')
+                return;
+            }
+
+            toast.error('Failed to send otp. Try again later.')
+        } finally {
+            setSendingOtp(false);
         }
     }
 
@@ -71,32 +87,22 @@ export default function SignupPage() {
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/verifyOtp`, {
                 method: "POST",
-                body: JSON.stringify({ email, otp })
+                body: JSON.stringify({ name, password, email, otp }),
+                credentials: 'include'
             })
 
+            const resData = await response.json();
+
+            // console.log('Response: ', JSON.stringify(resData));
+
             if (!response.ok) {
-                const errorData = await response.json();
-                toast.error(getToastErrorMessage({code: errorData.code}, "auth-otp"));
-                return;
+                throw new Error("Signup failed");
             }
 
-            const result = await signUp.email({
-                name: name.trim(),
-                email: email.trim(),
-                password
-            });
-
-            if (result.error) throw new Error(result.error.message || "Signup failed");
-            //     {
-            //     // setError(result.error.message || "Signup failed");
-            //     toast.error(result.error.message || "Signup failed");
-            //     setLoading(false);
-            //     return;
-            // }
-
+            await refetch();
             router.push("/library");
         } catch (error) {
-            toast.error(getToastErrorMessage({code: "UNKNOWN"}, "auth-signup"));
+            toast.error('Signup failed. Please try again after sometime.');
         } finally {
             setLoading(false);
         }
@@ -118,7 +124,7 @@ export default function SignupPage() {
                                 placeholder="Name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                className="w-full px-4 py-3 bg-surface border border-line rounded-md text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
                                 required
                             />
 
@@ -127,7 +133,7 @@ export default function SignupPage() {
                                 placeholder="Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                className="w-full px-4 py-3 bg-surface border border-line rounded-md text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
                                 required
                             />
 
@@ -137,7 +143,7 @@ export default function SignupPage() {
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                    className="w-full px-4 py-3 bg-surface border border-line rounded-md text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
                                     required
                                 />
 
@@ -146,7 +152,7 @@ export default function SignupPage() {
                                     onClick={() => setShowPassword((p) => !p)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground cursor-pointer bg-surface"
                                 >
-                                    {!showPassword ? <EyeClosed className="size-4"/> : <Eye className="size-4"/>}
+                                    {!showPassword ? <EyeClosed className="size-4" /> : <Eye className="size-4" />}
                                 </button>
                             </div>
 
@@ -156,7 +162,7 @@ export default function SignupPage() {
                                     placeholder="Confirm Password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                                    className="w-full px-4 py-3 bg-surface border border-line rounded-md text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
                                     required
                                 />
 
@@ -165,7 +171,7 @@ export default function SignupPage() {
                                     onClick={() => setShowConfirmPassword((p) => !p)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground cursor-pointer bg-surface"
                                 >
-                                    {!showConfirmPassword ? <EyeClosed className="size-4"/> : <Eye className="size-4"/>}
+                                    {!showConfirmPassword ? <EyeClosed className="size-4" /> : <Eye className="size-4" />}
                                 </button>
                             </div>
 
@@ -174,7 +180,7 @@ export default function SignupPage() {
                                 disabled={sendingOtp}
                                 onClick={handleOtp}
                                 className={cn(
-                                    "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
+                                    "w-full py-3 bg-accent/20 border border-accent/40 text-white rounded-md font-medium hover:bg-accent/40 transition-opacity disabled:opacity-50 cursor-pointer",
                                 )}
                             >
                                 {sendingOtp ? 'Sending OTP...' : 'Submit'}
@@ -187,7 +193,7 @@ export default function SignupPage() {
                             placeholder="Otp"
                             value={otp}
                             onChange={(e) => setOtp(e.target.value)}
-                            className="w-full px-4 py-3 bg-surface border border-line text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                            className="w-full px-4 py-3 bg-surface border border-line rounded-md text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
                             required
                         />
 
@@ -196,7 +202,7 @@ export default function SignupPage() {
                             onClick={handleSubmit}
                             disabled={loading}
                             className={cn(
-                                "w-full py-3 bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer",
+                                "w-full py-3 bg-accent/20 border border-accent/40 rounded-md text-white font-medium hover:bg-accent/40 disabled:opacity-50 cursor-pointer",
                             )}
                         >
                             {loading ? 'Creating Account...' : 'Create Account'}

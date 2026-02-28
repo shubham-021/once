@@ -13,11 +13,11 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending, refetch } = useSession();
   // const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!isPending && !session) {
+    if (!session && !isPending) {
       router.push("/auth/login");
     }
   }, [session, isPending, router]);

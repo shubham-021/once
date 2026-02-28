@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
+import { setCookie } from "hono/cookie";
 import storiesRouter from "./routes/stories";
 import { success, error } from "./lib/response";
 import vaultRouter from "./routes/vault";
@@ -12,7 +13,7 @@ import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
 import { sendEmail } from "./lib/email";
-import { db, eq, verification } from "@once/database";
+import { db, eq, user, verification } from "@once/database";
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, "../../../.env") });
@@ -50,6 +51,13 @@ app.post("/sendOtp", async (c) => {
     try {
 
         await db.transaction(async (tx) => {
+
+            const response = await tx.query.user.findFirst({ where: eq(user.email, email) });
+
+            if (response) {
+                throw { code: 'email_exists' };
+            }
+
             await tx.delete(verification).where(eq(verification.identifier, identifier));
             await tx.insert(verification).values({
                 id: crypto.randomUUID(),
@@ -71,14 +79,15 @@ app.post("/sendOtp", async (c) => {
         });
 
         return success(c, { data: "OTP sent" });
-    } catch (err) {
+    } catch (err: any) {
+        if (err.code === 'email_exists') return error(c, 'FORBIDDEN', "Email already exists");
         return error(c, "INTERNAL_ERROR", "Failed to send otp");
     }
 })
 
 app.post("/verifyOtp", async (c) => {
     const body = await c.req.json();
-    const { email, otp } = body;
+    const { name, email, password, otp } = body;
 
     if (!email || !otp) return error(c, "MISSING_FIELD", "Email and otp are required");
 
@@ -100,13 +109,49 @@ app.post("/verifyOtp", async (c) => {
             return error(c, "INVALID_OTP", "Invalid otp");
         }
 
-        await db.delete(verification).where(eq(verification.identifier, identifier));
-        return success(c, { verified: true });
+        const signupResponse = await auth.api.signUpEmail({
+            body: { name, email, password },
+            asResponse: true
+        })
+
+        if (!signupResponse.ok) {
+            const errData = await signupResponse.json();
+            return error(c, errData.code || "SIGNUP_FAILED", "Failed to create account");
+        }
+
+        await db.transaction(async (tx) => {
+            await tx.update(user).set({ emailVerified: true }).where(eq(user.email, email.toLocaleLowerCase()));
+            await tx.delete(verification).where(eq(verification.identifier, identifier));
+        })
+
+        const cookies = signupResponse.headers.getSetCookie();
+
+        const response = new Response(JSON.stringify({success: true}), {
+            status: 200,
+            headers: {
+                'Content-Type' : 'application/json'
+            }
+        })
+
+        for (const cookie of cookies) {
+            response.headers.append('Set-cookie', cookie);
+        }
+
+        return response;
     } catch (err) {
         console.error("Verify otp error: ", err);
         return error(c, "INTERNAL_ERROR", "Failed to verify otp");
     }
 })
+
+// better-auth.session_token=UFTVFlxhIAWjG7NqQOeHEbUlkNM3elOd.KoMCcmwMEPjqZCO3DBMe6eSkMdA6%2BbDT%2BeWDtVYSwH0%3D; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=None
+// Name: better-auth.session_token; Value: UFTVFlxhIAWjG7NqQOeHEbUlkNM3elOd.KoMCcmwMEPjqZCO3DBMe6eSkMdA6%2BbDT%2BeWDtVYSwH0%3D
+// Attributes:  ["Max-Age=604800","Path=/","HttpOnly","Secure","SameSite=None"]
+// Attribute name:  Max-Age Value name: 604800
+// Attribute name:  Path Value name: /
+// Attribute name:  HttpOnly Value name: undefined
+// Attribute name:  Secure Value name: undefined
+// Attribute name:  SameSite Value name: None
 
 app.route("/api/stories", storiesRouter);
 app.route("/api/vault", vaultRouter);
