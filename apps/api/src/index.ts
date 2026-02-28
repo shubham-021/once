@@ -144,15 +144,6 @@ app.post("/verifyOtp", async (c) => {
     }
 })
 
-// better-auth.session_token=UFTVFlxhIAWjG7NqQOeHEbUlkNM3elOd.KoMCcmwMEPjqZCO3DBMe6eSkMdA6%2BbDT%2BeWDtVYSwH0%3D; Max-Age=604800; Path=/; HttpOnly; Secure; SameSite=None
-// Name: better-auth.session_token; Value: UFTVFlxhIAWjG7NqQOeHEbUlkNM3elOd.KoMCcmwMEPjqZCO3DBMe6eSkMdA6%2BbDT%2BeWDtVYSwH0%3D
-// Attributes:  ["Max-Age=604800","Path=/","HttpOnly","Secure","SameSite=None"]
-// Attribute name:  Max-Age Value name: 604800
-// Attribute name:  Path Value name: /
-// Attribute name:  HttpOnly Value name: undefined
-// Attribute name:  Secure Value name: undefined
-// Attribute name:  SameSite Value name: None
-
 app.route("/api/stories", storiesRouter);
 app.route("/api/vault", vaultRouter);
 app.route("/api/credits", creditsRouter);
