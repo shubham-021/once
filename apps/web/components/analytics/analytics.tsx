@@ -129,7 +129,7 @@ function StatCard({
   value: number;
 }) {
   return (
-    <div className="border border-line bg-surface p-4 text-center">
+    <div className="border border-line bg-surface p-4 text-center rounded-lg">
       <Icon className="size-5 mx-auto text-muted mb-2" />
       <p className="text-2xl text-foreground">{value}</p>
       <p className="text-sm text-muted">{label}</p>

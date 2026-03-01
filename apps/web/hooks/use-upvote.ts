@@ -1,6 +1,6 @@
 import { storiesApi } from "@/lib/api";
 import { useUpvotesStore } from "@/stores/upvotes-store";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export function useUpvote(storyId: string) {
@@ -11,21 +11,26 @@ export function useUpvote(storyId: string) {
     const upvoteCount = useUpvotesStore(s => s.counts[id] ?? 0);
     const toggle = useUpvotesStore(s => s.toggle);
 
+    const upvoteRef = useRef<NodeJS.Timeout | null>(null);
+
 
     const toggleUpvote = useCallback(async () => {
+        if(upvoteRef.current) clearTimeout(upvoteRef.current);
+
         try {
-            setIsUpvoting(true);
             const countBeforeToggle = upvoteCount;
             toggle(id, countBeforeToggle);
 
-            const result = await storiesApi.upvote(storyId);
+            upvoteRef.current = setTimeout(async () => {
+                const result = await storiesApi.upvote(storyId);
 
-            if (result.error) {
-                toggle(id, hasUpvoted ? countBeforeToggle - 1 : countBeforeToggle + 1);
-                toast.error(result.error.message);
-            }
-        } finally {
-            setIsUpvoting(false);
+                if (result.error) {
+                    toggle(id, hasUpvoted ? countBeforeToggle - 1 : countBeforeToggle + 1);
+                    toast.error(result.error.message);
+                }
+            }, 2000)
+        } catch {
+            toast.error('Failed to upvote.');
         }
     }, [id, storyId, upvoteCount, toggle]);
 

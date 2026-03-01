@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PublicStoryCard } from "./public-story-card";
 import { Flame, TrendingUp, Clock, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,8 @@ export function Discover() {
     const [showFilters, setShowFilters] = useState(false);
     const [stories, setStories] = useState<DiscoverResult["stories"]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const fetchingStoriesRef = useRef<NodeJS.Timeout | null>(null);
 
     const initialise = useUpvotesStore(s => s.initialise);
 
@@ -50,7 +52,13 @@ export function Discover() {
 
             setIsLoading(false);
         };
-        fetchStories();
+
+        if(fetchingStoriesRef.current) clearTimeout(fetchingStoriesRef.current);
+
+        fetchingStoriesRef.current = setTimeout(() => {
+            fetchStories();
+        }, 500)
+        
         // setStories(mockStories);
         // setTotalpages(3); 
         // setIsLoading(false);

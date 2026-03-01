@@ -29,7 +29,7 @@ export function StoryReader({ storyId }: { storyId: string }) {
 
     const [forkInProgress, setForkInProgress] = useState<boolean>(false);
 
-    const { hasUpvoted, upvoteCount, isUpvoting, toggleUpvote } = useUpvote(storyId);
+    const { hasUpvoted, upvoteCount, toggleUpvote } = useUpvote(storyId);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -110,7 +110,6 @@ export function StoryReader({ storyId }: { storyId: string }) {
                     <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={toggleUpvote}
-                            disabled={isUpvoting}
                             className={cn(
                                 "flex items-center border rounded-lg overflow-hidden transition-colors cursor-pointer",
                                 hasUpvoted ? "border-accent" : "border-line hover:border-foreground/50"

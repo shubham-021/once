@@ -60,7 +60,7 @@ export function NoteDialog({ open, onClose, storyId, storyTitle }: NoteDialogPro
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="relative z-10 w-full max-w-md border border-line bg-surface p-6"
+                        className="relative z-10 w-full max-w-md border border-muted/40 bg-surface p-6 rounded-lg"
                     >
                         <button
                             onClick={onClose}
@@ -78,15 +78,15 @@ export function NoteDialog({ open, onClose, storyId, storyTitle }: NoteDialogPro
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             placeholder="What did you think of this story?"
-                            className="mt-4 w-full h-24 border border-line bg-transparent p-3 text-foreground placeholder:text-muted/50 focus:border-foreground focus:outline-none resize-none"
+                            className="mt-4 w-full h-24 border border-muted/40 rounded-md bg-transparent p-3 text-foreground placeholder:text-muted/50 focus:border-muted/90 focus:outline-none resize-none"
                         />
 
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading || !content.trim()}
                             className={cn(
-                                "mt-4 w-full flex items-center justify-center gap-2 border border-line py-2 text-foreground transition-colors cursor-pointer",
-                                "hover:border-foreground hover:bg-surface",
+                                "mt-4 w-full flex items-center justify-center gap-2 bg-accent/20 border border-accent/40 py-2 text-foreground transition-colors cursor-pointer rounded-md",
+                                "hover:bg-accent/40",
                                 "disabled:cursor-not-allowed disabled:opacity-40"
                             )}
                         >

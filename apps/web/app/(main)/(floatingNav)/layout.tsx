@@ -17,7 +17,7 @@ export default function MainLayout({
   // const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!session && !isPending) {
+    if (!isPending && !session) {
       router.push("/auth/login");
     }
   }, [session, isPending, router]);
@@ -28,10 +28,6 @@ export default function MainLayout({
         <p className="text-muted">Loading...</p>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (

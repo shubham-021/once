@@ -18,7 +18,7 @@ export function PublicStoryCard({ story }: { story: DiscoverResult["stories"][nu
         router.push(`/read/${story.id}`);
     }
 
-    const { hasUpvoted, upvoteCount, toggleUpvote, isUpvoting } = useUpvote(story.id);
+    const { hasUpvoted, upvoteCount, toggleUpvote } = useUpvote(story.id);
 
     return (
         <div onClick={handleClick} className="group h-full border border-line bg-surface p-5 flex flex-col rounded-xl cursor-pointer">
@@ -43,7 +43,6 @@ export function PublicStoryCard({ story }: { story: DiscoverResult["stories"][nu
                         e.stopPropagation();
                         toggleUpvote();
                     }}
-                    disabled={isUpvoting}
                     className={cn(
                         "flex items-center border rounded-lg overflow-hidden transition-colors cursor-pointer",
                         hasUpvoted ? "border-accent" : "border-line hover:border-foreground/50"
