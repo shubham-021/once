@@ -1,13 +1,12 @@
 "use client";
 
-import React, { ButtonHTMLAttributes, useEffect, useState } from "react";
-import { emailOtp, signUp, useSession } from "@/lib/auth-client";
+import React, { useEffect, useState } from "react";
+import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Eye, EyeClosed } from "lucide-react";
-import { getToastErrorMessage } from "@/lib/error-mapper";
 
 export default function SignupPage() {
     const router = useRouter();

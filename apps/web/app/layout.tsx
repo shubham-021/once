@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
-import { LenisProvider } from "@/components/lenis-provider";
-// import { EmberCursor } from "@/components/ember-cursor";
 import "./globals.css";
-import { NavHeader } from "@/components/nav-header";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { CreditsProvider } from "@/components/credits-provider";
-import { ConstellationLoader } from "@/components/constellationLoader";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", display: "swap" });
 

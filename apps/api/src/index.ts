@@ -13,7 +13,7 @@ import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
 import { sendEmail } from "./lib/email";
-import { db, eq, user, verification } from "@once/database";
+import { db, eq, user, userCredits, verification } from "@once/database";
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 config({ path: resolve(__dirname, "../../../.env") });
@@ -89,7 +89,9 @@ app.post("/verifyOtp", async (c) => {
     const body = await c.req.json();
     const { name, email, password, otp } = body;
 
-    if (!email || !otp) return error(c, "MISSING_FIELD", "Email and otp are required");
+    if ( typeof email !== "string" || typeof name !== "string" || !email.trim() || !name.trim() || !otp ){
+        return error(c, "MISSING_FIELD");
+    }
 
     const identifier = `signup-otp-${email.toLocaleLowerCase()}`;
 
@@ -109,8 +111,10 @@ app.post("/verifyOtp", async (c) => {
             return error(c, "INVALID_OTP", "Invalid otp");
         }
 
+        const userName = name[0].toUpperCase() + name.slice(1);
+
         const signupResponse = await auth.api.signUpEmail({
-            body: { name, email, password },
+            body: { name: userName, email, password },
             asResponse: true
         })
 
@@ -120,8 +124,12 @@ app.post("/verifyOtp", async (c) => {
         }
 
         await db.transaction(async (tx) => {
-            await tx.update(user).set({ emailVerified: true }).where(eq(user.email, email.toLocaleLowerCase()));
+            const userLog = await tx.update(user).set({ emailVerified: true }).where(eq(user.email, email.toLocaleLowerCase())).returning();
             await tx.delete(verification).where(eq(verification.identifier, identifier));
+            await tx.insert(userCredits).values({
+                userId: userLog[0].id,
+                balance: 50
+            })
         })
 
         const cookies = signupResponse.headers.getSetCookie();

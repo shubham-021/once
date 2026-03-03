@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
+import { signIn, useSession } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,6 +14,14 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
 
     const [passwordType, setPasswordType] = useState(true);
+
+    const {data: session, isPending} = useSession();
+
+    useEffect(() => {
+        if(!isPending && session){
+            router.push('/library');
+        }
+    }, [session,isPending]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
