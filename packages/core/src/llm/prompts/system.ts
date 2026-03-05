@@ -1,33 +1,21 @@
-import type { NarrativeStance, StoryMode } from "@once/shared/schemas";
-
-const stanceGuides: Record<NarrativeStance, string> = {
-    grimdark:
-        "The world is hostile. Death is permanent. Mercy is often punished. There are no heroes, only survivors. Consequences are harsh.",
-    heroic:
-        "The protagonist is exceptional. Luck favors the bold. Unlikely victories are possible. The world rewards courage.",
-    grounded:
-        "Realism governs. Injuries take time. Resources are finite. Success requires planning and compromise.",
-    mythic:
-        "The scale is epic. Gods walk among mortals. Prophecies shape destinies. The protagonist is part of something larger.",
-    noir: "Morality is gray. Everyone has secrets. Trust is a liability. Victories are pyrrhic.",
-};
+import type { StoryMode } from "@once/shared/schemas";
 
 export function buildSystemPrompt(
-    mode: StoryMode,
-    storyTitle?: string,
-    storyGenre?: string,
-    storyIdea?: string,
-    protagonist?: {
-        name: string;
-        description?: string;
-        traits: string[];
-    },
-    worldDescription?: string | null,
-    promptForOnce?: string | null,
-    cast?: Array<{ name: string; description: string }>,
-    castMode?: "strict" | "flexible"
+  mode: StoryMode,
+  storyTitle?: string,
+  storyGenre?: string,
+  storyIdea?: string,
+  protagonist?: {
+    name: string;
+    description?: string;
+    traits: string[];
+  },
+  worldDescription?: string | null,
+  promptForOnce?: string | null,
+  cast?: Array<{ name: string; description: string }>,
+  castMode?: "strict" | "flexible"
 ): string {
-    return `
+  return `
         <system_information>
         
           <about_once>
@@ -135,12 +123,12 @@ export function buildSystemPrompt(
           protagonist_description: {
             name: ${protagonist?.name}
             about: ${protagonist?.description}
-            traits: ${protagonist?.traits.join(', ')
-        }
+            traits: ${protagonist?.traits?.join(', ')}
+          }
           world_description: ${worldDescription}
           prompt_for_once: ${promptForOnce}
           cast_mode: ${castMode}
-          cast_list: ${cast?.map(c => `name: ${c.name}, description: ${c.description}`).join(' | ')}
+          cast_list: ${cast?.map(c => `name: ${c.name}, description: ${c.description}`)?.join(' | ')}
         </user_provided_information>
     `;
 }

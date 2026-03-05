@@ -290,9 +290,9 @@ draftsRouter.post("/draft/:storyId/continue", requireAuth, async (c) => {
                 castMode: story.castMode ?? 'flexible',
                 cast: story.castList ?? [],
                 protagonist: {
-                    name: story.protagonist[0].name,
-                    description: story.protagonist[0].description ?? "",
-                    traits: story.protagonist[0].baseTraits
+                    name: story.protagonist?.[0]?.name,
+                    description: story.protagonist?.[0]?.description ?? "",
+                    traits: story.protagonist?.[0]?.baseTraits
                 }
             }, {
                 promptForOnce: story.promptForOnce,

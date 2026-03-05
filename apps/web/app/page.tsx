@@ -8,15 +8,15 @@ import { useEffect } from "react";
 
 export default function Home() {
 
-  const {data: session, isPending} = useSession();
+  const { data: session, isPending } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    console.log(`IsPending: ${isPending}, session: ${JSON.stringify(session)}`)
-    if(!isPending && session){
-        router.push('/library');
+    // console.log(`IsPending: ${isPending}, session: ${JSON.stringify(session)}`)
+    if (!isPending && session) {
+      router.push('/library');
     }
-  }, [session,isPending,router]);
+  }, [session, isPending, router]);
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
