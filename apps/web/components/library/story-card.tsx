@@ -10,8 +10,9 @@ import { optionsApi } from "@/lib/api/options";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useLibraryStore } from "@/stores/library-store";
+import { useProgressStore } from "@/stores/progress-store";
 
-export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange, onForkChange }: { story: Story, onDelete: (id: number) => void, onVisibilityChange: (id:number, option:'public'|'private'|'unlisted')=>void, onStatusChange: (id:number, option:'active'|'completed'| 'abandoned')=>void, onForkChange: (id:number) => void}) {
+export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange, onForkChange }: { story: Story, onDelete: (id: number) => void, onVisibilityChange: (id: number, option: 'public' | 'private' | 'unlisted') => void, onStatusChange: (id: number, option: 'active' | 'completed' | 'abandoned') => void, onForkChange: (id: number) => void }) {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const router = useRouter();
@@ -19,8 +20,10 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
     const setInProgress = useLibraryStore(s => s.setInProgress)
     const setShowPublicDescription = useLibraryStore(s => s.setShowPublicDescription);
     const setInFocusStory = useLibraryStore(s => s.setInFocusStory);
+    const start = useProgressStore(s => s.start);
 
     const handleClick = () => {
+        start();
         router.push(`/story/${story.id}`)
     }
 
@@ -40,16 +43,16 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
 
     const handleVisibility = async () => {
         const option = (story.visibility === "public") ? "private" : "public";
-        if(option === "public" && !story.publicDescription){
+        if (option === "public" && !story.publicDescription) {
             setInFocusStory(story);
             setShowPublicDescription(true)
-        }else{
+        } else {
             setInProgress(true);
-            const response = await optionsApi.visibility(story.id.toString(),option);
-            if(response.error){
-            toast.error("Error while executing this req. Try again some times later");
-            setInProgress(false);
-            return; 
+            const response = await optionsApi.visibility(story.id.toString(), option);
+            if (response.error) {
+                toast.error("Error while executing this req. Try again some times later");
+                setInProgress(false);
+                return;
             }
 
             onVisibilityChange(story.id, option);
@@ -60,26 +63,26 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
     const handleStatus = async () => {
         setInProgress(true);
         const option = (story.status === "active") ? "completed" : "active";
-        const response = await optionsApi.status(story.id.toString(),option);
-        if(response.error){
-           toast.error("Error while executing this req. Try again some times later");
-           setInProgress(false);
-           return; 
+        const response = await optionsApi.status(story.id.toString(), option);
+        if (response.error) {
+            toast.error("Error while executing this req. Try again some times later");
+            setInProgress(false);
+            return;
         }
 
-        onStatusChange(story.id,option);
+        onStatusChange(story.id, option);
         setInProgress(false);
     }
 
     const handleForking = async () => {
         setInProgress(true);
         const option = !story.allowForking;
-        const response = await optionsApi.fork(story.id.toString(),option);
-        if(response.error){
+        const response = await optionsApi.fork(story.id.toString(), option);
+        if (response.error) {
             console.log(response.error);
             toast.error("Error while executing this req. Try again some times later");
             setInProgress(false);
-            return; 
+            return;
         }
 
         onForkChange(story.id);
@@ -149,9 +152,9 @@ export function StoryCard({ story, onDelete, onVisibilityChange, onStatusChange,
                                 {"(Fork)"}
                             </span>
                         ))}
-                        {(story.forkedFromStoryId) && 
+                        {(story.forkedFromStoryId) &&
                             <Link href={`/read/${story.forkedFromStoryId}`} onClick={(e) => e.stopPropagation()} className="text-xs flex gap-1 items-end">
-                                <LinkIcon className="size-3"/>
+                                <LinkIcon className="size-3" />
                             </Link>
                         }
                     </div>

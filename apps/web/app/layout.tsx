@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { CreditsProvider } from "@/components/credits-provider";
+import { ProgressBar } from "@/components/progress-bar";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", display: "swap" });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body
         className={`${outfit.variable}  font-outfit antialiased`}
       >
+        <ProgressBar />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

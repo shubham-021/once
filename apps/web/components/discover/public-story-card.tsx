@@ -8,13 +8,16 @@ import Link from "next/link";
 import { useUpvote } from "@/hooks/use-upvote";
 import { DiscoverResult } from "@once/shared";
 import { useRouter } from "next/navigation";
+import { useProgressStore } from "@/stores/progress-store";
 
 
 export function PublicStoryCard({ story }: { story: DiscoverResult["stories"][number] }) {
 
     const router = useRouter();
+    const start = useProgressStore(s => s.start);
 
     const handleClick = () => {
+        start();
         router.push(`/read/${story.id}`);
     }
 

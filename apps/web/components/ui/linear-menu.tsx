@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useProgressStore } from "@/stores/progress-store";
 
 export type LinearMenuItem = {
     title: string;
@@ -91,8 +92,12 @@ function MenuItemButton({
     const [canHover, setCanHover] = useState(false);
     const isLink = 'href' in item && item.href;
     const Component = isLink ? motion.a : motion.button;
+    const start = useProgressStore(s => s.start);
 
     const handleClick = () => {
+
+        if (isLink) start();
+
         if ('onClick' in item && item.onClick) item.onClick();
         onClose();
     };
